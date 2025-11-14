@@ -1,3 +1,6 @@
+# Deno seems to require .env instead of .env.local
+/.env
+
 # Logs
 logs
 *.log
