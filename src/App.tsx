@@ -5,12 +5,35 @@ import { graphql } from "@octokit/graphql";
 const BASE_URL = "http://localhost:5173";
 const BACKEND_URL = "http://localhost:3000";
 
+export interface ViewerContributions {
+  login: string;
+  name: string;
+  contributionsCollection: ContributionsCollection;
+}
+
+export interface ContributionsCollection {
+  contributionCalendar: ContributionCalendar;
+}
+
+export interface ContributionCalendar {
+  totalContributions: number;
+  weeks: ContributionWeek[];
+}
+
+export interface ContributionWeek {
+  contributionDays: ContributionDay[];
+}
+
+export interface ContributionDay {
+  contributionCount: number;
+  date: string;
+}
+
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-  const [info, setInfo] = useState<any>(null);
+  const [info, setInfo] = useState<ViewerContributions | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,12 +81,7 @@ export default function App() {
       setInfo(null);
       return;
     }
-    const graphqlWithAuth = graphql.defaults({
-      headers: {
-        authorization: `token ${accessToken}`,
-      },
-    });
-    graphqlWithAuth({
+    graphql({
       query: `query {
         viewer {
           login
@@ -81,8 +99,12 @@ export default function App() {
           }
         }
       }`,
-    }).then((result) => {
-      setInfo(result);
+      headers: {
+        authorization: `token ${accessToken}`,
+      },
+    }).then((result: unknown) => {
+      const { viewer } = result as { viewer: ViewerContributions };
+      setInfo(viewer);
     }).catch((error: unknown) => {
       console.error("Error getting contribution data", error);
       setError("Error getting contribution data");
