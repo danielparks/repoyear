@@ -1,6 +1,7 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import * as github from "./github/api.ts";
+import type { CreatedCommitContribution } from "./github/gql.ts";
 
 const BASE_URL = "http://localhost:5173";
 const BACKEND_URL = "http://localhost:3000";
@@ -134,17 +135,27 @@ function parseDateTime(input: string) {
   return new Date(year, month - 1, ...rest);
 }
 
+// Convert a date time to a date in UTC.
+//
+// This converts a local date time to its localtime date, then encodes it in UTC
+// for simpler date math (UTC has no daylight saving time).
+function toUtcDate(input: Date) {
+  return Date.UTC(input.getFullYear(), input.getMonth(), input.getDate());
+}
+
 class Calendar {
   start: Date;
+  start_ms: number; // UTC date encoded as ms since 1970.
   days: Day[];
 
   constructor(start: Date, days: Day[] = []) {
     this.start = start;
+    this.start_ms = toUtcDate(start);
     this.days = days;
   }
 
   static fromContributions(contributions: github.Contributions) {
-    return new Calendar(
+    const calendar = new Calendar(
       parseDateTime(contributions.calendar.weeks[0].contributionDays[0].date),
       contributions.calendar.weeks.map((week) =>
         week.contributionDays.map((day) =>
@@ -152,6 +163,40 @@ class Calendar {
         )
       ).flat(),
     );
+
+    for (const entry of contributions.commits) {
+      const {
+        repository: { url, isFork, isPrivate },
+        contributions: { nodes, pageInfo },
+      } = entry;
+      const _ = pageInfo; // FIXME?
+      const repository = new Repository(url, isFork, isPrivate);
+      if (nodes) {
+        for (const node of nodes) {
+          const { commitCount, occurredAt, isRestricted } =
+            node as CreatedCommitContribution;
+          const _ = isRestricted; // FIXME?
+          // occurredAt seems to always be a localtime date explicitly in UTC,
+          // e.g. "2025-10-02T07:00:00Z", so using `new Date()` to parse it
+          // works well.
+          const day = calendar.day(new Date(occurredAt));
+          if (!day) {
+            console.warn(`Date "${occurredAt}" not in calendar`);
+          } else {
+            // FIXME find existing RepositoryDay and update it if appropriate?
+            day.repositories.push(new RepositoryDay(repository, commitCount));
+          }
+        }
+      }
+    }
+
+    return calendar;
+  }
+
+  // Expects localtime date.
+  day(date: Date): Day | undefined {
+    // FIXME doens’t handle out-of-range dates well.
+    return this.days[Math.round((toUtcDate(date) - this.start_ms) / 86400000)];
   }
 
   maxContributions() {
@@ -184,6 +229,7 @@ class Day {
   date: Date;
   contributionCount: number | null;
   repositories: RepositoryDay[] = [];
+
   constructor(
     date: Date,
     contributionCount: number | null = null,

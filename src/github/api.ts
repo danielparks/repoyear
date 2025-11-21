@@ -95,8 +95,6 @@ export class GitHub {
                   commitCount
                   occurredAt
                   isRestricted
-                  resourcePath
-                  url
                 }
                 pageInfo {
                   hasNextPage
