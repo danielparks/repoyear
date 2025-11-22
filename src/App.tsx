@@ -261,6 +261,20 @@ class Day {
     this.contributionCount = contributionCount;
     this.repositories = repositories;
   }
+
+  // Do the contributions we know about add up to the contribution count?
+  addsUp() {
+    return this.contributionCount == this.knownContributionCount();
+  }
+
+  // Add up the contributions we know about specifically.
+  knownContributionCount() {
+    return [...this.repositories.values()].reduce(
+      (accumulator, repoDay) =>
+        accumulator + repoDay.created + repoDay.commitCount,
+      0,
+    );
+  }
 }
 
 class RepositoryDay {
@@ -299,6 +313,7 @@ function ContributionsGraph(
     }
     return {
       background: `hsl(270deg 40 ${value.toString()})`,
+      border: day.addsUp() ? "none" : "1px solid red",
     };
   }
 

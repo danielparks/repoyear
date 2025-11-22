@@ -19,7 +19,8 @@ table.contributions > tbody > tr > td {
   display: block;
   position: relative;
   text-align: center;
-  border: 1px solid #fff;
+  margin: 1px;
+  box-sizing: border-box;
   aspect-ratio: 1/1;
 }
 
