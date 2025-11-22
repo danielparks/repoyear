@@ -93,8 +93,8 @@ export class GitHub {
               contributions(last: 50) {
                 nodes {
                   commitCount
-                  occurredAt
                   isRestricted
+                  occurredAt
                 }
                 pageInfo {
                   hasNextPage
@@ -111,7 +111,6 @@ export class GitHub {
                   isPrivate
                   url
                 }
-                url
               }
               pageInfo {
                 hasNextPage

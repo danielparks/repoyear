@@ -1,7 +1,10 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import * as github from "./github/api.ts";
-import type { CreatedCommitContribution } from "./github/gql.ts";
+import type {
+  CreatedCommitContribution,
+  CreatedRepositoryContribution,
+} from "./github/gql.ts";
 
 const BASE_URL = "http://localhost:5173";
 const BACKEND_URL = "http://localhost:3000";
@@ -12,7 +15,6 @@ export default function App() {
   );
   const [info, setInfo] = useState<github.Contributions | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showNumbers, setShowNumbers] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Handle OAuth callback. Runs only on mount.
@@ -105,24 +107,10 @@ export default function App() {
       <h1>Contribution Graph{info && " for " + info.name}</h1>
       <button type="button" onClick={logout}>Log out</button>
       {error && <h3 className="error">Error: {error}</h3>}
-      {loading ? <h3 className="loading">Loading</h3> : info
-        ? (
-          <>
-            <label>
-              <input
-                type="checkbox"
-                onChange={(e) => {
-                  setShowNumbers(e.target.checked);
-                }}
-              />{" "}
-              Show numbers
-            </label>
-            <ContributionsGraph
-              contributions={info}
-              showNumbers={showNumbers}
-            />
-          </>
-        )
+      {loading
+        ? <h3 className="loading">Loading</h3>
+        : info
+        ? <ContributionsGraph contributions={info} />
         : <h3>No contributions data</h3>}
     </>
   );
@@ -183,8 +171,42 @@ class Calendar {
           if (!day) {
             console.warn(`Date "${occurredAt}" not in calendar`);
           } else {
-            // FIXME find existing RepositoryDay and update it if appropriate?
-            day.repositories.push(new RepositoryDay(repository, commitCount));
+            const repoDay = day.repositories.get(url);
+            if (repoDay) {
+              repoDay.commitCount += commitCount; // FIXME correct?
+            } else {
+              day.repositories.set(
+                url,
+                new RepositoryDay(repository, commitCount),
+              );
+            }
+          }
+        }
+      }
+    }
+
+    if (contributions.repositories.nodes) {
+      for (const node of contributions.repositories.nodes) {
+        const {
+          isRestricted,
+          occurredAt,
+          repository: { url, isFork, isPrivate },
+        } = node as CreatedRepositoryContribution;
+        const _ = isRestricted; // FIXME?
+        const repository = new Repository(url, isFork, isPrivate);
+
+        // occurredAt seems to be a UTC datetime, e.g. "2025-11-06T21:41:51Z",
+        // so using `new Date()` to parse it works well.
+        const day = calendar.day(new Date(occurredAt));
+        if (!day) {
+          console.warn(`Date "${occurredAt}" not in calendar`);
+        } else {
+          const repoDay = day.repositories.get(url);
+          if (repoDay) {
+            console.log("created", occurredAt, repoDay);
+            repoDay.created++;
+          } else {
+            day.repositories.set(url, new RepositoryDay(repository, 0, 1));
           }
         }
       }
@@ -228,12 +250,12 @@ class Calendar {
 class Day {
   date: Date;
   contributionCount: number | null;
-  repositories: RepositoryDay[] = [];
+  repositories: Map<string, RepositoryDay>;
 
   constructor(
     date: Date,
     contributionCount: number | null = null,
-    repositories: RepositoryDay[] = [],
+    repositories: Map<string, RepositoryDay> = new Map(),
   ) {
     this.date = date;
     this.contributionCount = contributionCount;
@@ -265,25 +287,17 @@ class Repository {
 }
 
 function ContributionsGraph(
-  { contributions, showNumbers }: {
-    contributions: github.Contributions;
-    showNumbers: boolean;
-  },
+  { contributions }: { contributions: github.Contributions },
 ) {
   const calendar = Calendar.fromContributions(contributions);
   const dayMax = calendar.maxContributions();
 
   function dayStyle(day: Day) {
     let value = 100;
-    let color = "transparent";
     if (day.contributionCount) {
       value = 55 * (1 - day.contributionCount / dayMax) + 40;
-      if (showNumbers) {
-        color = value < 70 ? "#fff" : "#333";
-      }
     }
     return {
-      color,
       background: `hsl(270deg 40 ${value.toString()})`,
     };
   }
@@ -299,7 +313,7 @@ function ContributionsGraph(
                   key={`day ${day.date.toString()}`}
                   style={dayStyle(day)}
                 >
-                  {day.contributionCount}
+                  <DayInfo day={day} />
                 </td>
               ))}
             </tr>
@@ -309,5 +323,36 @@ function ContributionsGraph(
       <pre>{JSON.stringify(contributions.commits, null, 2)}</pre>
       <pre>{JSON.stringify(contributions.repositories, null, 2)}</pre>
     </>
+  );
+}
+
+function DayInfo({ day }: { day: Day }) {
+  return (
+    <div className="day-info">
+      <table>
+        <tbody>
+          {[...day.repositories.values()].map((repoDay) => (
+            <tr key={repoDay.repository.url}>
+              <td className="commit-count">
+                {repoDay.commitCount}
+              </td>
+              <th>{repoDay.repository.url}</th>
+              <td className="created">
+                {repoDay.created > 0 && <>(Created)</>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td className="commit-count">
+              {day.contributionCount}
+            </td>
+            <th></th>
+            <td className="created"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   );
 }
