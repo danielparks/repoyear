@@ -1,0 +1,8 @@
+{
+  "lint": {
+    "rules": {
+      // eslint already catches explicit any
+      "exclude": ["no-explicit-any"]
+    }
+  }
+}

@@ -324,8 +324,12 @@ function ContributionsGraph(
           ))}
         </tbody>
       </table>
-      <pre>{JSON.stringify(contributions.commits, null, 2)}</pre>
-      <pre>{JSON.stringify(contributions.repositories, null, 2)}</pre>
+      <pre>{
+        JSON.stringify(
+          contributions.repositories.map(
+            (node) => `${node.occurredAt} ${node.repository.url}`
+          ), null, 2)
+      }</pre>
     </>
   );
 }

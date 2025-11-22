@@ -68,9 +68,18 @@ export class GitHub {
     });
   }
 
-  async queryBase(): Promise<Contributions> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async graphqlViewer(query: string, variables: { [key: string]: any }) {
     const { viewer } = await this.octokit.graphql<{ viewer: User }>({
-      query: `query {
+      query,
+      ...variables,
+    });
+    return viewer;
+  }
+
+  async queryBase(): Promise<Contributions> {
+    const viewer = await this.graphqlViewer(
+      `query ($cursor:String!) {
         viewer {
           login
           name
@@ -91,7 +100,7 @@ export class GitHub {
                 isPrivate
                 url
               }
-              contributions(last: 50) {
+              contributions(first: 50) {
                 nodes {
                   commitCount
                   isRestricted
@@ -103,7 +112,7 @@ export class GitHub {
                 }
               }
             }
-            repositoryContributions(last: 100) {
+            repositoryContributions(first: 50, after: $cursor) {
               nodes {
                 isRestricted
                 occurredAt
@@ -121,17 +130,52 @@ export class GitHub {
           }
         }
       }`,
-    });
+      { cursor: "" },
+    );
 
-    const contributions = viewer.contributionsCollection;
-
-    return {
+    const collection = viewer.contributionsCollection;
+    const contributions = {
       login: viewer.login,
       name: viewer.name || "",
-      calendar: contributions.contributionCalendar,
-      commits: contributions.commitContributionsByRepository,
-      repositories: cleanNodes(contributions.repositoryContributions.nodes),
+      calendar: collection.contributionCalendar,
+      commits: collection.commitContributionsByRepository,
+      repositories: cleanNodes(collection.repositoryContributions.nodes),
     };
+
+    let { endCursor, hasNextPage } =
+      collection.repositoryContributions.pageInfo;
+    while (hasNextPage) {
+      const results = await this.graphqlViewer(
+        `query ($cursor:String!) {
+          viewer {
+            contributionsCollection {
+              repositoryContributions(first: 50, after: $cursor) {
+                nodes {
+                  isRestricted
+                  occurredAt
+                  repository {
+                    isFork
+                    isPrivate
+                    url
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          }
+        }`,
+        { cursor: endCursor },
+      );
+      const { nodes, pageInfo } =
+        results.contributionsCollection.repositoryContributions;
+      contributions.repositories.push(...cleanNodes(nodes));
+      ({ endCursor, hasNextPage } = pageInfo);
+    }
+
+    return contributions;
   }
 }
 
