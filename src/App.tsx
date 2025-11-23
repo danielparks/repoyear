@@ -365,7 +365,6 @@ function ContributionsGraph(
     }
     return {
       background: `hsl(270deg 40 ${value.toString()})`,
-      border: day.addsUp() ? "none" : "1px solid red",
     };
   }
 
@@ -379,6 +378,7 @@ function ContributionsGraph(
                 <td
                   key={`day ${day.date.toString()}`}
                   style={dayStyle(day)}
+                  className={day.addsUp() ? "" : "unknown"}
                 >
                   <DayInfo day={day} />
                 </td>
@@ -464,6 +464,18 @@ function DayInfo({ day }: { day: Day }) {
               </td>
             </tr>
           ))}
+          {day.addsUp() ||
+            (
+              <tr key="unknown">
+                <td className="commit-count" colSpan={3}>
+                  {(day.contributionCount || 0) - day.knownContributionCount()}
+                </td>
+                <th>
+                  Unknown contributions <span className="unknown">▢</span>
+                </th>
+                <td className="created"></td>
+              </tr>
+            )}
         </tbody>
         <tfoot>
           <tr>
