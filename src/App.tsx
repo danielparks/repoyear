@@ -100,7 +100,7 @@ export default function App() {
 
   return (
     <>
-      <h1>Contribution Graph{info && " for " + info.name}</h1>
+      <h1>Contribution Graph{info && ` for ${info.name}`}</h1>
       <button type="button" onClick={logout}>Log out</button>
       {error && <h3 className="error">Error: {error}</h3>}
       {loading
@@ -327,10 +327,18 @@ function ContributionsGraph(
 
       <h2>Repository commits</h2>
       <ol>
-        {contributions.commits.map(({ repository, contributions }) => (
-          <li key={`commits for ${repository.url}`}>
-            {repository.url}: {github.cleanNodes(contributions.nodes).length}
-            {contributions.pageInfo.hasNextPage ? "+" : ""}
+        {contributions.commits.map(({ repository, contributions }, i) => (
+          <li key={`commits for ${repository.url} ${i.toString()}`}>
+            <h3>
+              {repository.url}: {github.cleanNodes(contributions.nodes).length}
+              {contributions.pageInfo.hasNextPage &&
+                `+ (${contributions.pageInfo.endCursor || ""})`}
+            </h3>
+            <ol>
+              {github.cleanNodes(contributions.nodes).map((node) => (
+                <li key={node.occurredAt}>{JSON.stringify(node)}</li>
+              ))}
+            </ol>
           </li>
         ))}
       </ol>

@@ -69,7 +69,7 @@ export class GitHub {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async graphqlViewer(query: string, variables: { [key: string]: any }) {
+  async graphqlViewer(query: string, variables: { [key: string]: any } = {}) {
     const { viewer } = await this.octokit.graphql<{ viewer: User }>({
       query,
       ...variables,
@@ -78,8 +78,7 @@ export class GitHub {
   }
 
   async queryBase(): Promise<Contributions> {
-    const viewer = await this.graphqlViewer(
-      `query ($cursor:String!) {
+    const query = `query ($cursor1:String = null, $cursor2:String = null) {
         viewer {
           login
           name
@@ -94,13 +93,13 @@ export class GitHub {
                 }
               }
             }
-            commitContributionsByRepository(maxRepositories: 25) {
+            commitContributionsByRepository(maxRepositories: 50) {
               repository {
                 isFork
                 isPrivate
                 url
               }
-              contributions(first: 50) {
+              contributions(first: 50, after: $cursor1) {
                 nodes {
                   commitCount
                   isRestricted
@@ -112,7 +111,7 @@ export class GitHub {
                 }
               }
             }
-            repositoryContributions(first: 50, after: $cursor) {
+            repositoryContributions(first: 50, after: $cursor2) {
               nodes {
                 isRestricted
                 occurredAt
@@ -129,10 +128,8 @@ export class GitHub {
             }
           }
         }
-      }`,
-      { cursor: "" },
-    );
-
+      }`;
+    const viewer = await this.graphqlViewer(query);
     const collection = viewer.contributionsCollection;
     const contributions = {
       login: viewer.login,
@@ -142,37 +139,34 @@ export class GitHub {
       repositories: cleanNodes(collection.repositoryContributions.nodes),
     };
 
-    let { endCursor, hasNextPage } =
-      collection.repositoryContributions.pageInfo;
-    while (hasNextPage) {
+    let pageInfo1 = collection.commitContributionsByRepository.find((
+      { contributions },
+    ) => contributions.pageInfo.hasNextPage)?.contributions.pageInfo;
+    let pageInfo2 = collection.repositoryContributions.pageInfo;
+    while (pageInfo1?.hasNextPage || pageInfo2.hasNextPage) {
       const results = await this.graphqlViewer(
-        `query ($cursor:String!) {
-          viewer {
-            contributionsCollection {
-              repositoryContributions(first: 50, after: $cursor) {
-                nodes {
-                  isRestricted
-                  occurredAt
-                  repository {
-                    isFork
-                    isPrivate
-                    url
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`,
-        { cursor: endCursor },
+        query,
+        { cursor1: pageInfo1?.endCursor, cursor2: pageInfo2.endCursor },
       );
-      const { nodes, pageInfo } =
-        results.contributionsCollection.repositoryContributions;
-      contributions.repositories.push(...cleanNodes(nodes));
-      ({ endCursor, hasNextPage } = pageInfo);
+
+      const collection = results.contributionsCollection;
+      if (pageInfo1?.hasNextPage) {
+        // Only load data if the last result wasn’t the last page.
+        pageInfo1 = collection
+          .commitContributionsByRepository.find(({ contributions }) =>
+            contributions.pageInfo.hasNextPage
+          )?.contributions.pageInfo;
+        contributions.commits.push(
+          ...collection.commitContributionsByRepository,
+        );
+      }
+
+      if (pageInfo2.hasNextPage) {
+        // Only load data if the last result wasn’t the last page.
+        const { nodes, pageInfo } = collection.repositoryContributions;
+        contributions.repositories.push(...cleanNodes(nodes));
+        pageInfo2 = pageInfo;
+      }
     }
 
     return contributions;
