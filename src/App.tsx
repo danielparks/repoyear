@@ -67,9 +67,12 @@ export default function App() {
       */
       const gh = new github.GitHub(accessToken);
       gh.installRateLimitReport();
+
+      // Load data incrementally.
       let isFirst = true;
-      for await (const partial of gh.queryBase()) {
-        setInfo(partial);
+      for await (const contributions of gh.queryBase()) {
+        setInfo(contributions);
+        // Kludge: (await results.next()).value has the wrong type. So:
         if (isFirst) {
           setLoading(false);
           isFirst = false;
