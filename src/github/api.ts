@@ -2,6 +2,7 @@ import { Octokit } from "@octokit/core";
 import type {
   CommitContributionsByRepository,
   ContributionCalendar,
+  CreatedPullRequestContribution,
   CreatedRepositoryContribution,
   Maybe,
   User,
@@ -73,7 +74,11 @@ export class GitHub {
   }
 
   async *queryBase(): AsyncGenerator<Contributions> {
-    const query = `query ($cursor1:String = null, $cursor2:String = null) {
+    const query = `query (
+      $cursor1:String = null,
+      $cursor2:String = null,
+      $cursor3:String = null,
+    ) {
         viewer {
           login
           name
@@ -106,7 +111,25 @@ export class GitHub {
                 }
               }
             }
-            repositoryContributions(first: 50, after: $cursor2) {
+            pullRequestContributions(first: 50, after: $cursor2) {
+              nodes {
+                isRestricted
+                occurredAt
+                pullRequest {
+                  repository {
+                    isFork
+                    isPrivate
+                    url
+                  }
+                  url
+                }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            }
+            repositoryContributions(first: 50, after: $cursor3) {
               nodes {
                 isRestricted
                 occurredAt
@@ -131,6 +154,7 @@ export class GitHub {
       name: viewer.name || "",
       calendar: collection.contributionCalendar,
       commits: collection.commitContributionsByRepository,
+      prs: cleanNodes(collection.pullRequestContributions.nodes),
       repositories: cleanNodes(collection.repositoryContributions.nodes),
     };
 
@@ -140,8 +164,11 @@ export class GitHub {
     let pageInfo1 = collection.commitContributionsByRepository.find((
       { contributions },
     ) => contributions.pageInfo.hasNextPage)?.contributions.pageInfo;
-    let pageInfo2 = collection.repositoryContributions.pageInfo;
-    while (pageInfo1?.hasNextPage || pageInfo2.hasNextPage) {
+    let pageInfo2 = collection.pullRequestContributions.pageInfo;
+    let pageInfo3 = collection.repositoryContributions.pageInfo;
+    while (
+      pageInfo1?.hasNextPage || pageInfo2.hasNextPage || pageInfo3.hasNextPage
+    ) {
       const results = await this.graphqlViewer(
         query,
         { cursor1: pageInfo1?.endCursor, cursor2: pageInfo2.endCursor },
@@ -161,9 +188,16 @@ export class GitHub {
 
       if (pageInfo2.hasNextPage) {
         // Only load data if the last result wasn’t the last page.
+        const { nodes, pageInfo } = collection.pullRequestContributions;
+        contributions.prs.push(...cleanNodes(nodes));
+        pageInfo2 = pageInfo;
+      }
+
+      if (pageInfo3.hasNextPage) {
+        // Only load data if the last result wasn’t the last page.
         const { nodes, pageInfo } = collection.repositoryContributions;
         contributions.repositories.push(...cleanNodes(nodes));
-        pageInfo2 = pageInfo;
+        pageInfo3 = pageInfo;
       }
 
       // Yield updated data after each page load
@@ -183,5 +217,6 @@ export interface Contributions {
   name: string;
   calendar: ContributionCalendar;
   commits: CommitContributionsByRepository[];
+  prs: CreatedPullRequestContribution[];
   repositories: CreatedRepositoryContribution[];
 }

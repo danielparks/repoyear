@@ -186,6 +186,28 @@ class Calendar {
       }
     }
 
+    for (const node of contributions.prs) {
+      const { url, isFork, isPrivate } = node.pullRequest.repository;
+
+      // occurredAt seems to be a UTC datetime, e.g. "2025-11-06T21:41:51Z", so
+      // using `new Date()` to parse it works well.
+      const day = calendar.day(new Date(node.occurredAt));
+      if (!day) {
+        console.warn(`Date "${node.occurredAt}" not in calendar`);
+      } else {
+        const repoDay = day.repositories.get(url);
+        if (repoDay) {
+          repoDay.prs.push(node.pullRequest.url);
+        } else {
+          const repository = new Repository(url, isFork, isPrivate);
+          day.repositories.set(
+            url,
+            new RepositoryDay(repository, 0, 0, [node.pullRequest.url]),
+          );
+        }
+      }
+    }
+
     for (const node of contributions.repositories) {
       const {
         isRestricted,
@@ -268,8 +290,8 @@ class Day {
   // Add up the contributions we know about specifically.
   knownContributionCount() {
     return [...this.repositories.values()].reduce(
-      (accumulator, repoDay) =>
-        accumulator + repoDay.created + repoDay.commitCount,
+      (total, repoDay) =>
+        total + repoDay.created + repoDay.commitCount + repoDay.prs.length,
       0,
     );
   }
@@ -280,10 +302,19 @@ class RepositoryDay {
   commitCount: number;
   // How many times the repo was created this day. (Typically 0, sometimes 1.)
   created = 0;
-  constructor(repository: Repository, commitCount = 0, created = 0) {
+  // PR urls
+  prs: string[];
+
+  constructor(
+    repository: Repository,
+    commitCount = 0,
+    created = 0,
+    prs: string[] = [],
+  ) {
     this.repository = repository;
     this.commitCount = commitCount;
     this.created = created;
+    this.prs = prs;
   }
 }
 
@@ -352,6 +383,17 @@ function ContributionsGraph(
         ))}
       </ol>
 
+      <h2>Pull requests</h2>
+      <ol>
+        {contributions.prs.map(
+          (node) => (
+            <li key={`${node.occurredAt} ${node.pullRequest.url}`}>
+              {node.occurredAt} {node.pullRequest.url}
+            </li>
+          ),
+        )}
+      </ol>
+
       <h2>Repositories created</h2>
       <ol>
         {contributions.repositories.map(
@@ -376,6 +418,9 @@ function DayInfo({ day }: { day: Day }) {
               <td className="commit-count">
                 {repoDay.commitCount}
               </td>
+              <td className="pr-count">
+                {repoDay.prs.length}
+              </td>
               <th>{repoDay.repository.url}</th>
               <td className="created">
                 {repoDay.created > 0 && <>(Created)</>}
@@ -385,7 +430,7 @@ function DayInfo({ day }: { day: Day }) {
         </tbody>
         <tfoot>
           <tr>
-            <td className="commit-count">
+            <td className="commit-count" colSpan={2}>
               {day.contributionCount}
             </td>
             <th></th>
