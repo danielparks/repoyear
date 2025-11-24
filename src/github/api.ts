@@ -55,13 +55,17 @@ export class GitHub {
       }
       printJob = setTimeout(() => {
         printJob = null;
-        console.log(`Rate limit used: ${used}/${limit}`, resource);
+        let resetMessage = "";
         if (reset) {
           const seconds = Number.parseInt(reset, 10);
           if (!Number.isNaN(seconds)) {
-            console.log("Rate limit resets:", new Date(seconds * 1000));
+            resetMessage = ` (resets: ${new Date(seconds * 1000).toString()})`;
           }
         }
+        console.log(
+          `Rate limit used: ${used}/${limit}${resetMessage}`,
+          resource,
+        );
       }, 1000);
     });
   }
