@@ -127,7 +127,7 @@ export class Calendar {
     const firstWeek: Day[] = [];
     const date = new Date(this.start);
     for (let i = 0; i < this.start.getDay(); i++) {
-      firstWeek.push(new Day(date, null));
+      firstWeek.push(new Day(date));
       date.setDate(date.getDate() + 1);
     }
     firstWeek.push(...this.days.slice(0, 7 - this.start.getDay()));
@@ -141,17 +141,15 @@ export class Calendar {
 
 export class Day {
   date: Date;
-  contributionCount: number | null;
-  repositories: Map<string, RepositoryDay>;
+  contributionCount: number | null = null;
+  repositories: Map<string, RepositoryDay> = new Map();
 
   constructor(
     date: Date,
     contributionCount: number | null = null,
-    repositories: Map<string, RepositoryDay> = new Map(),
   ) {
     this.date = date;
     this.contributionCount = contributionCount;
-    this.repositories = repositories;
   }
 
   // Do the contributions we know about add up to the contribution count?
@@ -172,24 +170,16 @@ export class Day {
 
 export class RepositoryDay {
   readonly repository: Repository;
-  commitCount: number;
+  commitCount = 0;
   // How many times the repo was created this day. (Typically 0, sometimes 1.)
   created = 0;
   // Issue urls
-  issues: string[];
+  issues: string[] = [];
   // PR urls
-  prs: string[];
+  prs: string[] = [];
 
-  constructor(
-    repository: Repository,
-    commitCount = 0,
-    created = 0,
-  ) {
+  constructor(repository: Repository) {
     this.repository = repository;
-    this.commitCount = commitCount;
-    this.created = created;
-    this.issues = [];
-    this.prs = [];
   }
 
   addCommits(count: number) {
