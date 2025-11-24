@@ -6,6 +6,7 @@ import type {
   CreatedPullRequestContribution,
   CreatedRepositoryContribution,
   Maybe,
+  PageInfo,
   User,
 } from "./gql.ts";
 
@@ -65,47 +66,103 @@ export class GitHub {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async graphqlViewer(query: string, variables: { [key: string]: any } = {}) {
-    const { viewer } = await this.octokit.graphql<{ viewer: User }>({
-      query,
-      ...variables,
-    });
-    return viewer;
-  }
-
   async *queryBase(): AsyncGenerator<Contributions> {
-    const query = `query (
-      $commitCursor:String = null,
-      $issueCursor:String = null,
-      $prCursor:String = null,
-      $repoCursor:String = null,
-    ) {
-        viewer {
-          login
-          name
-          contributionsCollection {
-            contributionCalendar {
-              totalContributions
-              weeks {
-                contributionDays {
-                  contributionCount
-                  contributionLevel
-                  date
+    const cursors = [
+      "commitCursor",
+      "issueCursor",
+      "prCursor",
+      "repoCursor",
+    ];
+
+    const pageInfo = Object.fromEntries(
+      cursors.map(
+        (name) => [name, { endCursor: null, hasNextPage: true }],
+      ),
+    ) as Record<string, PageInfo>;
+
+    while (!Object.values(pageInfo).every((info) => !info.hasNextPage)) {
+      const parameters = cursors.map((name) => `$${name}:String`).join(", ");
+      const { viewer } = await this.octokit.graphql<{ viewer: User }>({
+        query: `query ( $includeCommits:Boolean!, ${parameters} ) {
+          viewer {
+            login
+            name
+            contributionsCollection {
+              contributionCalendar {
+                totalContributions
+                weeks {
+                  contributionDays {
+                    contributionCount
+                    contributionLevel
+                    date
+                  }
                 }
               }
-            }
-            commitContributionsByRepository(maxRepositories: 50) {
-              repository {
-                isFork
-                isPrivate
-                url
+              commitContributionsByRepository(maxRepositories: 50)
+                @include(if: $includeCommits)
+              {
+                repository {
+                  isFork
+                  isPrivate
+                  url
+                }
+                contributions(first: 50, after: $commitCursor) {
+                  nodes {
+                    commitCount
+                    isRestricted
+                    occurredAt
+                  }
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                }
               }
-              contributions(first: 50, after: $commitCursor) {
+              issueContributions(first: 50, after: $issueCursor) {
                 nodes {
-                  commitCount
                   isRestricted
                   occurredAt
+                  issue {
+                    repository {
+                      isFork
+                      isPrivate
+                      url
+                    }
+                    url
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+              pullRequestContributions(first: 50, after: $prCursor) {
+                nodes {
+                  isRestricted
+                  occurredAt
+                  pullRequest {
+                    repository {
+                      isFork
+                      isPrivate
+                      url
+                    }
+                    url
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+              repositoryContributions(first: 50, after: $repoCursor) {
+                nodes {
+                  isRestricted
+                  occurredAt
+                  repository {
+                    isFork
+                    isPrivate
+                    url
+                  }
                 }
                 pageInfo {
                   hasNextPage
@@ -113,130 +170,58 @@ export class GitHub {
                 }
               }
             }
-            issueContributions(first: 50, after: $issueCursor) {
-              nodes {
-                isRestricted
-                occurredAt
-                issue {
-                  repository {
-                    isFork
-                    isPrivate
-                    url
-                  }
-                  url
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-            pullRequestContributions(first: 50, after: $prCursor) {
-              nodes {
-                isRestricted
-                occurredAt
-                pullRequest {
-                  repository {
-                    isFork
-                    isPrivate
-                    url
-                  }
-                  url
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-            repositoryContributions(first: 50, after: $repoCursor) {
-              nodes {
-                isRestricted
-                occurredAt
-                repository {
-                  isFork
-                  isPrivate
-                  url
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
           }
-        }
-      }`;
-    const viewer = await this.graphqlViewer(query);
-    const collection = viewer.contributionsCollection;
-    const contributions = {
-      login: viewer.login,
-      name: viewer.name || "",
-      calendar: collection.contributionCalendar,
-      commits: collection.commitContributionsByRepository,
-      issues: cleanNodes(collection.issueContributions.nodes),
-      prs: cleanNodes(collection.pullRequestContributions.nodes),
-      repositories: cleanNodes(collection.repositoryContributions.nodes),
-    };
+        }`,
+        includeCommits: pageInfo.commitCursor.hasNextPage,
+        ...Object.fromEntries(
+          cursors.map((name) => [name, pageInfo[name].endCursor]),
+        ),
+      });
+      const collection = viewer.contributionsCollection;
+      const contributions = {
+        login: viewer.login,
+        name: viewer.name || "",
+        calendar: collection.contributionCalendar,
+        // The following isn’t actually always truthy.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        commits: collection.commitContributionsByRepository || [],
+        issues: cleanNodes(collection.issueContributions.nodes),
+        prs: cleanNodes(collection.pullRequestContributions.nodes),
+        repositories: cleanNodes(collection.repositoryContributions.nodes),
+      };
 
-    // Yield initial data
-    yield contributions;
-
-    let commitPageInfo = collection.commitContributionsByRepository.find((
-      { contributions },
-    ) => contributions.pageInfo.hasNextPage)?.contributions.pageInfo;
-    let issuePageInfo = collection.issueContributions.pageInfo;
-    let prPageInfo = collection.pullRequestContributions.pageInfo;
-    let repoPageInfo = collection.repositoryContributions.pageInfo;
-    while (
-      commitPageInfo?.hasNextPage || issuePageInfo.hasNextPage ||
-      prPageInfo.hasNextPage || repoPageInfo.hasNextPage
-    ) {
-      const results = await this.graphqlViewer(
-        query,
-        {
-          commitCursor: commitPageInfo?.endCursor,
-          issueCursor: issuePageInfo.endCursor,
-          prCursor: prPageInfo.endCursor,
-          repoCursor: repoPageInfo.endCursor,
-        },
-      );
-
-      const collection = results.contributionsCollection;
-      if (commitPageInfo?.hasNextPage) {
-        // Only load data if the last result wasn’t the last page.
-        commitPageInfo = collection
-          .commitContributionsByRepository.find(({ contributions }) =>
-            contributions.pageInfo.hasNextPage
-          )?.contributions.pageInfo;
-        contributions.commits.push(
-          ...collection.commitContributionsByRepository,
-        );
-      }
-
-      if (issuePageInfo.hasNextPage) {
-        // Only load data if the last result wasn’t the last page.
-        const { nodes, pageInfo } = collection.issueContributions;
-        contributions.issues.push(...cleanNodes(nodes));
-        issuePageInfo = pageInfo;
-      }
-
-      if (prPageInfo.hasNextPage) {
-        // Only load data if the last result wasn’t the last page.
-        const { nodes, pageInfo } = collection.pullRequestContributions;
-        contributions.prs.push(...cleanNodes(nodes));
-        prPageInfo = pageInfo;
-      }
-
-      if (repoPageInfo.hasNextPage) {
-        // Only load data if the last result wasn’t the last page.
-        const { nodes, pageInfo } = collection.repositoryContributions;
-        contributions.repositories.push(...cleanNodes(nodes));
-        repoPageInfo = pageInfo;
-      }
-
-      // Yield updated data after each page load
+      // Yield update
       yield contributions;
+
+      if (pageInfo.commitCursor.hasNextPage) {
+        const newPageInfo = collection
+          .commitContributionsByRepository
+          .find(({ contributions }) => contributions.pageInfo.hasNextPage)
+          ?.contributions
+          .pageInfo;
+        if (newPageInfo) {
+          pageInfo.commitCursor = newPageInfo;
+        } else {
+          // FIXME? why does this require hasPreviousPage?
+          pageInfo.commitCursor = {
+            endCursor: null,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          };
+        }
+      }
+
+      if (pageInfo.issueCursor.hasNextPage) {
+        pageInfo.issueCursor = collection.issueContributions.pageInfo;
+      }
+
+      if (pageInfo.prCursor.hasNextPage) {
+        pageInfo.prCursor = collection.pullRequestContributions.pageInfo;
+      }
+
+      if (pageInfo.repoCursor.hasNextPage) {
+        pageInfo.repoCursor = collection.repositoryContributions.pageInfo;
+      }
     }
   }
 }

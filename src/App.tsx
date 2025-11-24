@@ -9,7 +9,7 @@ export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
-  const [info, setInfo] = useState<github.Contributions | null>(null);
+  const [info, setInfo] = useState<Calendar | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,13 +69,17 @@ export default function App() {
       gh.installRateLimitReport();
 
       // Load data incrementally.
-      let isFirst = true;
+      let calendar: Calendar | null = null;
       for await (const contributions of gh.queryBase()) {
-        setInfo(contributions);
         // Kludge: (await results.next()).value has the wrong type. So:
-        if (isFirst) {
+        if (calendar) {
+          calendar.updateFromContributions(contributions);
+          setInfo(calendar);
+        } else {
+          // First loop.
+          calendar = Calendar.fromContributions(contributions);
+          setInfo(calendar);
           setLoading(false);
-          isFirst = false;
         }
       }
     })().catch((error: unknown) => {
@@ -115,7 +119,7 @@ export default function App() {
       {loading
         ? <h3 className="loading">Loading</h3>
         : info
-        ? <ContributionsGraph contributions={info} />
+        ? <ContributionsGraph calendar={info} />
         : <h3>No contributions data</h3>}
     </>
   );
@@ -137,11 +141,13 @@ function toUtcDate(input: Date) {
 }
 
 class Calendar {
+  name: string; // User’s name.
   start: Date;
   start_ms: number; // UTC date encoded as ms since 1970.
   days: Day[];
 
-  constructor(start: Date, days: Day[] = []) {
+  constructor(name: string, start: Date, days: Day[] = []) {
+    this.name = name;
     this.start = start;
     this.start_ms = toUtcDate(start);
     this.days = days;
@@ -149,6 +155,7 @@ class Calendar {
 
   static fromContributions(contributions: github.Contributions) {
     const calendar = new Calendar(
+      contributions.name,
       parseDateTime(contributions.calendar.weeks[0].contributionDays[0].date),
       contributions.calendar.weeks.map((week) =>
         week.contributionDays.map((day) =>
@@ -156,20 +163,25 @@ class Calendar {
         )
       ).flat(),
     );
+    return calendar.updateFromContributions(contributions);
+  }
+
+  updateFromContributions(contributions: github.Contributions) {
+    // FIXME Ignores contributions.calendar; everything is loaded in first loop.
+    // However, if we want to add contributions from another date range this
+    // won’t work.
 
     for (const entry of contributions.commits) {
       const {
         repository: { url, isFork, isPrivate },
-        contributions: { nodes, pageInfo },
+        contributions: { nodes },
       } = entry;
-      const _ = pageInfo; // FIXME?
       const repository = new Repository(url, isFork, isPrivate);
       for (const node of github.cleanNodes(nodes)) {
-        const { commitCount, occurredAt, isRestricted } = node;
-        const _ = isRestricted; // FIXME?
+        const { commitCount, occurredAt } = node;
         // occurredAt seems to be a localtime date explicitly in UTC, e.g.
         // "2025-10-02T07:00:00Z", so using `new Date()` to parse it works well.
-        const day = calendar.day(new Date(occurredAt));
+        const day = this.day(new Date(occurredAt));
         if (!day) {
           console.warn(`Date "${occurredAt}" not in calendar`);
         } else {
@@ -191,13 +203,13 @@ class Calendar {
 
       // occurredAt seems to be a UTC datetime, e.g. "2025-11-06T21:41:51Z", so
       // using `new Date()` to parse it works well.
-      const day = calendar.day(new Date(node.occurredAt));
+      const day = this.day(new Date(node.occurredAt));
       if (!day) {
         console.warn(`Date "${node.occurredAt}" not in calendar`);
       } else {
         const repoDay = day.repositories.get(url);
         if (repoDay) {
-          repoDay.prs.push(node.issue.url);
+          repoDay.issues.push(node.issue.url);
         } else {
           const repository = new Repository(url, isFork, isPrivate);
           const repoDay = new RepositoryDay(repository, 0, 0);
@@ -212,7 +224,7 @@ class Calendar {
 
       // occurredAt seems to be a UTC datetime, e.g. "2025-11-06T21:41:51Z", so
       // using `new Date()` to parse it works well.
-      const day = calendar.day(new Date(node.occurredAt));
+      const day = this.day(new Date(node.occurredAt));
       if (!day) {
         console.warn(`Date "${node.occurredAt}" not in calendar`);
       } else {
@@ -230,16 +242,14 @@ class Calendar {
 
     for (const node of contributions.repositories) {
       const {
-        isRestricted,
         occurredAt,
         repository: { url, isFork, isPrivate },
       } = node;
-      const _ = isRestricted; // FIXME?
       const repository = new Repository(url, isFork, isPrivate);
 
       // occurredAt seems to be a UTC datetime, e.g. "2025-11-06T21:41:51Z", so
       // using `new Date()` to parse it works well.
-      const day = calendar.day(new Date(occurredAt));
+      const day = this.day(new Date(occurredAt));
       if (!day) {
         console.warn(`Date "${occurredAt}" not in calendar`);
       } else {
@@ -252,7 +262,7 @@ class Calendar {
       }
     }
 
-    return calendar;
+    return this;
   }
 
   // Expects localtime date.
@@ -352,10 +362,7 @@ class Repository {
   }
 }
 
-function ContributionsGraph(
-  { contributions }: { contributions: github.Contributions },
-) {
-  const calendar = Calendar.fromContributions(contributions);
+function ContributionsGraph({ calendar }: { calendar: Calendar }) {
   const dayMax = calendar.maxContributions();
 
   function dayStyle(day: Day) {
@@ -369,25 +376,32 @@ function ContributionsGraph(
   }
 
   return (
-    <>
-      <table className="contributions">
-        <tbody>
-          {[...calendar.weeks()].map((week) => (
-            <tr key={`week ${week[0].date.toString()}`} className="week">
-              {week.map((day) => (
-                <td
-                  key={`day ${day.date.toString()}`}
-                  style={dayStyle(day)}
-                  className={day.addsUp() ? "" : "unknown"}
-                >
-                  <DayInfo day={day} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <table className="contributions">
+      <tbody>
+        {[...calendar.weeks()].map((week) => (
+          <tr key={`week ${week[0].date.toString()}`} className="week">
+            {week.map((day) => (
+              <td
+                key={`day ${day.date.toString()}`}
+                style={dayStyle(day)}
+                className={day.addsUp() ? "" : "unknown"}
+              >
+                <DayInfo day={day} />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
+// FIXME remove?
+export function ContributionsQueryReport(
+  { contributions }: { contributions: github.Contributions },
+) {
+  return (
+    <>
       <h2>Repository commits</h2>
       <ol>
         {contributions.commits.map(({ repository, contributions }, i) => (
