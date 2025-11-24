@@ -117,34 +117,34 @@ export default function App() {
 function ContributionsGraph({ calendar }: { calendar: Calendar }) {
   const dayMax = calendar.maxContributions();
 
-  function dayStyle(day: Day) {
-    let value = 100;
-    if (day.contributionCount) {
-      value = 55 * (1 - day.contributionCount / dayMax) + 40;
-    }
-    return {
-      background: `hsl(270deg 40 ${value.toString()})`,
-    };
-  }
-
   return (
     <table className="contributions">
       <tbody>
         {[...calendar.weeks()].map((week) => (
           <tr key={`week ${week[0].date.toString()}`} className="week">
             {week.map((day) => (
-              <td
-                key={`day ${day.date.toString()}`}
-                style={dayStyle(day)}
-                className={day.addsUp() ? "" : "unknown"}
-              >
-                <DayInfo day={day} />
-              </td>
+              <GraphDay key={day.date.toString()} day={day} max={dayMax} />
             ))}
           </tr>
         ))}
       </tbody>
     </table>
+  );
+}
+
+function GraphDay({ day, max }: { day: Day; max: number }) {
+  let value = 100;
+  if (day.contributionCount) {
+    value = 55 * (1 - day.contributionCount / max) + 40;
+  }
+  const style = {
+    background: `hsl(270deg 40 ${value.toString()})`,
+  };
+
+  return (
+    <td style={style} className={day.addsUp() ? "" : "unknown"}>
+      <DayInfo day={day} />
+    </td>
   );
 }
 
