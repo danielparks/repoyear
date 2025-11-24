@@ -54,18 +54,6 @@ export default function App() {
       }
       setLoading(true);
 
-      /*
-      contributionsCollection:
-        commitContributionsByRepository
-        issueContributions or issueContributionsByRepository // opened
-        pullRequestContributions or pullRequestContributionsByRepository
-        pullRequestReviewContributions or pullRequestReviewContributionsByRepository
-        repositoryContributions // repos created
-        joinedGitHubContribution
-        contributionYears // years the user has made contributions
-        hasActivityInThePast // alternative
-        mostRecentCollectionWithActivity // maybe automatically gets earlier stuff?
-      */
       const gh = new github.GitHub(accessToken);
       gh.installRateLimitReport();
 

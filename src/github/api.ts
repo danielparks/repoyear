@@ -86,6 +86,10 @@ export class GitHub {
 
     while (!Object.values(pageInfo).every((info) => !info.hasNextPage)) {
       const parameters = cursors.map((name) => `$${name}:String`).join(", ");
+      // FIXME add joinedGitHubContribution
+      // FIXME check contributionYears or hasActivityInThePast?
+      // FIXME does mostRecentCollectionWithActivity catch recent changes (e.g.
+      //       deleting a repo) that affect the past?
       const { viewer } = await this.octokit.graphql<{ viewer: User }>({
         query: `query ( $includeCommits:Boolean!, ${parameters} ) {
           viewer {
