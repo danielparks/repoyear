@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createIDBPersister } from "./utils/persister.ts";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import App from "./App.tsx";
 
@@ -20,12 +22,21 @@ const queryClient = new QueryClient({
   },
 });
 
+// Create IndexedDB persister for cache persistence across page loads
+const persister = createIDBPersister();
+
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // Keep cache for 7 days
+      }}
+    >
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   </StrictMode>,
 );
