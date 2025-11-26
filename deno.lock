@@ -7,6 +7,7 @@
     "npm:@graphql-codegen/cli@^6.1.0": "6.1.0_graphql@16.12.0_@types+node@24.10.1_typescript@5.9.3",
     "npm:@graphql-codegen/typescript@^5.0.5": "5.0.5_graphql@16.12.0",
     "npm:@octokit/core@^7.0.6": "7.0.6",
+    "npm:@tanstack/react-query@^5.90.11": "5.90.11_react@19.2.0",
     "npm:@types/node@^24.10.1": "24.10.1",
     "npm:@types/react-dom@^19.2.3": "19.2.3_@types+react@19.2.7",
     "npm:@types/react@^19.2.7": "19.2.7",
@@ -1402,6 +1403,16 @@
       "integrity": "sha512-k+/Rkcyx//P6fetPoLMb8pBeqJBNGx81uuf7iljX9++yNBVRDQgD04L+SVXmXmh5ZP4/WOp4mWF0kmi06PW2tA==",
       "os": ["win32"],
       "cpu": ["x64"]
+    },
+    "@tanstack/query-core@5.90.11": {
+      "integrity": "sha512-f9z/nXhCgWDF4lHqgIE30jxLe4sYv15QodfdPDKYAk7nAEjNcndy4dHz3ezhdUaR23BpWa4I2EH4/DZ0//Uf8A=="
+    },
+    "@tanstack/react-query@5.90.11_react@19.2.0": {
+      "integrity": "sha512-3uyzz01D1fkTLXuxF3JfoJoHQMU2fxsfJwE+6N5hHy0dVNoZOvwKP8Z2k7k1KDeD54N20apcJnG75TBAStIrBA==",
+      "dependencies": [
+        "@tanstack/query-core",
+        "react"
+      ]
     },
     "@theguild/federation-composition@0.20.2_graphql@16.12.0": {
       "integrity": "sha512-QI4iSdrc4JvCWnMb1QbiHnEpdD33KGdiU66qfWOcM8ENebRGHkGjXDnUrVJ8F9g1dmCRMTNfn2NFGqTcDpeYXw==",
@@ -3311,6 +3322,7 @@
         "npm:@graphql-codegen/cli@^6.1.0",
         "npm:@graphql-codegen/typescript@^5.0.5",
         "npm:@octokit/core@^7.0.6",
+        "npm:@tanstack/react-query@^5.90.11",
         "npm:@types/node@^24.10.1",
         "npm:@types/react-dom@^19.2.3",
         "npm:@types/react@^19.2.7",

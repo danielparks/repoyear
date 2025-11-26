@@ -1,18 +1,35 @@
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
+import { QUERY_VERSION } from "./github/api.ts";
 import { Calendar, Day } from "./model.ts";
 
 const BASE_URL = "http://localhost:5173";
 const BACKEND_URL = "http://localhost:3000";
 
+/**
+ * Fetches all contribution data from GitHub API.
+ * Collects all pages from the async generator into a single array.
+ */
+async function fetchAllContributions(
+  accessToken: string,
+): Promise<github.Contributions[]> {
+  const gh = new github.GitHub(accessToken);
+  gh.installRateLimitReport();
+
+  const allContributions: github.Contributions[] = [];
+  for await (const contributions of gh.queryBase()) {
+    allContributions.push(contributions);
+  }
+  return allContributions;
+}
+
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
-  const [info, setInfo] = useState<Calendar | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Handle OAuth callback. Runs only on mount.
   useEffect(() => {
@@ -26,8 +43,7 @@ export default function App() {
         return;
       }
 
-      setLoading(true);
-      setError(null);
+      setAuthError(null);
 
       const token = await github.getToken(code, BACKEND_URL);
       if (token) {
@@ -36,53 +52,58 @@ export default function App() {
         localStorage.setItem("github_token", token);
         history.replaceState({}, document.title, "/");
       } else {
-        setError("Failed to authenticate with GitHub");
+        setAuthError("Failed to authenticate with GitHub");
       }
     })().catch((error: unknown) => {
-      setError("Error during authentication");
+      setAuthError("Error during authentication");
       console.error(error);
     });
     // This should only run on mount, not when accessToken changes:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    (async () => {
+  // Fetch contributions using TanStack Query
+  const {
+    data: contributions,
+    isLoading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ["github", "contributions", QUERY_VERSION, accessToken],
+    queryFn: () => {
       if (!accessToken) {
-        setInfo(null);
-        return;
+        throw new Error("Access token is required");
       }
-      setLoading(true);
+      return fetchAllContributions(accessToken);
+    },
+    enabled: !!accessToken,
+  });
 
-      const gh = new github.GitHub(accessToken);
-      gh.installRateLimitReport();
+  // Transform contributions to Calendar model
+  const calendar = useMemo(() => {
+    if (!contributions || contributions.length === 0) {
+      return null;
+    }
 
-      // Load data incrementally.
-      let calendar: Calendar | null = null;
-      for await (const contributions of gh.queryBase()) {
-        // Kludge: (await results.next()).value has the wrong type. So:
-        if (calendar) {
-          calendar.updateFromContributions(contributions);
-          setInfo(calendar);
-        } else {
-          // First loop.
-          calendar = Calendar.fromContributions(contributions);
-          setInfo(calendar);
-          setLoading(false);
-        }
+    let cal: Calendar | null = null;
+    for (const contrib of contributions) {
+      if (cal) {
+        cal.updateFromContributions(contrib);
+      } else {
+        cal = Calendar.fromContributions(contrib);
       }
-    })().catch((error: unknown) => {
-      console.error("Error getting contribution data", error);
-      setError("Error getting contribution data");
-    });
-  }, [accessToken]);
+    }
+    return cal;
+  }, [contributions]);
+
+  const error = authError ||
+    (queryError ? "Error getting contribution data" : null);
 
   function login(): void {
     try {
       github.redirectToLogin(BASE_URL);
     } catch (error: unknown) {
       console.error("Error redirecting to GitHub login:", error);
-      setError("Configuration error. Could not log into GitHub.");
+      setAuthError("Configuration error. Could not log into GitHub.");
     }
   }
 
@@ -102,14 +123,14 @@ export default function App() {
 
   return (
     <>
-      <h1>Contribution Graph{info && ` for ${info.name}`}</h1>
+      <h1>Contribution Graph{calendar && ` for ${calendar.name}`}</h1>
       <button type="button" onClick={logout}>Log out</button>
       {error && <h3 className="error">Error: {error}</h3>}
-      {loading ? <h3 className="loading">Loading</h3> : info
+      {isLoading ? <h3 className="loading">Loading</h3> : calendar
         ? (
           <>
-            <ContributionsGraph calendar={info} />
-            <RepositoryList calendar={info} />
+            <ContributionsGraph calendar={calendar} />
+            <RepositoryList calendar={calendar} />
           </>
         )
         : <h3>No contributions data</h3>}

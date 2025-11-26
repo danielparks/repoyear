@@ -11,6 +11,142 @@ import type {
   User,
 } from "./gql.ts";
 
+/**
+ * Simple hash function to generate a version string from the query.
+ * This ensures the cache key changes automatically when the query is modified.
+ */
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(36).slice(0, 8);
+}
+
+/**
+ * GraphQL query template for fetching GitHub contributions.
+ * FIXME: Consider adding joinedGitHubContribution
+ * FIXME: Check contributionYears or hasActivityInThePast?
+ * FIXME: Does mostRecentCollectionWithActivity catch recent changes (e.g.
+ *        deleting a repo) that affect the past?
+ */
+export const CONTRIBUTIONS_QUERY_TEMPLATE =
+  `query ( $includeCommits:Boolean!, {{CURSORS}} ) {
+  viewer {
+    login
+    name
+    contributionsCollection {
+      contributionCalendar {
+        totalContributions
+        weeks {
+          contributionDays {
+            contributionCount
+            contributionLevel
+            date
+          }
+        }
+      }
+      commitContributionsByRepository(maxRepositories: 100)
+        @include(if: $includeCommits)
+      {
+        repository {
+          isFork
+          isPrivate
+          url
+        }
+        contributions(first: 100, after: $commitCursor) {
+          nodes {
+            commitCount
+            isRestricted
+            occurredAt
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+      issueContributions(first: 100, after: $issueCursor) {
+        nodes {
+          isRestricted
+          occurredAt
+          issue {
+            repository {
+              isFork
+              isPrivate
+              url
+            }
+            url
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      pullRequestContributions(first: 100, after: $prCursor) {
+        nodes {
+          isRestricted
+          occurredAt
+          pullRequest {
+            repository {
+              isFork
+              isPrivate
+              url
+            }
+            url
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      pullRequestReviewContributions(first: 100, after: $reviewCursor) {
+        nodes {
+          isRestricted
+          occurredAt
+          pullRequestReview {
+            repository {
+              isFork
+              isPrivate
+              url
+            }
+            url
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      repositoryContributions(first: 100, after: $repoCursor) {
+        nodes {
+          isRestricted
+          occurredAt
+          repository {
+            isFork
+            isPrivate
+            url
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}`;
+
+/**
+ * Cache version derived from the query template.
+ * This value changes automatically when CONTRIBUTIONS_QUERY_TEMPLATE is modified.
+ */
+export const QUERY_VERSION = simpleHash(CONTRIBUTIONS_QUERY_TEMPLATE);
+
 export function redirectToLogin(redirectUrl: string) {
   const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
   if (!clientId) {
@@ -88,118 +224,13 @@ export class GitHub {
 
     while (!Object.values(pageInfo).every((info) => !info.hasNextPage)) {
       const parameters = cursors.map((name) => `$${name}:String`).join(", ");
-      // FIXME add joinedGitHubContribution
-      // FIXME check contributionYears or hasActivityInThePast?
-      // FIXME does mostRecentCollectionWithActivity catch recent changes (e.g.
-      //       deleting a repo) that affect the past?
+      const query = CONTRIBUTIONS_QUERY_TEMPLATE.replace(
+        "{{CURSORS}}",
+        parameters,
+      );
+
       const { viewer } = await this.octokit.graphql<{ viewer: User }>({
-        query: `query ( $includeCommits:Boolean!, ${parameters} ) {
-          viewer {
-            login
-            name
-            contributionsCollection {
-              contributionCalendar {
-                totalContributions
-                weeks {
-                  contributionDays {
-                    contributionCount
-                    contributionLevel
-                    date
-                  }
-                }
-              }
-              commitContributionsByRepository(maxRepositories: 100)
-                @include(if: $includeCommits)
-              {
-                repository {
-                  isFork
-                  isPrivate
-                  url
-                }
-                contributions(first: 100, after: $commitCursor) {
-                  nodes {
-                    commitCount
-                    isRestricted
-                    occurredAt
-                  }
-                  pageInfo {
-                    hasNextPage
-                    endCursor
-                  }
-                }
-              }
-              issueContributions(first: 100, after: $issueCursor) {
-                nodes {
-                  isRestricted
-                  occurredAt
-                  issue {
-                    repository {
-                      isFork
-                      isPrivate
-                      url
-                    }
-                    url
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-              pullRequestContributions(first: 100, after: $prCursor) {
-                nodes {
-                  isRestricted
-                  occurredAt
-                  pullRequest {
-                    repository {
-                      isFork
-                      isPrivate
-                      url
-                    }
-                    url
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-              pullRequestReviewContributions(first: 100, after: $reviewCursor) {
-                nodes {
-                  isRestricted
-                  occurredAt
-                  pullRequestReview {
-                    repository {
-                      isFork
-                      isPrivate
-                      url
-                    }
-                    url
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-              repositoryContributions(first: 100, after: $repoCursor) {
-                nodes {
-                  isRestricted
-                  occurredAt
-                  repository {
-                    isFork
-                    isPrivate
-                    url
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        }`,
+        query,
         includeCommits: pageInfo.commitCursor.hasNextPage,
         ...Object.fromEntries(
           cursors.map((name) => [name, pageInfo[name].endCursor]),
