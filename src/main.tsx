@@ -27,16 +27,16 @@ const persister = createIDBPersister();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: 1000 * 60 * 60 * 24 * 7, // Keep cache for 7 days
-      }}
-    >
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister,
+          maxAge: 1000 * 60 * 60 * 24 * 7, // Keep cache for 7 days
+        }}
+      >
         <App />
-      </ErrorBoundary>
-    </PersistQueryClientProvider>
+      </PersistQueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );
