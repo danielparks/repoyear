@@ -8,18 +8,20 @@ import type {
 } from "@tanstack/react-query-persist-client";
 
 export default function QueryCacheProvider({ children }: PropsWithChildren) {
-  // FIXME: does the cache maxAge need to be more than staleTime/gcTime?
-  const maxAge = 1000 * 60 * 60 * 24 * 7; // 7 days
   const idbKey: IDBValidKey = `${location.pathname} contributions`;
   const client = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: maxAge,
-        gcTime: maxAge,
+        // Try to refetch after 6 hours
+        staleTime: 1000 * 60 * 60 * 6,
+        // Keep data in memory indefinitely (never garbage collect)
+        gcTime: Infinity,
         // Retry failed requests once
         retry: 1,
         // Don't refetch on window focus (contributions don't change that often)
         refetchOnWindowFocus: false,
+        // Refetch when coming back online
+        refetchOnReconnect: true,
       },
     },
   });
@@ -36,7 +38,8 @@ export default function QueryCacheProvider({ children }: PropsWithChildren) {
         await del(idbKey);
       },
     } as Persister,
-    maxAge,
+    // Keep data in IndexedDB indefinitely
+    maxAge: Infinity,
   };
 
   return (
