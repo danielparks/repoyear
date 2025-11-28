@@ -20,6 +20,14 @@ export class Filter {
   defaultState: boolean = true;
   states: Map<string, boolean> = new Map();
 
+  static withRepos(...urls: string[]) {
+    const filter = new Filter();
+    urls.forEach((url) => {
+      filter.states.set(url, true);
+    });
+    return filter;
+  }
+
   isOn(url: string) {
     return this.states.get(url);
   }

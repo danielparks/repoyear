@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
 import { CONTRIBUTIONS_QUERY_TEMPLATE } from "./github/api.ts";
-import { Calendar, Day, Filter } from "./model.ts";
+import { Calendar, Day, Filter, Repository } from "./model.ts";
 
 const BASE_URL = "http://localhost:5173";
 const BACKEND_URL = "http://localhost:3000";
@@ -270,10 +270,54 @@ function RepositoryList(
               value={repo.url}
               onChange={onChange}
             />
-            {repo.url}
+            <h3>{repo.url}</h3>
+            <WeekGraph repo={repo} calendar={calendar} />
           </label>
         </li>
       ))}
     </ol>
+  );
+}
+
+function WeekGraph({ calendar, repo }: {
+  calendar: Calendar;
+  repo: Repository;
+}) {
+  const weeks = [...calendar.weeks()];
+  const weekMax = Math.max(
+    ...weeks.map((days) =>
+      days.reduce((total, day) => total + (day.contributionCount || 0), 0)
+    ),
+  );
+
+  return (
+    <div className="week-graph">
+      {weeks.map((days) => (
+        <WeekGraphElement
+          key={days[0].date.toString()}
+          days={days}
+          repo={repo}
+          max={weekMax}
+        />
+      ))}
+    </div>
+  );
+}
+
+function WeekGraphElement({ days, repo, max }: {
+  days: Day[];
+  repo: Repository;
+  max: number;
+}) {
+  const filter = Filter.withRepos(repo.url);
+  const count = days.reduce(
+    (total, day) => total + day.filteredCount(filter),
+    0,
+  );
+  const height = 100 * count / max;
+  return (
+    <div>
+      <div style={{ height: `${height.toString()}%` }}></div>
+    </div>
   );
 }

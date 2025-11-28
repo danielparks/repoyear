@@ -64,3 +64,21 @@ table.contributions > tbody > tr > td.unknown {
 .day-info span.unknown {
   color: red;
 }
+
+.week-graph {
+  display: flex;
+  border: 1px solid hsl(270deg 40 80);
+  height: 20px;
+}
+
+.week-graph > div {
+  position: relative;
+  flex: 1;
+}
+
+.week-graph > div > div {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: hsl(270deg 40 80);
+}
