@@ -1,4 +1,7 @@
 {
+  "fmt": {
+    "exclude": ["**/*.svg"]
+  },
   "lint": {
     "rules": {
       // eslint already catches explicit any

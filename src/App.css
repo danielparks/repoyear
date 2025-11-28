@@ -65,9 +65,47 @@ table.contributions > tbody > tr > td.unknown {
   color: red;
 }
 
+ol.repository-list {
+  margin: 1em 0 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+ol.repository-list > li {
+  margin: 10px 0 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+ol.repository-list > li > label {
+  display: block;
+  position: relative;
+}
+
+ol.repository-list > li > label > input[type="checkbox"] {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 20px;
+}
+
+ol.repository-list > li > label > h3 {
+  padding-left: 30px;
+  margin: 0;
+  font-size: 100%;
+}
+
+ol.repository-list > li > label > h3 img {
+  height: 1em;
+  vertical-align: text-top;
+  margin: 0 5px 0 0;
+}
+
 .week-graph {
   display: flex;
-  border: 1px solid hsl(270deg 40 80);
+  border-bottom: 1px solid hsl(270deg 40 90);
   height: 20px;
 }
 
@@ -80,5 +118,5 @@ table.contributions > tbody > tr > td.unknown {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: hsl(270deg 40 80);
+  background: hsl(270deg 40 70);
 }

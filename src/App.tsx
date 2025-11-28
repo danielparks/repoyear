@@ -2,6 +2,7 @@ import "./App.css";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
+import githubMarkUrl from "./github/github-mark.svg";
 import { CONTRIBUTIONS_QUERY_TEMPLATE } from "./github/api.ts";
 import { Calendar, Day, Filter, Repository } from "./model.ts";
 
@@ -260,7 +261,7 @@ function RepositoryList(
     setFilter(newFilter);
   }
   return (
-    <ol>
+    <ol className="repository-list">
       {[...calendar.repositories.values()].map((repo) => (
         <li key={repo.url}>
           <label>
@@ -270,12 +271,23 @@ function RepositoryList(
               value={repo.url}
               onChange={onChange}
             />
-            <h3>{repo.url}</h3>
+            <h3>
+              <RepositoryName url={repo.url} />
+            </h3>
             <WeekGraph repo={repo} calendar={calendar} />
           </label>
         </li>
       ))}
     </ol>
+  );
+}
+
+function RepositoryName({ url }: { url: string }) {
+  return (
+    <a href={url}>
+      <img src={githubMarkUrl} alt="GitHub" />
+      {url.replace("https://github.com/", "")}
+    </a>
   );
 }
 
@@ -314,7 +326,10 @@ function WeekGraphElement({ days, repo, max }: {
     (total, day) => total + day.filteredCount(filter),
     0,
   );
-  const height = 100 * count / max;
+  let height = 0;
+  if (count) {
+    height = 5 + 95 * count / max;
+  }
   return (
     <div>
       <div style={{ height: `${height.toString()}%` }}></div>
