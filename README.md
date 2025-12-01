@@ -4,11 +4,8 @@ Displays a graph of the logged in user’s GitHub contributions.
 
 ## To do
 
-- [x] Make repository list more compact
-  - [x] Use something like spark lines to show repository usage
-- [x] Improve log in and log out UI
-- [x] Improve pop-over with day contribution info
-  - [x] Ensure the pop-over is always entirely visible
-- [x] Make repo color assignment more stable during load.
-- [x] Improve loading UI.
-- [x] Add ability to reload contributions
+- [ ] Improve pop-over with day contribution info
+- [ ] Test in Chrome and Firefox.
+- [ ] Allow changing the user the information is displayed about
+- [ ] Add backend so that I can display my contributions on my web site without
+      requiring the viewer to be logged into GitHub
