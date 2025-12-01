@@ -15,6 +15,7 @@ export default function App() {
   );
   const [authError, setAuthError] = useState<string | null>(null);
   const [highlight, setHighlight] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [repoFilter, setRepoFilter] = useState<Filter>(() => new Filter());
   const queryClient = useQueryClient();
 
@@ -52,7 +53,6 @@ export default function App() {
   const queryKey = ["contributions", CONTRIBUTIONS_QUERY_TEMPLATE, accessToken];
   const {
     data: contributions,
-    isLoading,
     error: queryError,
   } = useQuery({
     enabled: !!accessToken,
@@ -62,6 +62,7 @@ export default function App() {
         // Redundant; enabled condition requires accessToken not to be null.
         throw new Error("Access token is required");
       }
+      setLoading(true);
 
       const gh = new github.GitHub(accessToken);
       gh.installRateLimitReport();
@@ -73,6 +74,7 @@ export default function App() {
         queryClient.setQueryData(queryKey, [...contributions]);
       }
 
+      setLoading(false);
       return contributions;
     },
   });
@@ -120,7 +122,10 @@ export default function App() {
   }
 
   function reload() {
-    queryClient.clear();
+    setLoading(true);
+    queryClient.refetchQueries({ queryKey }).catch((error: unknown) => {
+      console.error("Error refetching query:", error);
+    });
   }
 
   if (accessToken === null) {
@@ -138,6 +143,7 @@ export default function App() {
       <button type="button" onClick={logout}>Log out</button>
       <button type="button" onClick={reload}>Reload</button>
       {error && <h3 className="error">Error: {error}</h3>}
+      {loading && <h3 className="loading">Loading</h3>}
       {calendar
         ? (
           <>
@@ -154,8 +160,6 @@ export default function App() {
             />
           </>
         )
-        : isLoading
-        ? <h3 className="loading">Loading</h3>
         : <h3>No contributions data</h3>}
     </>
   );
