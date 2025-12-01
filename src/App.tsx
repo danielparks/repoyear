@@ -304,7 +304,9 @@ function DayInfo({ day }: { day: Day }) {
     const parent = div.parentElement;
     if (parent) {
       parent.addEventListener("mousemove", updatePosition);
-      return () => { parent.removeEventListener("mousemove", updatePosition); };
+      return () => {
+        parent.removeEventListener("mousemove", updatePosition);
+      };
     }
   }, []);
 
