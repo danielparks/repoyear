@@ -63,6 +63,7 @@ export default function App() {
         throw new Error("Access token is required");
       }
       setLoading(true);
+      setAuthError(null); // The ability to query implies we’re authenticated.
 
       const gh = new github.GitHub(accessToken);
       gh.installRateLimitReport();
