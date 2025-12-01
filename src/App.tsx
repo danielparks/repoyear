@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
 import githubMarkUrl from "./github/github-mark.svg";
@@ -250,8 +250,56 @@ function GraphDay(
 }
 
 function DayInfo({ day }: { day: Day }) {
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const divRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const div = divRef.current;
+    if (!div) return;
+
+    const updatePosition = (e: MouseEvent) => {
+      const padding = 10;
+      const rect = div.getBoundingClientRect();
+
+      let left = e.clientX + padding;
+      let top = e.clientY + padding;
+
+      // Adjust if too far right
+      if (left + rect.width > window.innerWidth) {
+        left = e.clientX - rect.width - padding;
+      }
+
+      // Adjust if too far down
+      if (top + rect.height > window.innerHeight) {
+        top = e.clientY - rect.height - padding;
+      }
+
+      // Ensure it doesn't go off the left edge
+      if (left < padding) {
+        left = padding;
+      }
+
+      // Ensure it doesn't go off the top edge
+      if (top < padding) {
+        top = padding;
+      }
+
+      setPosition({ top, left });
+    };
+
+    const parent = div.parentElement;
+    if (parent) {
+      parent.addEventListener("mousemove", updatePosition);
+      return () => parent.removeEventListener("mousemove", updatePosition);
+    }
+  }, []);
+
   return (
-    <div className="day-info">
+    <div
+      className="day-info"
+      ref={divRef}
+      style={{ top: `${position.top}px`, left: `${position.left}px` }}
+    >
       <table>
         <tbody>
           {[...day.repositories.values()].map((repoDay) => (
