@@ -381,7 +381,7 @@ function RepositoryList(
   }
   return (
     <ol className="repository-list">
-      {[...calendar.repositories.values()].map((repo) => (
+      {calendar.mostUsedRepos().map((repo) => (
         <li key={repo.url}>
           <label
             onMouseEnter={() => {

@@ -124,7 +124,27 @@ export class Calendar {
         .push(node.pullRequestReview.url);
     }
 
+    this.updateRepoCounts();
     return this;
+  }
+
+  updateRepoCounts() {
+    for (const repo of this.repositories.values()) {
+      repo.contributions = 0;
+    }
+
+    this.days.forEach((day) => {
+      day.repositories.forEach((repoDay) => {
+        repoDay.repository.contributions += repoDay.count();
+      });
+    });
+  }
+
+  // All repos sorted by decreasing contributions
+  mostUsedRepos() {
+    const repos = [...this.repositories.values()];
+    repos.sort((a, b) => b.contributions - a.contributions);
+    return repos;
   }
 
   repoUrls() {
@@ -284,6 +304,7 @@ export class Repository {
   isFork: boolean;
   isPrivate: boolean;
   hue = 270;
+  contributions = 0;
 
   constructor(url: string, isFork = false, isPrivate = false) {
     this.url = url;
