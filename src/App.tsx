@@ -199,20 +199,23 @@ function GraphDay(
     highlight: string | null;
   },
 ) {
-  let lightness = 100;
-  const count = day.filteredCount(filter);
-  if (count) {
-    lightness = 45 * (1 - count / max) + 50;
-  }
-
   const className: string[] = [];
   if (highlight && day.hasRepo(highlight)) {
     className.push("highlight");
   }
 
-  let subdivisions = null;
+  interface Subdivision {
+    key: string;
+    style: React.CSSProperties;
+  }
+  let subdivisions: Subdivision[] = [];
   let style = {};
   if (day.addsUp()) {
+    let lightness = 100;
+    const count = day.filteredCount(filter);
+    if (count) {
+      lightness = 45 * (1 - count / max) + 50;
+    }
     subdivisions = day.filteredRepos(filter).map((repoDay) => ({
       key: repoDay.url(),
       style: {
@@ -220,8 +223,12 @@ function GraphDay(
         background: repoDay.repository.color(lightness),
       },
     }));
-    style = {};
   } else {
+    let lightness = 100;
+    const count = day.contributionCount;
+    if (count) {
+      lightness = 45 * (1 - count / max) + 50;
+    }
     className.push("unknown");
     style = {
       background: `hsl(270deg 40 ${lightness.toString()})`,
@@ -231,14 +238,9 @@ function GraphDay(
   return (
     <td style={style} className={className.join(" ")}>
       <DayInfo day={day} />
-      {subdivisions &&
-        (
-          <ol>
-            {subdivisions.map(({ key, style }) => (
-              <li key={key} style={style}></li>
-            ))}
-          </ol>
-        )}
+      <ol>
+        {subdivisions.map(({ key, style }) => <li key={key} style={style} />)}
+      </ol>
     </td>
   );
 }

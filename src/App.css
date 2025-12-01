@@ -20,18 +20,20 @@ table.contributions > tbody > tr > td {
   position: relative;
   text-align: center;
   margin: 1px;
-  padding: 1px;
+  padding: 0;
   aspect-ratio: 1/1;
 }
 
 table.contributions > tbody > tr > td.unknown {
-  border: 1px solid red;
-  padding: 0;
+  filter: blur(1px);
 }
 
-table.contributions > tbody > tr > td.highlight {
+table.contributions > tbody > tr > td.unknown > ol {
+  border: 1px solid #fff;
+}
+
+table.contributions > tbody > tr > td.highlight > ol {
   border: 1px solid hsl(30deg 100 50);
-  padding: 0;
 }
 
 table.contributions > tbody > tr > td > ol {
@@ -40,6 +42,7 @@ table.contributions > tbody > tr > td > ol {
   margin: 0;
   padding: 0;
   height: 100%;
+  box-sizing: border-box;
 }
 
 table.contributions > tbody > tr > td > ol > li {
