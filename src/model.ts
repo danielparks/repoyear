@@ -272,11 +272,17 @@ export class RepositoryDay {
   }
 }
 
-// Rotate through the hues.
-let LAST_HUE = 270 - 55;
-function nextHue() {
-  LAST_HUE = (LAST_HUE + 55) % 360;
-  return LAST_HUE;
+// Generate a deterministic hue based on a string (repository URL).
+// This ensures colors remain stable regardless of load order.
+function stringToHue(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Map hash to hue range, avoiding purple (270) used for unknown contributions
+  const hue = Math.abs(hash) % 310;
+  return hue < 270 ? hue : hue + 50;
 }
 
 export class Repository {
@@ -289,7 +295,7 @@ export class Repository {
     this.url = url;
     this.isFork = isFork;
     this.isPrivate = isPrivate;
-    this.hue = nextHue();
+    this.hue = stringToHue(url);
   }
 
   color(lightness = 68) {
