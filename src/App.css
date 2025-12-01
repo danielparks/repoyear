@@ -166,21 +166,33 @@ table.contributions > tbody > tr > td > ol > li {
 
 .day-info {
   display: none;
-  position: fixed;
+  position: absolute;
   background: #fff;
   color: #000;
   width: 400px;
-  max-width: calc(100vw - 20px);
   padding: 10px;
-  height: auto;
-  max-height: calc(100vh - 20px);
-  overflow: auto;
-  z-index: 1000;
+  z-index: 1;
   font-size: 80%;
   box-shadow: 5px 5px 10px hsl(0 0 0 / 0.3);
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
   pointer-events: none;
+}
+
+.day-info.align-top {
+  top: 50%;
+}
+
+.day-info.align-bottom {
+  bottom: 50%;
+}
+
+.day-info.align-left {
+  left: 50%;
+}
+
+.day-info.align-right {
+  right: 50%;
 }
 
 *:hover > .day-info {
@@ -192,12 +204,12 @@ table.contributions > tbody > tr > td > ol > li {
   font-weight: normal;
 }
 
-.day-info td.commit-count {
+.day-info td.count {
   text-align: right;
   width: 2em;
 }
 
-.day-info tfoot td.commit-count {
+.day-info tfoot td.count {
   border-top: 1px solid #000;
 }
 

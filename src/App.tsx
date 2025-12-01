@@ -275,100 +275,66 @@ function GraphDay(
 }
 
 function DayInfo({ day }: { day: Day }) {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const divRef = useRef<HTMLDivElement>(null);
+  const [classNames, setClassNames] = useState(["day-info"]);
 
   useEffect(() => {
-    const div = divRef.current;
-    if (!div) return;
-
-    const updatePosition = (e: MouseEvent) => {
-      const padding = 10;
-      const rect = div.getBoundingClientRect();
-
-      let left = e.clientX + padding;
-      let top = e.clientY + padding;
-
-      // Adjust if too far right
-      if (left + rect.width > globalThis.innerWidth) {
-        left = e.clientX - rect.width - padding;
+    function checkOverflow() {
+      // Check the overflow of the parent <td>.
+      if (divRef.current && divRef.current.parentNode) {
+        const rect = (divRef.current.parentNode as HTMLTableCellElement)
+          .getBoundingClientRect();
+        const newClassNames = ["day-info", "align-top"];
+        // FIXME: this assumes the window is large enough.
+        if (rect.right > globalThis.innerWidth - 460) {
+          newClassNames.push("align-right");
+        } else {
+          newClassNames.push("align-left");
+        }
+        setClassNames(newClassNames);
       }
-
-      // Adjust if too far down
-      if (top + rect.height > globalThis.innerHeight) {
-        top = e.clientY - rect.height - padding;
-      }
-
-      // Ensure it doesn't go off the left edge
-      if (left < padding) {
-        left = padding;
-      }
-
-      // Ensure it doesn't go off the top edge
-      if (top < padding) {
-        top = padding;
-      }
-
-      setPosition({ top, left });
-    };
-
-    const parent = div.parentElement;
-    if (parent) {
-      parent.addEventListener("mousemove", updatePosition);
-      return () => {
-        parent.removeEventListener("mousemove", updatePosition);
-      };
     }
+
+    checkOverflow();
+    addEventListener("resize", checkOverflow);
+
+    return () => {
+      removeEventListener("resize", checkOverflow);
+    };
   }, []);
 
   return (
-    <div
-      className="day-info"
-      ref={divRef}
-      style={{ top: `${position.top}px`, left: `${position.left}px` }}
-    >
+    <div ref={divRef} className={classNames.join(" ")}>
       <table>
         <tbody>
           {[...day.repositories.values()].map((repoDay) => (
             <tr key={repoDay.repository.url}>
-              <td className="commit-count">
-                {repoDay.commitCount}
+              <td className="count">
+                {repoDay.count()}
               </td>
-              <td className="pr-count">
-                {repoDay.prs.length}
-              </td>
-              <td className="issue-count">
-                {repoDay.issues.length}
-              </td>
-              <td className="review-count">
-                {repoDay.reviews.length}
-              </td>
-              <th>{repoDay.repository.url}</th>
-              <td className="created">
-                {repoDay.created > 0 && <>(Created)</>}
-              </td>
+              <th>
+                {repoDay.repository.url} {repoDay.created > 0 && <>(Created)</>}
+              </th>
             </tr>
           ))}
           {day.addsUp() ||
             (
               <tr key="unknown">
-                <td className="commit-count" colSpan={4}>
+                <td className="count">
                   {(day.contributionCount || 0) - day.knownContributionCount()}
                 </td>
                 <th>
-                  Unknown contributions <span className="unknown">▢</span>
+                  Unknown contributions
                 </th>
-                <td className="created"></td>
               </tr>
             )}
         </tbody>
         <tfoot>
           <tr>
-            <td className="commit-count" colSpan={4}>
+            <td className="count">
               {day.contributionCount}
             </td>
             <th></th>
-            <td className="created"></td>
           </tr>
         </tfoot>
       </table>
