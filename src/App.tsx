@@ -6,9 +6,6 @@ import githubMarkUrl from "./github/github-mark.svg";
 import { CONTRIBUTIONS_QUERY_TEMPLATE } from "./github/api.ts";
 import { Calendar, Day, Filter, Repository } from "./model.ts";
 
-const BASE_URL = "http://localhost:5173";
-const BACKEND_URL = "http://localhost:3000";
-
 export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
@@ -18,6 +15,13 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [repoFilter, setRepoFilter] = useState<Filter>(() => new Filter());
   const queryClient = useQueryClient();
+
+  const frontendUrl: string =
+    (import.meta.env.VITE_FRONTEND_URL as string | undefined) ||
+    "http://localhost:5173";
+  const backendUrl: string =
+    (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
+    "http://localhost:3000";
 
   // Handle OAuth callback. Runs only on mount.
   useEffect(() => {
@@ -33,7 +37,7 @@ export default function App() {
 
       setAuthError(null);
 
-      const token = await github.getToken(code, BACKEND_URL);
+      const token = await github.getToken(code, backendUrl);
       if (token) {
         setAccessToken(token);
         // FIXME? This will be available to the entire origin.
@@ -112,7 +116,7 @@ export default function App() {
 
   function login(): void {
     try {
-      github.redirectToLogin(BASE_URL);
+      github.redirectToLogin(frontendUrl);
     } catch (error: unknown) {
       console.error("Error redirecting to GitHub login:", error);
       setAuthError("Configuration error. Could not log into GitHub.");
