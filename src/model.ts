@@ -272,13 +272,27 @@ export class RepositoryDay {
   }
 }
 
+// Rotate through the hues.
+let LAST_HUE = 270 - 55;
+function nextHue() {
+  LAST_HUE = (LAST_HUE + 55) % 360;
+  return LAST_HUE;
+}
+
 export class Repository {
   url: string;
   isFork: boolean;
   isPrivate: boolean;
+  hue = 270;
+
   constructor(url: string, isFork = false, isPrivate = false) {
     this.url = url;
     this.isFork = isFork;
     this.isPrivate = isPrivate;
+    this.hue = nextHue();
+  }
+
+  color(lightness = 68) {
+    return `hsl(${this.hue.toString()}deg 40 ${lightness.toString()})`;
   }
 }

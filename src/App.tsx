@@ -194,10 +194,10 @@ function GraphDay(
     highlight: string | null;
   },
 ) {
-  let value = 100;
+  let lightness = 100;
   const count = day.filteredCount(filter);
   if (count) {
-    value = 55 * (1 - count / max) + 40;
+    lightness = 45 * (1 - count / max) + 50;
   }
 
   const className: string[] = [];
@@ -212,16 +212,14 @@ function GraphDay(
       key: repoDay.url(),
       style: {
         flex: repoDay.count(),
-        background: repoColor(repoDay.url()),
+        background: repoDay.repository.color(lightness),
       },
     }));
-    style = {
-      background: `hsl(270deg 40 99)`,
-    };
+    style = {};
   } else {
     className.push("unknown");
     style = {
-      background: `hsl(270deg 40 ${value.toString()})`,
+      background: `hsl(270deg 40 ${lightness.toString()})`,
     };
   }
 
@@ -326,7 +324,7 @@ function RepositoryList(
               onChange={onChange}
             />
             <h3>
-              <RepositoryName url={repo.url} />
+              <RepositoryName repo={repo} />
             </h3>
             <WeekGraph repo={repo} calendar={calendar} />
           </label>
@@ -336,11 +334,11 @@ function RepositoryList(
   );
 }
 
-function RepositoryName({ url }: { url: string }) {
+function RepositoryName({ repo }: { repo: Repository }) {
   return (
-    <a style={{ color: repoColor(url) }} href={url}>
+    <a style={{ color: repo.color() }} href={repo.url}>
       <img src={githubMarkUrl} alt="GitHub" />
-      {url.replace("https://github.com/", "")}
+      {repo.url.replace("https://github.com/", "")}
     </a>
   );
 }
@@ -389,27 +387,4 @@ function WeekGraphElement({ days, repo, max }: {
       <div style={{ height: `${height.toString()}%` }}></div>
     </div>
   );
-}
-
-function repoColor(url: string) {
-  const hue = (simpleHash(url) % 360).toString();
-  return `hsl(${hue}deg 40 68)`;
-}
-
-// From https://gist.github.com/jlevy/c246006675becc446360a798e2b2d781 (slightly
-// modified for my needs).
-//
-// A simple, *insecure* 32-bit hash that's short, fast, and has no dependencies.
-// Output is always 7 characters.
-//
-// Loosely based on the Java version; see
-// https://stackoverflow.com/questions/6122571/simple-non-secure-hash-function-for-javascript
-function simpleHash(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-  }
-  // Convert to 32bit unsigned integer
-  return hash >>> 0;
 }
