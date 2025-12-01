@@ -35,6 +35,7 @@ table.contributions > tbody > tr > td.highlight {
 }
 
 table.contributions > tbody > tr > td > ol {
+  display: flex;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -45,7 +46,6 @@ table.contributions > tbody > tr > td > ol > li {
   margin: 0;
   padding: 0;
   height: 100%;
-  float: left;
 }
 
 .day-info {

@@ -211,7 +211,7 @@ function GraphDay(
     subdivisions = day.filteredRepos(filter).map((repoDay) => ({
       key: repoDay.url(),
       style: {
-        width: pct(repoDay.count() / max),
+        flex: repoDay.count(),
         background: repoColor(repoDay.url()),
       },
     }));
@@ -238,10 +238,6 @@ function GraphDay(
         )}
     </td>
   );
-}
-
-function pct(fraction: number) {
-  return `${(fraction * 100).toString()}%`;
 }
 
 function DayInfo({ day }: { day: Day }) {
