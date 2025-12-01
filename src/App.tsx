@@ -104,7 +104,9 @@ export default function App() {
     );
   }, [calendar]);
 
-  // FIXME do we need to log queryError?
+  if (queryError) {
+    console.error("Error querying GitHub:", queryError);
+  }
   const error = authError ||
     (queryError ? "Error getting contribution data" : null);
 
