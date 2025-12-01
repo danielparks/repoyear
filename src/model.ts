@@ -292,7 +292,7 @@ export class Repository {
     this.hue = nextHue();
   }
 
-  color(lightness = 68) {
-    return `hsl(${this.hue.toString()}deg 40 ${lightness.toString()})`;
+  color(lightness = 50) {
+    return `hsl(${this.hue.toString()}deg 70 ${lightness.toString()})`;
   }
 }
