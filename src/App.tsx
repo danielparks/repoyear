@@ -247,12 +247,20 @@ function GraphDay(
         ),
       },
     }));
+
+    if (subdivisions.length == 0) {
+      className.push("empty");
+    }
   } else {
     const lightness = countToLightness(day.contributionCount || 0);
     className.push("unknown");
     style = {
       background: `hsl(270deg 40 ${lightness})`,
     };
+
+    if (day.contributionCount === 0) {
+      className.push("empty");
+    }
   }
 
   return (
