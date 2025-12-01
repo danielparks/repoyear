@@ -155,7 +155,9 @@ export default function App() {
         </div>
       </header>
       {error && <div className="error-message">{error}</div>}
-      {loading && <div className="loading-message">Loading contributions...</div>}
+      {loading && (
+        <div className="loading-message">Loading contributions...</div>
+      )}
       {calendar
         ? (
           <>
@@ -277,12 +279,12 @@ function DayInfo({ day }: { day: Day }) {
       let top = e.clientY + padding;
 
       // Adjust if too far right
-      if (left + rect.width > window.innerWidth) {
+      if (left + rect.width > globalThis.innerWidth) {
         left = e.clientX - rect.width - padding;
       }
 
       // Adjust if too far down
-      if (top + rect.height > window.innerHeight) {
+      if (top + rect.height > globalThis.innerHeight) {
         top = e.clientY - rect.height - padding;
       }
 
@@ -302,7 +304,7 @@ function DayInfo({ day }: { day: Day }) {
     const parent = div.parentElement;
     if (parent) {
       parent.addEventListener("mousemove", updatePosition);
-      return () => parent.removeEventListener("mousemove", updatePosition);
+      return () => { parent.removeEventListener("mousemove", updatePosition); };
     }
   }, []);
 

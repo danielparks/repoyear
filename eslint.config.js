@@ -38,6 +38,7 @@ export default defineConfig([
           "varsIgnorePattern": "^_",
         },
       ],
+      "@typescript-eslint/restrict-template-expressions": "off",
     },
   },
 ]);
