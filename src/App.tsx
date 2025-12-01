@@ -130,20 +130,32 @@ export default function App() {
 
   if (accessToken === null) {
     return (
-      <>
-        {error && <h3>Error: {error}</h3>}
-        <button type="button" onClick={login}>Log in</button>
-      </>
+      <div className="login-container">
+        <h1>GitHub Contribution Graph</h1>
+        <p>View and analyze your GitHub contributions over time</p>
+        {error && <div className="error-message">{error}</div>}
+        <button type="button" onClick={login}>
+          Log in with GitHub
+        </button>
+      </div>
     );
   }
 
   return (
     <>
-      <h1>Contribution Graph{calendar && ` for ${calendar.name}`}</h1>
-      <button type="button" onClick={logout}>Log out</button>
-      <button type="button" onClick={reload}>Reload</button>
-      {error && <h3 className="error">Error: {error}</h3>}
-      {loading && <h3 className="loading">Loading</h3>}
+      <header className="app-header">
+        <h1>Contribution Graph{calendar && ` for ${calendar.name}`}</h1>
+        <div className="button-group">
+          <button type="button" onClick={reload}>
+            Reload
+          </button>
+          <button type="button" onClick={logout} className="logout-button">
+            Log out
+          </button>
+        </div>
+      </header>
+      {error && <div className="error-message">{error}</div>}
+      {loading && <div className="loading-message">Loading contributions...</div>}
       {calendar
         ? (
           <>
@@ -160,7 +172,7 @@ export default function App() {
             />
           </>
         )
-        : <h3>No contributions data</h3>}
+        : <div className="info-message">No contributions data</div>}
     </>
   );
 }
