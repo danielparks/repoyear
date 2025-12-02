@@ -19,8 +19,8 @@ import type {
  *        deleting a repo) that affect the past?
  */
 export const CONTRIBUTIONS_QUERY_TEMPLATE =
-  `query ( $includeCommits:Boolean!, {{CURSORS}} ) {
-  viewer {
+  `query ( $includeCommits:Boolean!, $login:String, {{CURSORS}} ) {
+  {{USER_OR_VIEWER}} {
     login
     name
     contributionsCollection {
@@ -187,7 +187,7 @@ export class GitHub {
     });
   }
 
-  async *queryBase(): AsyncGenerator<Contributions> {
+  async *queryBase(username?: string): AsyncGenerator<Contributions> {
     const cursors = [
       "commitCursor",
       "issueCursor",
@@ -203,24 +203,39 @@ export class GitHub {
     ) as Record<string, PageInfo>;
 
     while (!Object.values(pageInfo).every((info) => !info.hasNextPage)) {
-      const query = CONTRIBUTIONS_QUERY_TEMPLATE.replace(
+      let query = CONTRIBUTIONS_QUERY_TEMPLATE.replace(
         "{{CURSORS}}",
         cursors.map((name) => `$${name}:String`).join(", "),
       );
 
-      const { viewer } = await this.octokit.graphql<{ viewer: User }>({
+      // Replace {{USER_OR_VIEWER}} based on whether username is provided
+      if (username) {
+        query = query.replace("{{USER_OR_VIEWER}}", "user(login: $login)");
+      } else {
+        query = query.replace("{{USER_OR_VIEWER}}", "viewer");
+      }
+
+      const variables = {
         query,
         includeCommits: pageInfo.commitCursor.hasNextPage,
+        ...(username && { login: username }),
         ...Object.fromEntries(
           cursors.map((name) => [name, pageInfo[name].endCursor]),
         ),
-      });
+      };
+
+      const result = await this.octokit.graphql<{ viewer?: User; user?: User }>(variables);
+      const userOrViewer = result.viewer || result.user;
+
+      if (!userOrViewer) {
+        throw new Error(`User ${username || 'viewer'} not found`);
+      }
 
       // Yield update
-      const collection = viewer.contributionsCollection;
+      const collection = userOrViewer.contributionsCollection;
       yield {
-        login: viewer.login,
-        name: viewer.name || "",
+        login: userOrViewer.login,
+        name: userOrViewer.name || "",
         calendar: collection.contributionCalendar,
         // The following isn’t actually always truthy.
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

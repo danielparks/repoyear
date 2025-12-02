@@ -6,7 +6,7 @@ import githubMarkUrl from "./github/github-mark.svg";
 import { CONTRIBUTIONS_QUERY_TEMPLATE } from "./github/api.ts";
 import { Calendar, Day, Filter, Repository } from "./model.ts";
 
-export default function App() {
+export default function App({ username }: { username: string | null }) {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
@@ -54,7 +54,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const queryKey = ["contributions", CONTRIBUTIONS_QUERY_TEMPLATE, accessToken];
+  const queryKey = ["contributions", CONTRIBUTIONS_QUERY_TEMPLATE, accessToken, username];
   const {
     data: contributions,
     error: queryError,
@@ -73,7 +73,7 @@ export default function App() {
       gh.installRateLimitReport();
 
       const contributions: github.Contributions[] = [];
-      for await (const contribution of gh.queryBase()) {
+      for await (const contribution of gh.queryBase(username || undefined)) {
         contributions.push(contribution);
         // Incrementally update cache, triggering a re-render.
         queryClient.setQueryData(queryKey, [...contributions]);
@@ -151,7 +151,11 @@ export default function App() {
   return (
     <>
       <header className="app-header">
-        <h1>Contribution Graph{calendar && ` for ${calendar.name}`}</h1>
+        <h1>
+          Contribution Graph
+          {calendar && ` for ${calendar.name}`}
+          {username && !calendar && ` for ${username}`}
+        </h1>
         <div className="button-group">
           <button type="button" onClick={reload}>
             Reload
