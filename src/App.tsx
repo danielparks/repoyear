@@ -3,7 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
 import githubMarkUrl from "./github/github-mark.svg";
-import { CONTRIBUTIONS_QUERY_TEMPLATE } from "./github/api.ts";
+import {
+  CONTRIBUTIONS_QUERY_TEMPLATE,
+  type GithubError,
+} from "./github/api.ts";
 import { Calendar, Day, Filter, Repository } from "./model.ts";
 
 export default function App({ username }: { username: string | null }) {
@@ -113,11 +116,22 @@ export default function App({ username }: { username: string | null }) {
     );
   }, [calendar]);
 
+  let error = authError;
   if (queryError) {
     console.error("Error querying GitHub:", queryError);
+    if (!error) {
+      // error should always be null if we managed to make a query.
+      const errors = (queryError as GithubError).errors || [];
+      if (
+        username && errors[0]?.type == "NOT_FOUND" &&
+        errors[0].path.join("/") == "user"
+      ) {
+        error = `Could not find user “${username}”`;
+      } else {
+        error = "Error getting contribution data";
+      }
+    }
   }
-  const error = authError ||
-    (queryError ? "Error getting contribution data" : null);
 
   function login(): void {
     try {
@@ -171,7 +185,7 @@ export default function App({ username }: { username: string | null }) {
         </div>
       </header>
       {error && <div className="error-message">{error}</div>}
-      {loading && (
+      {loading && !error && (
         <div className="loading-message">Loading contributions...</div>
       )}
       {calendar

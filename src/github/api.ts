@@ -1,5 +1,9 @@
 import { Octokit } from "@octokit/core";
 import type {
+  GraphQlQueryResponseData,
+  GraphqlResponseError,
+} from "@octokit/graphql";
+import type {
   CommitContributionsByRepository,
   ContributionCalendar,
   CreatedIssueContribution,
@@ -10,6 +14,10 @@ import type {
   PageInfo,
   User,
 } from "./gql.ts";
+
+// Type for errors raised by query.
+// FIXME correct type?
+export type GithubError = GraphqlResponseError<GraphQlQueryResponseData>;
 
 /**
  * GraphQL query template for fetching GitHub contributions.

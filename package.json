@@ -13,6 +13,7 @@
   "dependencies": {
     "@deno/vite-plugin": "^1.0.5",
     "@octokit/core": "^7.0.6",
+    "@octokit/graphql": "^9.0.3",
     "@tanstack/react-query": "^5.90.11",
     "@tanstack/react-query-persist-client": "^5.90.13",
     "@types/react": "^19.2.7",
