@@ -17,6 +17,10 @@ pub struct Params {
     /// Verbosity (may be repeated up to three times)
     #[clap(short, long, action = clap::ArgAction::Count)]
     pub verbose: u8,
+
+    /// Address to bind to
+    #[arg(long, default_value = "localhost:3000")]
+    pub bind: String,
 }
 
 impl Params {

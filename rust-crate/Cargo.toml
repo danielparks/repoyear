@@ -19,10 +19,14 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
+actix-cors = "0.7.1"
+actix-web = "4.12.1"
 anyhow = "1.0.95"
 clap = { version = "4.5.27", features = ["derive"] }
+serde_json = "1.0.145"
 termcolor = "1.4.1"
 tracing = "0.1.41"
+tracing-actix-web = "0.7.19"
 tracing-subscriber = { version = "0.3.19", features = ["chrono"] }
 
 [lints]

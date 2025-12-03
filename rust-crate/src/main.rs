@@ -1,7 +1,11 @@
 //! contributions-tracker executable.
 
-use std::io::Write;
+use actix_cors::Cors;
+use actix_web::{
+    self, App, HttpResponse, HttpServer, Responder, get, http::header, mime,
+};
 use std::process::ExitCode;
+use tracing_actix_web::TracingLogger;
 
 mod logging;
 mod params;
@@ -37,8 +41,51 @@ fn main() -> ExitCode {
 fn cli(params: &Params) -> anyhow::Result<ExitCode> {
     logging::init(params.verbose)?;
 
-    params.out_stream().write_all(b"Hello\n")?;
-    tracing::trace!("about to exit");
+    serve(&params.bind)?;
 
     Ok(ExitCode::SUCCESS)
+}
+
+/// Main entry point for serving over HTTP
+///
+/// # Errors
+///
+/// May return an error if the server could not start correctly.
+#[actix_web::main]
+pub async fn serve<S: AsRef<str>>(address: S) -> anyhow::Result<()> {
+    let address = address.as_ref();
+
+    // FIXME data: $GITHUB_CLIENT_ID, $GITHUB_CLIENT_SECRET
+
+    HttpServer::new(|| {
+        let cors = Cors::default()
+            //.allowed_origin("...")
+            .allow_any_origin()
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![header::CONTENT_TYPE, header::ACCEPT])
+            .max_age(3600);
+        App::new()
+            .wrap(TracingLogger::default())
+            .wrap(cors)
+            .service(api_oauth_callback)
+            .service(api_health)
+    })
+    .bind(address)?
+    .run()
+    .await?;
+    Ok(()) // Pressing ^C causes run() to return.
+}
+
+#[get("/api/oauth/callback")]
+async fn api_oauth_callback() -> impl Responder {
+    HttpResponse::Ok()
+        .append_header(header::ContentType(mime::APPLICATION_JSON))
+        .body(r#"{"status":"ok"}"#)
+}
+
+#[get("/api/health")]
+async fn api_health() -> impl Responder {
+    HttpResponse::Ok()
+        .append_header(header::ContentType(mime::APPLICATION_JSON))
+        .body(r#"{"status":"ok"}"#)
 }
