@@ -21,6 +21,14 @@ pub struct Params {
     /// Address to bind to
     #[arg(long, default_value = "localhost:3000")]
     pub bind: String,
+
+    /// GitHub client ID for OAuth
+    #[arg(long, env)]
+    pub github_client_id: String,
+
+    /// GitHub client secret for OAuth
+    #[arg(long, env, hide_env_values=true)]
+    pub github_client_secret: String,
 }
 
 impl Params {
