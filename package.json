@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "tsc -b --noemit && eslint .",
-    "preview": "vite preview",
-    "server": "deno run --env-file --allow-net --allow-env --allow-read server.ts"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@deno/vite-plugin": "^1.0.5",
