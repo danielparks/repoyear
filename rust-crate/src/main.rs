@@ -41,7 +41,7 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
         &params.bind,
         &params.github_client_id,
         &params.github_client_secret,
-        tower_http::cors::Any,
+        params.allow_origin.clone().into(),
     )?;
 
     Ok(ExitCode::SUCCESS)

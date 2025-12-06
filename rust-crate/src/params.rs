@@ -1,8 +1,10 @@
 //! Code to deal with executable parameters.
 #![allow(clippy::allow_attributes, reason = "framework code from a template")]
 
+use axum::http::HeaderValue;
 use std::io::{self, IsTerminal, Write};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+use tower_http::cors::AllowOrigin;
 
 pub use clap::Parser;
 
@@ -29,6 +31,10 @@ pub struct Params {
     /// GitHub client secret for OAuth
     #[arg(long, env, hide_env_values = true)]
     pub github_client_secret: String,
+
+    /// Origins to allow for cross-site requests ("none" disables CORS)
+    #[arg(long, value_parser = parse_allow_origin, default_value = "none")]
+    pub allow_origin: OptionalAllowOrigin,
 }
 
 impl Params {
@@ -98,4 +104,70 @@ pub fn error_color() -> ColorSpec {
     color.set_fg(Some(Color::Red));
     color.set_intense(true);
     color
+}
+
+/// Stand in for `Option<AllowOrigin>`.
+///
+/// Necessary because Clap’s `value_parser` can’t return `Option<AllowOrigin>`.
+#[derive(Clone, Debug)]
+pub enum OptionalAllowOrigin {
+    /// CORS is disabled.
+    None,
+
+    /// CORS is enabled with the specified origins.
+    Some(AllowOrigin),
+}
+
+impl From<OptionalAllowOrigin> for Option<AllowOrigin> {
+    fn from(opt: OptionalAllowOrigin) -> Self {
+        match opt {
+            OptionalAllowOrigin::None => None,
+            OptionalAllowOrigin::Some(origins) => Some(origins),
+        }
+    }
+}
+
+/// Parse a string into an `OptionalAllowOrigin` for CORS configuration.
+///
+/// Accepts:
+///   - "none" to disable CORS
+///   - "*" for any origin
+///   - At least one origin, separated by commas, e.g. `"http://localhost:5173"`
+///     or `"http://localhost:5173,http://example.com"`
+fn parse_allow_origin(s: &str) -> Result<OptionalAllowOrigin, String> {
+    let s = s.trim();
+
+    if s == "*" {
+        return Ok(OptionalAllowOrigin::Some(AllowOrigin::any()));
+    } else if s == "none" {
+        return Ok(OptionalAllowOrigin::None);
+    }
+
+    let header_values: Vec<HeaderValue> = s
+        .split(',')
+        .map(str::trim)
+        .map(|origin| {
+            // FIXME validate that the origin is a URL?
+            if origin.is_empty() {
+                Err("Origin cannot be empty string".to_owned())
+            } else if origin == "*" {
+                Err("Cannot use wildcard origin with other origins".to_owned())
+            } else if origin == "none" {
+                Err("Cannot use 'none' with other origins".to_owned())
+            } else {
+                HeaderValue::from_str(origin)
+                    .map_err(|e| format!("Invalid origin '{origin}': {e}"))
+            }
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    if header_values.is_empty() {
+        Err("Origin cannot be empty string".to_owned())
+    } else if header_values.len() == 1 {
+        Ok(OptionalAllowOrigin::Some(AllowOrigin::exact(
+            header_values.into_iter().next().unwrap(),
+        )))
+    } else {
+        Ok(OptionalAllowOrigin::Some(AllowOrigin::list(header_values)))
+    }
 }

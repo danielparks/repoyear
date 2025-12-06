@@ -14,34 +14,40 @@ use tower_http::trace::TraceLayer;
 
 /// Start web server for API.
 #[tokio::main]
-pub async fn serve<S, A>(
+pub async fn serve<S>(
     address: &str,
     github_client_id: S,
     github_client_secret: S,
-    allow_origin: A,
+    allow_origin: Option<AllowOrigin>,
 ) -> anyhow::Result<()>
 where
     S: Into<String>,
-    A: Into<AllowOrigin>,
 {
     let listener = tokio::net::TcpListener::bind(address).await?;
     tracing::info!("Server running on http://{address}");
 
-    let app = Router::new()
+    let mut app = Router::new()
         .route("/api/oauth/callback", get(oauth_callback))
         .route("/api/health", get(health_check))
         .fallback(api_not_found)
         .layer(TraceLayer::new_for_http())
-        .layer(
-            CorsLayer::new()
-                .allow_origin(allow_origin)
-                .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                .allow_headers([header::CONTENT_TYPE]),
-        )
         .with_state(Arc::new(AppState {
             github_client_id: github_client_id.into(),
             github_client_secret: github_client_secret.into(),
         }));
+
+    // Only apply CORS layer if origins are specified
+    if let Some(origins) = allow_origin {
+        tracing::info!("CORS enabled");
+        app = app.layer(
+            CorsLayer::new()
+                .allow_origin(origins)
+                .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                .allow_headers([header::CONTENT_TYPE]),
+        );
+    } else {
+        tracing::info!("CORS disabled");
+    }
 
     axum::serve(listener, app).await?;
     Ok(())
