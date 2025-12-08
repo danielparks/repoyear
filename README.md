@@ -15,6 +15,7 @@ See [.env.example] for environment variables. You will need a GitHub client ID a
 - [ ] Automated testing.
 - [ ] Add backend so that I can display my contributions on my web site without
       requiring the viewer to be logged into GitHub
+      - Possibly use https://github.com/graphql-rust/graphql-client/tree/main/examples/github
 - [ ] Load information about local repositories in backend.
 
 ## License
