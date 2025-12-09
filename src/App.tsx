@@ -24,7 +24,7 @@ export default function App({ username }: { username: string | null }) {
     "http://localhost:5173";
   const backendUrl: string =
     (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
-    "http://localhost:3000";
+    frontendUrl;
 
   // Handle OAuth callback. Runs only on mount.
   useEffect(() => {
