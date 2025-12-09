@@ -6,7 +6,10 @@
 //!
 //! Run with: `cargo run --example mock_server`
 
-use contributions_tracker::api::{contributions_api_mod, mock::{MockApiImpl, MockAppState}};
+use contributions_tracker::api::{
+    contributions_api_mod,
+    mock::{MockApiImpl, MockAppState},
+};
 use slog::Drain;
 
 #[tokio::main]

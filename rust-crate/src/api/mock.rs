@@ -15,7 +15,7 @@ pub struct MockAppState {
 
 impl MockAppState {
     /// Create a new mock state with successful defaults.
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self {
             health_status: "ok".to_owned(),
@@ -25,7 +25,7 @@ impl MockAppState {
     }
 
     /// Create a mock state that simulates OAuth failure.
-    #[must_use] 
+    #[must_use]
     pub fn with_oauth_error(error: String) -> Self {
         Self {
             health_status: "ok".to_owned(),

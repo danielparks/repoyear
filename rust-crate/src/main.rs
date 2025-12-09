@@ -1,10 +1,12 @@
 //! contributions-tracker executable.
 
+use anyhow::anyhow;
+use contributions_tracker::api;
 use std::process::ExitCode;
 
-use contributions_tracker::api;
 mod logging;
 mod params;
+mod server;
 
 use params::{Command, Params, Parser};
 
@@ -38,7 +40,7 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
 
     match &params.command {
         Command::Serve(serve_params) => {
-            api::serve(
+            server::serve(
                 &serve_params.bind,
                 &serve_params.github_client_id,
                 &serve_params.github_client_secret,
@@ -62,10 +64,9 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
 ///
 /// Returns an error if the `OpenAPI` spec cannot be generated or written.
 fn generate_openapi(params: &params::OpenapiParams) -> anyhow::Result<()> {
-    let api =
-        api::contributions_api_mod::stub_api_description().map_err(|e| {
-            anyhow::anyhow!("Failed to create API description: {e}")
-        })?;
+    let api = api::contributions_api_mod::stub_api_description().map_err(
+        |error| anyhow!("Failed to create API description: {error}"),
+    )?;
 
     // Use version from Cargo.toml via CARGO_PKG_VERSION environment variable
     let version = semver::Version::parse(env!("CARGO_PKG_VERSION"))

@@ -19,4 +19,4 @@ pub use definition::{
 pub use definition::contributions_api_mod;
 
 // Re-export commonly used items from implementation
-pub use implementation::{serve, AppState, ContributionsApiImpl};
+pub use implementation::{AppState, ContributionsApiImpl};
