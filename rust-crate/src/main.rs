@@ -78,7 +78,7 @@ fn generate_openapi(params: &params::OpenapiParams) -> anyhow::Result<()> {
     let json_string = serde_json::to_string_pretty(&json_value)?;
 
     if let Some(output_path) = &params.output {
-        std::fs::write(output_path, json_string)?;
+        std::fs::write(output_path, format!("{json_string}\n"))?;
     } else {
         println!("{json_string}");
     }
