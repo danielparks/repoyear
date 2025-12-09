@@ -11,15 +11,27 @@ URL, it will show the contributions for that GitHub user.
 ## Configuration
 
 See [.env.example] for environment variables. You will need a GitHub client ID
-and secret from https://github.com/settings/developers. The frontend and backend
-URLs can be set with `$VITE_FRONTEND_URL` and `$VITE_BACKEND_URL`.
+and secret from https://github.com/settings/developers. The frontend URL can be
+set with `$VITE_FRONTEND_URL`.
+
+The backend should be proxied through the frontend URL at `/api`, e.g. a request
+to `http://frontend/api/health` should be proxied to
+`http://backend/api/health`.
+
+## Stack
+
+This is a TypeScript and React app with a simple Rust backend built on
+[Dropshot]. Dropshot provides automatic OpenAPI support, and will eventually
+enable compile-time type checking of calls across the API boundary.
 
 ## To do
 
+- [ ] Add data source to backend so selected users’s contributions can be
+      displayed to visitors without logging into GitHub.
+  - Type safety across API boundary.
+  - Possibly use <https://github.com/graphql-rust/graphql-client>
+- [ ] Add demo to <https://demon.horse/portfolio/>.
 - [ ] Automated testing.
-- [ ] Add backend so that I can display my contributions on my web site without
-      requiring the viewer to be logged into GitHub - Possibly use
-      https://github.com/graphql-rust/graphql-client/tree/main/examples/github
 - [ ] Load information about local repositories in backend.
 
 ## License
@@ -37,3 +49,4 @@ the Apache 2.0 license shall be dual licensed as above, without any additional
 terms or conditions.
 
 [.env.example]: .env.example
+[Dropshot]: https://docs.rs/dropshot/latest/dropshot/
