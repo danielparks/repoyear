@@ -1,4 +1,4 @@
-name: PR checks
+name: Rust checks
 
 on:
   workflow_dispatch:
@@ -6,6 +6,10 @@ on:
     branches:
       - main
   pull_request:
+
+defaults:
+  run:
+    working-directory: rust-crate
 
 jobs:
   clippy:
@@ -32,6 +36,7 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           rust-version: "1.85.0"
+          working-directory: rust-crate
 
   fmt:
     name: cargo fmt
@@ -43,6 +48,8 @@ jobs:
         with:
           components: rustfmt
       - uses: actions-rust-lang/rustfmt@v1
+        with:
+          working-directory: rust-crate
 
   msrv:
     name: cargo msrv
