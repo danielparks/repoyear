@@ -14,7 +14,7 @@
     },
     "schemas": {
       "CallbackSuccessResponse": {
-        "description": "Response from /api/oauth/callback",
+        "description": "Response from `/api/oauth/callback`",
         "properties": {
           "access_token": {
             "description": "The access token from GitHub.",
@@ -46,7 +46,7 @@
         "type": "object"
       },
       "HealthResponse": {
-        "description": "Response from /api/health",
+        "description": "Response from `/api/health`",
         "properties": {
           "status": {
             "description": "Health status (always `\"ok\"`).",
@@ -87,7 +87,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "summary": "Handle /api/health"
+        "summary": "Handle `/api/health`"
       }
     },
     "/api/oauth/callback": {
@@ -122,7 +122,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "summary": "Handle /api/oauth/callback"
+        "summary": "Handle `/api/oauth/callback`"
       }
     }
   }
