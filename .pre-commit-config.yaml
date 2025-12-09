@@ -48,3 +48,17 @@ repos:
         args: []
         files: (\.rs|rustfmt\.toml)$
         pass_filenames: false
+      - id: deno-check
+        name: deno check
+        description: Check all TypeScript source code files.
+        entry: deno check
+        types_or: [ts, tsx]
+        pass_filenames: false
+        language: system
+  - repo: https://github.com/nozaq/pre-commit-deno
+    rev: 0.1.0
+    hooks:
+      - id: deno-fmt-check
+      - id: deno-lint
+      - id: deno-test
+        args: ["--permit-no-files"]
