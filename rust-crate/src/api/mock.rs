@@ -1,6 +1,6 @@
 //! Mock implementation of the API for testing.
 
-use super::{ApiBase, ContributionsApi};
+use super::definition::{ApiBase, ContributionsApi};
 
 /// Mock state for testing that returns predefined responses.
 #[derive(Clone, Debug)]
