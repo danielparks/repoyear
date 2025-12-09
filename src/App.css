@@ -2,29 +2,38 @@ body {
   font-family: sans-serif;
 }
 
-button {
+button, a.button, .pressed-button {
   background: hsl(210deg 100 50);
   color: white;
   border: none;
   padding: 10px 20px;
   font-size: 16px;
   border-radius: 6px;
-  cursor: pointer;
   font-weight: 500;
+  text-decoration: none;
   transition: background 0.2s, transform 0.1s;
   margin: 5px;
 }
 
-button:hover {
+button, a.button {
+  cursor: pointer;
+  background: hsl(210deg 100 50);
+}
+
+.pressed-button {
+  background: hsl(210deg 30 70);
+}
+
+button:hover, a.button:hover {
   background: hsl(210deg 100 45);
   transform: translateY(-1px);
 }
 
-button:active {
+button:active, a.button:active {
   transform: translateY(0);
 }
 
-button:focus {
+button:focus, a.button:focus {
   outline: 2px solid hsl(210deg 100 60);
   outline-offset: 2px;
 }

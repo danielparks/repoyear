@@ -136,7 +136,7 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
   }
 }`;
 
-export function redirectToLogin(redirectUrl: string) {
+export function loginUrl(redirectUrl: string) {
   const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
   if (!clientId) {
     throw new Error(
@@ -145,11 +145,11 @@ export function redirectToLogin(redirectUrl: string) {
     );
   }
 
-  const redirect = new URL("https://github.com/login/oauth/authorize");
-  redirect.searchParams.set("client_id", clientId);
-  redirect.searchParams.set("redirect_uri", redirectUrl);
-  redirect.searchParams.set("scope", "repo");
-  document.location.href = redirect.href;
+  const url = new URL("https://github.com/login/oauth/authorize");
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("redirect_uri", redirectUrl);
+  url.searchParams.set("scope", "repo");
+  return url;
 }
 
 export async function getToken(code: string, backendUrl: string) {

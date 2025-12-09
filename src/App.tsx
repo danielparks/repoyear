@@ -9,33 +9,40 @@ import {
 } from "./github/api.ts";
 import { Calendar, Day, Filter, Repository } from "./model.ts";
 
+const FRONTEND_URL: string =
+  (import.meta.env.VITE_FRONTEND_URL as string | undefined) ||
+  "http://localhost:5173";
+const BACKEND_URL: string =
+  (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
+  FRONTEND_URL;
+
+function getAuthCode() {
+  const code = new URLSearchParams(location.search).get("code");
+  if (code) {
+    // Remove code parameter.
+    // FIXME preserve other query parameters?
+    history.replaceState({}, document.title, location.pathname);
+  }
+  return code;
+}
+
 export default function App({ username }: { username: string | null }) {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
+  const authCodeHandled = useRef<boolean>(false);
   const [highlight, setHighlight] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [repoFilter, setRepoFilter] = useState<Filter>(() => new Filter());
   const queryClient = useQueryClient();
 
-  const frontendUrl: string =
-    (import.meta.env.VITE_FRONTEND_URL as string | undefined) ||
-    "http://localhost:5173";
-  const backendUrl: string =
-    (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
-    frontendUrl;
-
-  // Handle OAuth callback. Runs only on mount.
+  // Handle OAuth callback.
   useEffect(() => {
-    (async () => {
-      const code = new URLSearchParams(document.location.search).get("code");
-      if (!code) {
-        return;
-      }
-
-      if (!accessToken) {
-        const token = await github.getToken(code, backendUrl);
+    if (!accessToken && authCode && !authCodeHandled.current) {
+      authCodeHandled.current = true;
+      github.getToken(authCode, BACKEND_URL).then((token) => {
         if (token) {
           setAuthError(null);
           setAccessToken(token);
@@ -43,19 +50,17 @@ export default function App({ username }: { username: string | null }) {
           localStorage.setItem("github_token", token);
         } else {
           setAuthError("Failed to authenticate with GitHub");
+          console.error("GitHub refused authentication");
         }
-      }
-
-      // Remove code parameter.
-      // FIXME handle non root-paths
-      history.replaceState({}, document.title, "/");
-    })().catch((error: unknown) => {
-      setAuthError("Error during authentication");
-      console.error(error);
-    });
-    // This should only run on mount, not when accessToken changes:
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      }).catch((error: unknown) => {
+        setAuthError("Error during authentication");
+        console.error(error);
+      }).finally(() => {
+        // Whatever happened, the authCode is now invalid.
+        setAuthCode(null);
+      });
+    }
+  }, [authCode, accessToken]);
 
   const queryKey = [
     "contributions",
@@ -116,29 +121,20 @@ export default function App({ username }: { username: string | null }) {
     );
   }, [calendar]);
 
-  let error = authError;
+  let errorMessage = authError;
   if (queryError) {
     console.error("Error querying GitHub:", queryError);
-    if (!error) {
-      // error should always be null if we managed to make a query.
+    if (!errorMessage) {
+      // errorMessage should always be null if we managed to make a query.
       const errors = (queryError as GithubError).errors || [];
       if (
         username && errors[0]?.type == "NOT_FOUND" &&
         errors[0].path.join("/") == "user"
       ) {
-        error = `Could not find user “${username}”`;
+        errorMessage = `Could not find user “${username}”`;
       } else {
-        error = "Error getting contribution data";
+        errorMessage = "Error getting contribution data";
       }
-    }
-  }
-
-  function login(): void {
-    try {
-      github.redirectToLogin(frontendUrl);
-    } catch (error: unknown) {
-      console.error("Error redirecting to GitHub login:", error);
-      setAuthError("Configuration error. Could not log into GitHub.");
     }
   }
 
@@ -155,14 +151,33 @@ export default function App({ username }: { username: string | null }) {
   }
 
   if (accessToken === null) {
+    let loginUrl: string | null = null;
+
+    if (!authCode) {
+      // No accessToken, no authCode: user is logged out.
+      try {
+        loginUrl = github.loginUrl(FRONTEND_URL).href;
+      } catch (error: unknown) {
+        console.error("Error getting GitHub login URL:", error);
+        errorMessage = "Configuration error. Could get GitHub login URL.";
+      }
+    }
+
     return (
       <div className="login-container">
         <h1>GitHub Contribution Graph</h1>
         <p>View and analyze your GitHub contributions over time</p>
-        {error && <div className="error-message">{error}</div>}
-        <button type="button" onClick={login}>
-          Log in with GitHub
-        </button>
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
+        {loginUrl && (
+          <a href={loginUrl} className="button">
+            Log in with GitHub
+          </a>
+        )}
+        {authCode && (
+          <div className="pressed-button">
+            Logging in…
+          </div>
+        )}
       </div>
     );
   }
@@ -184,8 +199,8 @@ export default function App({ username }: { username: string | null }) {
           </button>
         </div>
       </header>
-      {error && <div className="error-message">{error}</div>}
-      {loading && !error && (
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
+      {loading && !errorMessage && (
         <div className="loading-message">Loading contributions...</div>
       )}
       {calendar
