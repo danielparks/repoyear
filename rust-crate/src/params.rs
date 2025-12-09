@@ -18,6 +18,7 @@ pub struct Params {
     #[clap(short, long, action = clap::ArgAction::Count, global = true)]
     pub verbose: u8,
 
+    /// The subcommand to execute
     #[command(subcommand)]
     pub command: Command,
 }

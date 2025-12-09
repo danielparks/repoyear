@@ -192,12 +192,24 @@ impl ContributionsApi for ContributionsApiImpl {
 }
 
 /// Start web server for API.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The bind address cannot be parsed
+/// - The API description cannot be created
+/// - The server cannot be created
+/// - The server encounters an error during operation
+///
+/// # Panics
+///
+/// This function does not panic under normal operation.
 #[tokio::main]
 pub async fn serve<S>(
     address: &str,
     github_client_id: S,
     github_client_secret: S,
-    log: slog::Logger,
+    log: &slog::Logger,
 ) -> anyhow::Result<()>
 where
     S: Into<String>,
@@ -219,7 +231,7 @@ where
     let state =
         AppState::new(github_client_id.into(), github_client_secret.into());
 
-    let server = HttpServerStarter::new(&config_dropshot, api, state, &log)
+    let server = HttpServerStarter::new(&config_dropshot, api, state, log)
         .map_err(|e| anyhow::anyhow!("Failed to create server: {e}"))?
         .start();
 

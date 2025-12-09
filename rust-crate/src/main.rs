@@ -2,7 +2,7 @@
 
 use std::process::ExitCode;
 
-mod api;
+use contributions_tracker::api;
 mod logging;
 mod params;
 
@@ -42,7 +42,7 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
                 &serve_params.bind,
                 &serve_params.github_client_id,
                 &serve_params.github_client_secret,
-                log,
+                &log,
             )?;
             Ok(ExitCode::SUCCESS)
         }
