@@ -183,7 +183,7 @@ export class Calendar {
 
   // Expects localtime date.
   day(date: Date): Day | undefined {
-    // FIXME doens’t handle out-of-range dates well.
+    // FIXME doesn’t handle out-of-range dates well.
     return this.days[Math.round((toUtcDate(date) - this.start_ms) / 86400000)];
   }
 
