@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,12 +6,7 @@
  * Copyright Oxide Computer Company
  */
 
-import {
-  camelToSnake,
-  isNotNull,
-  processResponseBody,
-  snakeify,
-} from "./util.ts";
+import { camelToSnake, processResponseBody, isNotNull } from "./util";
 
 /** Success responses from the API */
 export type ApiSuccess<Data> = {
@@ -33,18 +27,18 @@ export type ErrorBody = {
 export type ErrorResult =
   // 4xx and 5xx responses from the API
   | {
-    type: "error";
-    response: Response;
-    data: ErrorBody;
-  }
+      type: "error";
+      response: Response;
+      data: ErrorBody;
+    }
   // JSON parsing or processing errors within the client. Includes raised Error
   // and response body as a string for debugging.
   | {
-    type: "client_error";
-    response: Response;
-    error: Error;
-    text: string;
-  };
+      type: "client_error";
+      response: Response;
+      error: Error;
+      text: string;
+    };
 
 export type ApiResult<Data> = ApiSuccess<Data> | ErrorResult;
 
@@ -53,7 +47,7 @@ export type ApiResult<Data> = ApiSuccess<Data> | ErrorResult;
  * body and query params.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function replacer(_key: string, value: any) {
+export function dateReplacer(_key: string, value: any) {
   if (value instanceof Date) {
     return value.toISOString();
   }
@@ -61,15 +55,13 @@ function replacer(_key: string, value: any) {
 }
 
 function encodeQueryParam(key: string, value: unknown) {
-  return `${encodeURIComponent(camelToSnake(key))}=${
-    encodeURIComponent(
-      replacer(key, value),
-    )
-  }`;
+  return `${encodeURIComponent(camelToSnake(key))}=${encodeURIComponent(
+    dateReplacer(key, value)
+  )}`;
 }
 
 export async function handleResponse<Data>(
-  response: Response,
+  response: Response
 ): Promise<ApiResult<Data>> {
   const respText = await response.text();
 
@@ -78,9 +70,8 @@ export async function handleResponse<Data>(
   try {
     // don't bother trying to parse empty responses like 204s
     // TODO: is empty object what we want here?
-    respJson = respText.length > 0
-      ? processResponseBody(JSON.parse(respText))
-      : {};
+    respJson =
+      respText.length > 0 ? processResponseBody(JSON.parse(respText)) : {};
   } catch (e) {
     return {
       type: "client_error",
@@ -124,48 +115,6 @@ export interface FullParams extends FetchParams {
   body?: unknown;
   host?: string;
   method?: string;
-}
-
-export interface ApiConfig {
-  /**
-   * No host means requests will be sent to the current host. This is used in
-   * the web console.
-   */
-  host?: string;
-  token?: string;
-  baseParams?: FetchParams;
-}
-
-export class HttpClient {
-  host: string;
-  token?: string;
-  baseParams: FetchParams;
-
-  constructor({ host = "", baseParams = {}, token }: ApiConfig = {}) {
-    this.host = host;
-    this.token = token;
-
-    const headers = new Headers({ "Content-Type": "application/json" });
-    if (token) {
-      headers.append("Authorization", `Bearer ${token}`);
-    }
-    this.baseParams = mergeParams({ headers }, baseParams);
-  }
-
-  public async request<Data>({
-    body,
-    path,
-    query,
-    host,
-    ...fetchParams
-  }: FullParams): Promise<ApiResult<Data>> {
-    const url = (host || this.host) + path + toQueryString(query);
-    const init = {
-      ...mergeParams(this.baseParams, fetchParams),
-      body: JSON.stringify(snakeify(body), replacer),
-    };
-    return handleResponse(await fetch(url, init));
-  }
 }
 
 export function mergeParams(a: FetchParams, b: FetchParams): FetchParams {

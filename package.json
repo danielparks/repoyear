@@ -8,7 +8,7 @@
     "build": "npm run generate:api && tsc -b && vite build",
     "lint": "tsc -b --noemit && eslint .",
     "preview": "vite preview",
-    "generate:api": "deno run -A npm:@oxide/openapi-gen-ts@0.9.0 openapi.json src/api && sed -i '1s/^/\\/* eslint-disable *\\/\\n/' src/api/http-client.ts src/api/util.ts && deno fmt src/api",
+    "generate:api": "deno run -A npm:@oxide/openapi-gen-ts@0.12.0 openapi.json src/api",
     "generate:api:watch": "chokidar 'openapi.json' -c 'npm run generate:api' --initial --silent",
     "codegen:api": "npm run generate:api"
   },

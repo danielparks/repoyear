@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,21 +28,22 @@ export const isObjectOrArray = (o: unknown) =>
  * @param kf maps key to key
  * @param vf maps key + value to value
  */
-export const mapObj = (
-  kf: (k: string) => string,
-  vf: (k: string | undefined, v: unknown) => unknown = (_, v) => v,
-) =>
-(o: unknown): unknown => {
-  if (!isObjectOrArray(o)) return o;
+export const mapObj =
+  (
+    kf: (k: string) => string,
+    vf: (k: string | undefined, v: unknown) => unknown = (_, v) => v
+  ) =>
+  (o: unknown): unknown => {
+    if (!isObjectOrArray(o)) return o;
 
-  if (Array.isArray(o)) return o.map(mapObj(kf, vf));
+    if (Array.isArray(o)) return o.map(mapObj(kf, vf));
 
-  const newObj: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
-    newObj[kf(k)] = isObjectOrArray(v) ? mapObj(kf, vf)(v) : vf(k, v);
-  }
-  return newObj;
-};
+    const newObj: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
+      newObj[kf(k)] = isObjectOrArray(v) ? mapObj(kf, vf)(v) : vf(k, v);
+    }
+    return newObj;
+  };
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
