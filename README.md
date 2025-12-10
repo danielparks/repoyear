@@ -21,14 +21,13 @@ to `http://frontend/api/health` should be proxied to
 ## Stack
 
 This is a TypeScript and React app with a simple Rust backend built on
-[Dropshot]. Dropshot provides automatic OpenAPI support, and will eventually
-enable compile-time type checking of calls across the API boundary.
+[Dropshot]. Dropshot provides automatic OpenAPI support, which enables
+compile-time type checking of calls across the API boundary.
 
 ## To do
 
 - [ ] Add data source to backend so selected users’s contributions can be
       displayed to visitors without logging into GitHub.
-  - Type safety across API boundary.
   - Possibly use <https://github.com/graphql-rust/graphql-client>
 - [ ] Add demo to <https://demon.horse/portfolio/>.
 - [ ] Automated testing.
