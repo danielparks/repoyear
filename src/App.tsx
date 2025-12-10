@@ -2,6 +2,7 @@ import "./App.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
+import { exchangeOAuthCode } from "./api/client.ts";
 import githubMarkUrl from "./github/github-mark.svg";
 import {
   CONTRIBUTIONS_QUERY_TEMPLATE,
@@ -12,9 +13,6 @@ import { Calendar, Day, Filter, Repository } from "./model.ts";
 const FRONTEND_URL: string =
   (import.meta.env.VITE_FRONTEND_URL as string | undefined) ||
   "http://localhost:5173";
-const BACKEND_URL: string =
-  (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
-  FRONTEND_URL;
 
 function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
@@ -52,19 +50,19 @@ export default function App({ username }: { username: string | null }) {
   useEffect(() => {
     if (!accessToken && authCode && !authCodeHandled.current) {
       authCodeHandled.current = true;
-      github.getToken(authCode, BACKEND_URL).then((token) => {
+      exchangeOAuthCode(authCode).then((token) => {
         if (token) {
           setAuthError(null);
           setAccessToken(token);
           // FIXME? This will be available to the entire origin.
           localStorage.setItem("github_token", token);
         } else {
-          setAuthError("Failed to authenticate with GitHub");
-          console.error("GitHub refused authentication");
+          setAuthError("Error during authentication");
+          console.error("No token in GitHub response");
         }
       }).catch((error: unknown) => {
         setAuthError("Error during authentication");
-        console.error(error);
+        console.error("Error getting oauth token:", error);
       }).finally(() => {
         // Whatever happened, the authCode is now invalid.
         setAuthCode(null);

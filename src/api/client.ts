@@ -6,7 +6,6 @@
  */
 
 import Api from "./Api.ts";
-import type { ApiResult } from "./Api.ts";
 
 /**
  * API client instance configured for the backend.
@@ -29,63 +28,11 @@ export async function exchangeOAuthCode(
 ): Promise<string | undefined> {
   const result = await api.methods.oauthCallback({ query: { code } });
 
-  // Handle all error cases
   if (result.type === "error") {
-    console.error("OAuth callback API error:", result.data);
-    return undefined;
+    throw new Error(`OAuth callback API error: ${result.data.message}`);
+  } else if (result.type === "client_error") {
+    throw new Error(`OAuth callback client error: ${result.error.message}`);
+  } else {
+    return result.data.accessToken;
   }
-
-  if (result.type === "client_error") {
-    console.error(
-      "OAuth callback client error:",
-      result.error.message,
-      "Response text:",
-      result.text,
-    );
-    return undefined;
-  }
-
-  // Success case
-  return result.data.accessToken;
-}
-
-/**
- * Check API health status.
- *
- * @returns Result object with status and optional error
- */
-export async function checkHealth(): Promise<
-  { ok: true; status: string } | { ok: false; error: string }
-> {
-  const result = await api.methods.healthCheck({});
-
-  if (result.type === "error") {
-    return { ok: false, error: result.data.message };
-  }
-
-  if (result.type === "client_error") {
-    return { ok: false, error: result.error.message };
-  }
-
-  return { ok: true, status: result.data.status };
-}
-
-/**
- * Type guard to check if an API result is successful.
- */
-export function isSuccess<T>(result: ApiResult<T>): result is Extract<
-  ApiResult<T>,
-  { type: "success" }
-> {
-  return result.type === "success";
-}
-
-/**
- * Type guard to check if an API result is an error.
- */
-export function isError<T>(result: ApiResult<T>): result is Extract<
-  ApiResult<T>,
-  { type: "error" | "client_error" }
-> {
-  return result.type === "error" || result.type === "client_error";
 }
