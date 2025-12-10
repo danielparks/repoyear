@@ -28,8 +28,7 @@
     "npm:typescript-eslint@^8.49.0": "8.49.0_eslint@9.39.1_typescript@5.9.3_@typescript-eslint+parser@8.49.0__eslint@9.39.1__typescript@5.9.3",
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:vite-plugin-checker@0.11": "0.11.0_eslint@9.39.1_typescript@5.9.3_vite@7.2.7__@types+node@24.10.2__picomatch@4.0.3_@types+node@24.10.2",
-    "npm:vite@^7.2.7": "7.2.7_@types+node@24.10.2_picomatch@4.0.3",
-    "npm:zod@^4.1.13": "4.1.13"
+    "npm:vite@^7.2.7": "7.2.7_@types+node@24.10.2_picomatch@4.0.3"
   },
   "npm": {
     "@ardatan/relay-compiler@12.0.3_graphql@16.12.0": {
@@ -3566,8 +3565,7 @@
         "npm:typescript-eslint@^8.49.0",
         "npm:typescript@^5.9.3",
         "npm:vite-plugin-checker@0.11",
-        "npm:vite@^7.2.7",
-        "npm:zod@^4.1.13"
+        "npm:vite@^7.2.7"
       ]
     }
   }
