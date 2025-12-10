@@ -20,17 +20,27 @@ function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
   if (code) {
     // Remove code parameter.
-    // FIXME preserve other query parameters?
     history.replaceState({}, document.title, location.pathname);
   }
   return code;
+}
+
+function getAuthError() {
+  // Example error URL from GitHub: http://localhost:5173/?error=access_denied&error_description=The+user+has+denied+your+application+access.&error_uri=https%3A%2F%2Fdocs.github.com%2Fapps%2Fmanaging-oauth-apps%2Ftroubleshooting-authorization-request-errors%2F%23access-denied
+  const message = new URLSearchParams(location.search).get("error_description");
+  if (message) {
+    // Remove error parameters.
+    history.replaceState({}, document.title, location.pathname);
+    return message;
+  }
+  return null;
 }
 
 export default function App({ username }: { username: string | null }) {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("github_token"),
   );
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
   const [highlight, setHighlight] = useState<string | null>(null);
