@@ -148,7 +148,7 @@ export function loginUrl(redirectUrl: string) {
   const url = new URL("https://github.com/login/oauth/authorize");
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", redirectUrl);
-  url.searchParams.set("scope", "repo");
+  url.searchParams.set("scope", "");
   return url;
 }
 
