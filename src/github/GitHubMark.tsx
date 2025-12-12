@@ -1,13 +1,10 @@
 /**
- * GitHub logo mark icon component.
- *
- * Converted from github-mark.svg to avoid asset import issues in SSG context.
+ * GitHub logo component.
  */
 export function GitHubMark({ className }: { className?: string }) {
   return (
     <svg
-      width="98"
-      height="96"
+      viewBox="0 0 98 96"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-label="GitHub"

@@ -275,7 +275,7 @@ ol.repository-list > li > label > h3 {
   text-overflow: ellipsis;
 }
 
-ol.repository-list > li > label > h3 img {
+ol.repository-list > li > label > h3 svg {
   height: 1em;
   vertical-align: text-top;
   margin: 0 4px 0 0;
