@@ -1,5 +1,5 @@
 import { Calendar, Day, Filter, Repository } from "../model.ts";
-import githubMarkUrl from "../github/github-mark.svg";
+import { GitHubMark } from "../github/GitHubMark.tsx";
 
 export function RepositoryList(
   { calendar, filter, setFilter, setHighlight }: {
@@ -48,7 +48,7 @@ export function RepositoryList(
 function RepositoryName({ repo }: { repo: Repository }) {
   return (
     <a style={{ color: repo.color() }} href={repo.url}>
-      <img src={githubMarkUrl} alt="GitHub" />
+      <GitHubMark />
       {repo.url.replace("https://github.com/", "")}
     </a>
   );
