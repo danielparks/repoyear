@@ -1,10 +1,10 @@
 /* eslint-disable */
 
-    import type { FetchParams, FullParams, ApiResult } from "./http-client";
-    import { dateReplacer, handleResponse, mergeParams, toQueryString } from './http-client'
-    import { snakeify } from './util'
+    import type { FetchParams, FullParams, ApiResult } from "./http-client.ts";
+    import { dateReplacer, handleResponse, mergeParams, toQueryString } from './http-client.ts'
+    import { snakeify } from './util.ts'
 
-    export type { ApiResult, ErrorBody, ErrorResult } from './http-client'
+    export type { ApiResult, ErrorBody, ErrorResult } from './http-client.ts'
     
 /**
 * Response from `/api/oauth/callback`

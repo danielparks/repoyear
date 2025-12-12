@@ -1,4 +1,9 @@
 {
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "deno.ns"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
   "fmt": {
     "exclude": [
       "**/*.svg",
@@ -6,6 +11,10 @@
       "src/api/http-client.ts",
       "src/api/util.ts"
     ]
+  },
+  "imports": {
+    "react": "npm:react",
+    "@types/react": "npm:@types/react"
   },
   "lint": {
     "exclude": [

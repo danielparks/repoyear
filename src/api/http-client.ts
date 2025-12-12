@@ -6,7 +6,7 @@
  * Copyright Oxide Computer Company
  */
 
-import { camelToSnake, processResponseBody, isNotNull } from "./util";
+import { camelToSnake, processResponseBody, isNotNull } from "./util.ts";
 
 /** Success responses from the API */
 export type ApiSuccess<Data> = {
