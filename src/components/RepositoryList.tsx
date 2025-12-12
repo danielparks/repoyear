@@ -91,7 +91,7 @@ function SparklineElement({ days, repo, max }: {
   repo: Repository;
   max: number;
 }) {
-  const filter = Filter.withRepos(repo.url);
+  const filter = Filter.withOnlyRepos(repo.url);
   const count = days.reduce(
     (total, day) => total + day.filteredCount(filter),
     0,

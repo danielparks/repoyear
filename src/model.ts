@@ -20,17 +20,22 @@ export class Filter {
   defaultState: boolean = true;
   states: Map<string, boolean> = new Map();
 
-  static withRepos(...urls: string[]) {
+  static withOnlyRepos(...urls: string[]) {
     const filter = new Filter();
+    filter.defaultState = false;
     urls.forEach((url) => {
       filter.states.set(url, true);
     });
     return filter;
   }
 
-  // Returns `undefined` if this filter doesn’t know about the repo.
-  isOn(url: string): boolean | undefined {
-    return this.states.get(url);
+  isOn(url: string): boolean {
+    const value = this.states.get(url);
+    if (value === undefined) {
+      return this.defaultState;
+    } else {
+      return value;
+    }
   }
 
   clone() {
@@ -40,28 +45,8 @@ export class Filter {
     return filter;
   }
 
-  // Return a new Filter if the urls don’t exist in this one, otherwise null.
-  addReposIfMissing(urls: string[]): Filter | null {
-    let newFilter: Filter | null = null;
-    urls.forEach((url) => {
-      if (!this.states.has(url)) {
-        if (!newFilter) {
-          newFilter = this.clone();
-        }
-        newFilter.states.set(url, this.defaultState);
-      }
-    });
-    return newFilter;
-  }
-
   switchRepo(url: string, enabled: boolean) {
     this.states.set(url, enabled);
-  }
-
-  activeUrls() {
-    return [...this.states.entries()]
-      .filter(([_, value]) => value)
-      .map(([key, _]) => key);
   }
 }
 
