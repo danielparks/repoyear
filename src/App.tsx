@@ -7,9 +7,8 @@ import {
   CONTRIBUTIONS_QUERY_TEMPLATE,
   type GithubError,
 } from "./github/api.ts";
-import { Calendar, Filter } from "./model.ts";
-import { ContributionsGraph } from "./components/ContributionsGraph.tsx";
-import { RepositoryList } from "./components/RepositoryList.tsx";
+import { Calendar } from "./model.ts";
+import { ContributionsView } from "./components/ContributionsView.tsx";
 
 function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
@@ -38,9 +37,7 @@ export default function App({ username }: { username: string | null }) {
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
-  const [highlight, setHighlight] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [repoFilter, setRepoFilter] = useState<Filter>(() => new Filter());
   const queryClient = useQueryClient();
 
   // Handle OAuth callback.
@@ -114,17 +111,6 @@ export default function App({ username }: { username: string | null }) {
     }
     return calendar;
   }, [contributions]);
-
-  // Update repoFilter with newly loaded repositories.
-  useEffect(() => {
-    if (!calendar) {
-      return;
-    }
-
-    setRepoFilter((old) =>
-      old.addReposIfMissing([...calendar.repoUrls()]) || old
-    );
-  }, [calendar]);
 
   let errorMessage = authError;
   if (queryError) {
@@ -213,21 +199,7 @@ export default function App({ username }: { username: string | null }) {
         <div className="loading-message">Loading contributions...</div>
       )}
       {calendar
-        ? (
-          <>
-            <ContributionsGraph
-              calendar={calendar}
-              filter={repoFilter}
-              highlight={highlight}
-            />
-            <RepositoryList
-              calendar={calendar}
-              filter={repoFilter}
-              setFilter={setRepoFilter}
-              setHighlight={setHighlight}
-            />
-          </>
-        )
+        ? <ContributionsView calendar={calendar} />
         : <div className="info-message">No contributions data</div>}
     </>
   );
