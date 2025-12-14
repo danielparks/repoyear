@@ -13,7 +13,7 @@ export function StaticApp() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("./assets/contributions.json")
+    fetch("assets/contributions.json")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -23,10 +23,9 @@ export function StaticApp() {
       .then((data: Contributions[]) => {
         setContributions(data);
       })
-      .catch((err: unknown) => {
-        setError(
-          err instanceof Error ? err.message : "Failed to load contributions",
-        );
+      .catch((error: unknown) => {
+        console.error("Error loading assets/contributions.json", error);
+        setError("Could not load contributions.");
       });
   }, []);
 
@@ -43,30 +42,11 @@ export function StaticApp() {
   }, [contributions]);
 
   if (error) {
-    return (
-      <div className="login-container">
-        <h1>GitHub Contribution Graph</h1>
-        <div className="error-message">{error}</div>
-      </div>
-    );
-  }
-
-  if (!contributions) {
-    return (
-      <div className="login-container">
-        <h1>GitHub Contribution Graph</h1>
-        <div className="loading-message">Loading contributions...</div>
-      </div>
-    );
-  }
-
-  if (!calendar) {
-    return (
-      <div className="login-container">
-        <h1>GitHub Contribution Graph</h1>
-        <div className="error-message">No contribution data available</div>
-      </div>
-    );
+    return message("error", error);
+  } else if (!contributions) {
+    return message("loading", "Loading contributions…");
+  } else if (!calendar) {
+    return message("error", "No contribution data available.");
   }
 
   return (
@@ -76,6 +56,15 @@ export function StaticApp() {
       </header>
       <ContributionsView calendar={calendar} />
     </>
+  );
+}
+
+function message(type: string, message: string) {
+  return (
+    <div className="login-container">
+      <h1>GitHub Contribution Graph</h1>
+      <div className={`${type}-message`}>{message}</div>
+    </div>
   );
 }
 
