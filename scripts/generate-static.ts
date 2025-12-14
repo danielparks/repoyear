@@ -1,4 +1,5 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env
+
 import { GitHub } from "../src/github/api.ts";
 import type { Contributions } from "../src/github/api.ts";
 
@@ -14,7 +15,7 @@ function parseArgs(): Args {
   let username = "";
   let tokenFile = ".github-token";
   let verbose = false;
-  let outputFile = "static.html";
+  let outputFile = "dist/assets/contributions.json";
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -43,13 +44,17 @@ function parseArgs(): Args {
   }
 
   if (!username) {
-    throw new Error(
-      "Usage: generate-static.ts [options] <username>\n" +
-        "Options:\n" +
-        "  -t, --token-file <file>  Path to file containing GitHub token (default: .github-token)\n" +
-        "  -o, --output <file>      Output file path (default: static.html)\n" +
-        "  -v, --verbose            Enable verbose output",
+    console.error(
+      `Usage: generate-static.ts [options] <username>
+
+Options:
+  -t, --token-file <file>  Path to file containing GitHub token
+                           (default: .github-token)
+  -o, --output <file>      Path to JSON file to generate
+                           (default: dist/assets/contributions.json)
+  -v, --verbose            Enable verbose output`,
     );
+    Deno.exit(1);
   }
 
   return { username, tokenFile, verbose, outputFile };
@@ -68,6 +73,9 @@ async function fetchContributions(
   username: string,
   verbose: boolean,
 ): Promise<Contributions[]> {
+  if (verbose) {
+    console.log(`Fetching contributions for ${username}...`);
+  }
   const gh = new GitHub(token);
   if (verbose) {
     gh.installRateLimitReport();
@@ -78,57 +86,34 @@ async function fetchContributions(
     contributions.push(contribution);
   }
 
+  if (verbose) {
+    console.log(`Fetched ${contributions.length} contribution batches`);
+  }
   return contributions;
-}
-
-async function generateStaticHtml(
-  contributions: Contributions[],
-  outputFile: string,
-): Promise<void> {
-  const template = await Deno.readTextFile("static.html");
-
-  const dataScript = `<script>window.CALENDAR_DATA = ${
-    JSON.stringify(contributions)
-  };</script>`;
-
-  const html = template.replace(
-    '<div id="root"></div>',
-    `<div id="root"></div>\n    ${dataScript}`,
-  );
-
-  await Deno.writeTextFile(outputFile, html);
 }
 
 async function main() {
   try {
-    const args = parseArgs();
+    const { username, tokenFile, verbose, outputFile } = parseArgs();
 
-    if (args.verbose) {
-      console.log(`Fetching contributions for ${args.username}...`);
-      console.log(`Reading token from ${args.tokenFile}...`);
+    if (verbose) {
+      console.log(`Reading token from ${tokenFile}...`);
     }
+    const token = await readToken(tokenFile);
 
-    const token = await readToken(args.tokenFile);
-    const contributions = await fetchContributions(
-      token,
-      args.username,
-      args.verbose,
+    await Deno.writeTextFile(
+      outputFile,
+      JSON.stringify(await fetchContributions(token, username, verbose)),
     );
 
-    if (args.verbose) {
-      console.log(`Fetched ${contributions.length} contribution batches`);
-      console.log(`Generating ${args.outputFile}...`);
-    }
-
-    await generateStaticHtml(contributions, args.outputFile);
-
-    if (args.verbose) {
-      console.log(`Done! Generated ${args.outputFile}`);
+    if (verbose) {
+      console.log(`Generated ${outputFile}`);
     }
   } catch (error) {
     console.error("Error:", error instanceof Error ? error.message : error);
     Deno.exit(1);
   }
+  Deno.exit(0);
 }
 
 main();
