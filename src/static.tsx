@@ -13,7 +13,10 @@ export function StaticApp() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("assets/contributions.json")
+    const url =
+      (import.meta.env.VITE_CONTRIBUTIONS_URL as string | undefined) ||
+      "assets/contributions.json";
+    fetch(url)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -24,7 +27,7 @@ export function StaticApp() {
         setContributions(data);
       })
       .catch((error: unknown) => {
-        console.error("Error loading assets/contributions.json", error);
+        console.error(`Error loading ${url}`, error);
         setError("Could not load contributions.");
       });
   }, []);
