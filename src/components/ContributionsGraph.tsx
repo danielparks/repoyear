@@ -155,7 +155,7 @@ function DayInfo({ day }: { day: Day }) {
             <td className="count">
               {day.contributionCount}
             </td>
-            <th></th>
+            <th className="date">{day.date.toLocaleDateString()}</th>
           </tr>
         </tfoot>
       </table>

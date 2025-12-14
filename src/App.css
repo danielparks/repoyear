@@ -208,6 +208,10 @@ table.contributions > tbody > tr > td > ol > li {
   display: block;
 }
 
+.day-info > table {
+  width: 100%;
+}
+
 .day-info th {
   text-align: left;
   font-weight: normal;
@@ -220,6 +224,11 @@ table.contributions > tbody > tr > td > ol > li {
 
 .day-info tfoot td.count {
   border-top: 1px solid #000;
+}
+
+.day-info tfoot th.date {
+  text-align: right;
+  font-weight: bold;
 }
 
 .day-info span.unknown {
