@@ -2,7 +2,7 @@ import "./App.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
-import { CompactGraph } from "./components/CompactGraph.tsx";
+import { ContributionsGraph } from "./components/ContributionsGraph.tsx";
 import { StatusMessage } from "./components/StatusMessage.tsx";
 import { useStaticCalendar } from "./hooks/useStaticCalendar.ts";
 
@@ -20,7 +20,13 @@ export function CompactApp() {
     );
   }
 
-  return <CompactGraph calendar={calendar} clickUrl={clickUrl} />;
+  return (
+    <ContributionsGraph
+      calendar={calendar}
+      clickUrl={clickUrl}
+      showTooltip={false}
+    />
+  );
 }
 
 createRoot(document.getElementById("root") as HTMLElement).render(

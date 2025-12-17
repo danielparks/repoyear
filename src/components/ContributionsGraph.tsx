@@ -1,17 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, Day, Filter } from "../model.ts";
 
+export interface ContributionsGraphProps {
+  calendar: Calendar;
+  filter?: Filter;
+  highlight?: string | null;
+  clickUrl?: string;
+  showTooltip?: boolean;
+}
+
 export function ContributionsGraph(
-  { calendar, filter, highlight }: {
-    calendar: Calendar;
-    filter: Filter;
-    highlight: string | null;
-  },
+  { calendar, filter, highlight, clickUrl, showTooltip = true }:
+    ContributionsGraphProps,
 ) {
   const dayMax = calendar.maxContributions();
+  const effectiveFilter = filter ?? new Filter();
+  const effectiveHighlight = highlight ?? null;
+
+  const handleClick = clickUrl
+    ? () => {
+      globalThis.location.href = clickUrl;
+    }
+    : undefined;
 
   return (
-    <table className="contributions">
+    <table
+      className="contributions"
+      onClick={handleClick}
+      style={clickUrl ? { cursor: "pointer" } : undefined}
+    >
       <tbody>
         {[...calendar.weeks()].map((week) => (
           <tr key={`week ${week[0].date}`} className="week">
@@ -19,9 +36,10 @@ export function ContributionsGraph(
               <GraphDay
                 key={day.date.toString()}
                 day={day}
-                filter={filter}
+                filter={effectiveFilter}
                 max={dayMax}
-                highlight={highlight}
+                highlight={effectiveHighlight}
+                showTooltip={showTooltip}
               />
             ))}
           </tr>
