@@ -96,6 +96,27 @@ async function fetchContributions(
   return contributions;
 }
 
+async function atomicWrite(path: string, content: string) {
+  let attempt = 1;
+  let tempPath = `${path}.temp`;
+
+  while (true) {
+    try {
+      await Deno.writeTextFile(tempPath, content, { createNew: true });
+      break;
+    } catch (error: unknown) {
+      if (error instanceof Deno.errors.AlreadyExists) {
+        attempt++;
+        tempPath = `${path}.temp_${attempt.toString()}`;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  await Deno.rename(tempPath, path);
+}
+
 async function main() {
   try {
     const { username, tokenFile, verbose, outputFile } = parseArgs();
@@ -105,7 +126,7 @@ async function main() {
     }
     const token = await readToken(tokenFile);
 
-    await Deno.writeTextFile(
+    await atomicWrite(
       outputFile,
       JSON.stringify(await fetchContributions(token, username, verbose)),
     );
