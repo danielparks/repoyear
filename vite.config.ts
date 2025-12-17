@@ -1,5 +1,4 @@
 import { defineConfig } from "vite";
-import checker from "vite-plugin-checker";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
@@ -7,15 +6,6 @@ import { resolve } from "node:path";
 export default defineConfig({
   base: "",
   plugins: [
-    checker({
-      typescript: {
-        buildMode: true,
-      },
-      eslint: {
-        useFlatConfig: true,
-        lintCommand: 'eslint "src/**/*.{ts,tsx}"',
-      },
-    }),
     react(),
   ],
   build: {
