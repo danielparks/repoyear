@@ -1,4 +1,5 @@
-import { Calendar, Day, Filter } from "../model.ts";
+import { Calendar, Filter } from "../model.ts";
+import { GraphDay } from "./ContributionsGraph.tsx";
 
 export function CompactGraph(
   { calendar, clickUrl }: {
@@ -25,75 +26,17 @@ export function CompactGraph(
         {[...calendar.weeks()].map((week) => (
           <tr key={`week ${week[0].date}`} className="week">
             {week.map((day) => (
-              <CompactDay
+              <GraphDay
                 key={day.date.toString()}
                 day={day}
                 filter={filter}
                 max={dayMax}
+                showTooltip={false}
               />
             ))}
           </tr>
         ))}
       </tbody>
     </table>
-  );
-}
-
-function CompactDay(
-  { day, filter, max }: {
-    day: Day;
-    filter: Filter;
-    max: number;
-  },
-) {
-  function countToLightness(count: number) {
-    if (count) {
-      return 59 * (1 - count / max) + 40;
-    } else {
-      return 100;
-    }
-  }
-
-  interface Subdivision {
-    key: string;
-    style: React.CSSProperties;
-  }
-  let subdivisions: Subdivision[] = [];
-  let style = {};
-  const className: string[] = [];
-
-  if (day.addsUp()) {
-    subdivisions = day.filteredRepos(filter).map((repoDay) => ({
-      key: repoDay.url(),
-      style: {
-        flex: repoDay.count(),
-        background: repoDay.repository.color(
-          countToLightness(day.filteredCount(filter)),
-          0.1,
-        ),
-      },
-    }));
-
-    if (subdivisions.length == 0) {
-      className.push("empty");
-    }
-  } else {
-    const lightness = countToLightness(day.contributionCount || 0);
-    className.push("unknown");
-    style = {
-      background: `hsl(270deg 40% ${lightness}%)`,
-    };
-
-    if (day.contributionCount === 0) {
-      className.push("empty");
-    }
-  }
-
-  return (
-    <td style={style} className={className.join(" ")}>
-      <ol>
-        {subdivisions.map(({ key, style }) => <li key={key} style={style} />)}
-      </ol>
-    </td>
   );
 }

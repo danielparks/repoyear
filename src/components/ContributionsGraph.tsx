@@ -31,13 +31,16 @@ export function ContributionsGraph(
   );
 }
 
-function GraphDay(
-  { day, filter, max, highlight }: {
-    day: Day;
-    filter: Filter;
-    max: number;
-    highlight: string | null;
-  },
+export interface GraphDayProps {
+  day: Day;
+  filter: Filter;
+  max: number;
+  highlight?: string | null;
+  showTooltip?: boolean;
+}
+
+export function GraphDay(
+  { day, filter, max, highlight, showTooltip = true }: GraphDayProps,
 ) {
   const className: string[] = [];
   if (highlight && day.hasRepo(highlight)) {
@@ -87,7 +90,7 @@ function GraphDay(
 
   return (
     <td style={style} className={className.join(" ")}>
-      <DayInfo day={day} />
+      {showTooltip && <DayInfo day={day} />}
       <ol>
         {subdivisions.map(({ key, style }) => <li key={key} style={style} />)}
       </ol>
