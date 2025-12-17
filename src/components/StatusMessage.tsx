@@ -4,6 +4,11 @@ export interface StatusMessageProps {
   title?: string;
 }
 
+/**
+ * Displays a status message (loading or error state).
+ *
+ * Used when the app is waiting for data or has encountered an error.
+ */
 export function StatusMessage({ type, message, title }: StatusMessageProps) {
   return (
     <div className="login-container">

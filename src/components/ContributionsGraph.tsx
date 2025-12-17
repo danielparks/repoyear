@@ -9,6 +9,12 @@ export interface ContributionsGraphProps {
   showTooltip?: boolean;
 }
 
+/**
+ * Renders the contribution calendar as a grid of colored cells.
+ *
+ * Supports optional filtering, highlighting, tooltips, and click navigation.
+ * Can be used in both interactive (with filter/highlight) and static modes.
+ */
 export function ContributionsGraph(
   {
     calendar,
@@ -60,6 +66,12 @@ export interface GraphDayProps {
   showTooltip?: boolean;
 }
 
+/**
+ * Renders a single day cell in the contribution graph.
+ *
+ * The cell is subdivided by repository contributions, with colors indicating
+ * intensity. Optionally shows a tooltip on hover with contribution details.
+ */
 export function GraphDay(
   { day, filter, max, highlight, showTooltip = true }: GraphDayProps,
 ) {
@@ -68,6 +80,11 @@ export function GraphDay(
     className.push("highlight");
   }
 
+  /**
+   * Converts a contribution count to an OKLCH lightness value (40-100%).
+   *
+   * Higher contribution counts result in darker colors.
+   */
   function countToLightness(count: number) {
     if (count) {
       return 59 * (1 - count / max) + 40;
@@ -119,13 +136,17 @@ export function GraphDay(
   );
 }
 
+/**
+ * Tooltip displaying detailed contribution information for a day.
+ *
+ * Automatically positions itself to avoid overflowing the window.
+ */
 function DayInfo({ day }: { day: Day }) {
   const divRef = useRef<HTMLDivElement>(null);
   const [classNames, setClassNames] = useState(["day-info"]);
 
   useEffect(() => {
     function checkOverflow() {
-      // Check the overflow of the parent <td>.
       if (divRef.current && divRef.current.parentNode) {
         const rect = (divRef.current.parentNode as HTMLTableCellElement)
           .getBoundingClientRect();

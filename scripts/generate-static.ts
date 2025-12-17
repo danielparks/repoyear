@@ -20,6 +20,9 @@ Options:
   -v, --verbose            Enable verbose output
   --help                   Show this output.`;
 
+/**
+ * Parses command-line arguments.
+ */
 function parseArgs(): Args {
   const args = Deno.args;
   let username = "";
@@ -64,6 +67,9 @@ function parseArgs(): Args {
   return { username, tokenFile, verbose, outputFile };
 }
 
+/**
+ * Reads a GitHub personal access token from a file.
+ */
 async function readToken(tokenFile: string): Promise<string> {
   const token = (await Deno.readTextFile(tokenFile)).trim();
   if (!token) {
@@ -72,6 +78,9 @@ async function readToken(tokenFile: string): Promise<string> {
   return token;
 }
 
+/**
+ * Fetches all contributions for a GitHub user.
+ */
 async function fetchContributions(
   token: string,
   username: string,
@@ -96,6 +105,11 @@ async function fetchContributions(
   return contributions;
 }
 
+/**
+ * Writes content to a file atomically using a temp file and rename.
+ *
+ * This ensures the target file is never partially written.
+ */
 async function atomicWrite(path: string, content: string) {
   let attempt = 1;
   let tempPath = `${path}.temp`;

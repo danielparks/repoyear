@@ -1,6 +1,9 @@
 import * as github from "./github/api.ts";
 import * as gql from "./github/gql.ts";
 
+/**
+ * Parses an ISO date string (e.g., "2025-01-15") into a Date object.
+ */
 function parseDateTime(input: string) {
   const [year, month, ...rest] = input
     .split(/\D+/)
@@ -8,18 +11,28 @@ function parseDateTime(input: string) {
   return new Date(year, month - 1, ...rest);
 }
 
-// Convert a date time to a date in UTC.
-//
-// This converts a local date time to its localtime date, then encodes it in UTC
-// for simpler date math (UTC has no daylight saving time).
+/**
+ * Converts a local Date to UTC milliseconds, preserving the date (not time).
+ *
+ * This encodes the localtime date in UTC for simpler date math, since UTC
+ * has no daylight saving time.
+ */
 function toUtcDate(input: Date) {
   return Date.UTC(input.getFullYear(), input.getMonth(), input.getDate());
 }
 
+/**
+ * Manages which repositories are visible in the contribution graph.
+ *
+ * Maintains a default state (all on/off) and per-repository overrides.
+ */
 export class Filter {
   defaultState: boolean = true;
   states: Map<string, boolean> = new Map();
 
+  /**
+   * Creates a filter that only shows the specified repositories.
+   */
   static withOnlyRepos(...urls: string[]) {
     const filter = new Filter();
     filter.defaultState = false;
@@ -29,6 +42,9 @@ export class Filter {
     return filter;
   }
 
+  /**
+   * Checks whether a repository should be visible.
+   */
   isOn(url: string): boolean {
     const value = this.states.get(url);
     if (value === undefined) {
@@ -50,10 +66,16 @@ export class Filter {
   }
 }
 
+/**
+ * Represents a user's contribution calendar over a date range.
+ *
+ * Contains all contributions organized by day and repository.
+ */
 export class Calendar {
-  name: string; // User’s name.
+  name: string;
   start: Date;
-  start_ms: number; // UTC date encoded as ms since 1970.
+  /** UTC date encoded as ms since 1970 */
+  start_ms: number;
   days: Day[];
   repositories = new Map<string, Repository>();
 
@@ -64,6 +86,9 @@ export class Calendar {
     this.days = days;
   }
 
+  /**
+   * Creates a Calendar from GitHub contributions data.
+   */
   static fromContributions(contributions: github.Contributions) {
     const calendar = new Calendar(
       contributions.name,
@@ -77,10 +102,12 @@ export class Calendar {
     return calendar.updateFromContributions(contributions);
   }
 
+  /**
+   * Merges additional contributions data into this calendar.
+   */
   updateFromContributions(contributions: github.Contributions) {
-    // FIXME Ignores contributions.calendar; everything is loaded in first loop.
-    // However, if we want to add contributions from another date range this
-    // won’t work.
+    // FIXME: Ignores contributions.calendar; everything is loaded in first loop.
+    // If we want to add contributions from another date range this won't work.
 
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
@@ -134,7 +161,9 @@ export class Calendar {
     }
   }
 
-  // All repos sorted by decreasing contributions
+  /**
+   * Returns all repositories sorted by contribution count (highest first).
+   */
   mostUsedRepos() {
     const repos = [...this.repositories.values()];
     repos.sort((a, b) => b.contributions - a.contributions);
@@ -145,10 +174,13 @@ export class Calendar {
     return this.repositories.keys();
   }
 
+  /**
+   * Gets the RepositoryDay for a given timestamp and repository.
+   *
+   * Timestamps (occurredAt) are dates or datetimes in UTC (e.g.,
+   * "2025-10-02T07:00:00Z"), so parsing with `new Date(str)` works correctly.
+   */
   repoDay(timestamp: string, repository: gql.Repository) {
-    // timestamps (occurredAt) as either dates or datetimes explicitly in UTC,
-    // e.g. "2025-10-02T07:00:00Z" or "2025-11-06T21:41:51Z", so parsing with
-    // `new Date(str)` should be fine.
     const day = this.day(new Date(timestamp));
     if (!day) {
       console.warn(`Date "${timestamp}" not in calendar`);
@@ -166,13 +198,18 @@ export class Calendar {
     return repoDay;
   }
 
-  // Expects localtime date.
+  /**
+   * Gets the Day for a given localtime date.
+   *
+   * FIXME: doesn't handle out-of-range dates well.
+   */
   day(date: Date): Day | undefined {
-    // FIXME doesn’t handle out-of-range dates well.
     return this.days[Math.round((toUtcDate(date) - this.start_ms) / 86400000)];
   }
 
-  // Convert a GraphQL repository into a local, deduplicated repo.
+  /**
+   * Converts a GraphQL repository into a deduplicated local Repository object.
+   */
   cleanRepository({ url, isFork, isPrivate }: gql.Repository) {
     let repository = this.repositories.get(url);
     if (!repository) {
@@ -190,9 +227,13 @@ export class Calendar {
     );
   }
 
-  // FIXME test this.
+  /**
+   * Yields weeks (7-day arrays) of Days, starting on Sunday.
+   *
+   * Pads the first week if the start date isn't Sunday.
+   * FIXME: test this.
+   */
   *weeks() {
-    // Weeks always start on Sunday; if .start isn’t Sunday, pad with null Days.
     const firstWeek: Day[] = [];
     const date = new Date(this.start);
     for (let i = 0; i < this.start.getDay(); i++) {
@@ -208,6 +249,11 @@ export class Calendar {
   }
 }
 
+/**
+ * Represents a single day in the contribution calendar.
+ *
+ * Tracks total contributions and per-repository activity.
+ */
 export class Day {
   date: Date;
   contributionCount: number | null = null;
@@ -221,12 +267,16 @@ export class Day {
     this.contributionCount = contributionCount;
   }
 
-  // Do the contributions we know about add up to the contribution count?
+  /**
+   * Checks if known contributions match the total contribution count.
+   */
   addsUp() {
     return this.contributionCount == this.knownContributionCount();
   }
 
-  // Add up the contributions we know about specifically.
+  /**
+   * Sums up the contributions we know about from specific repositories.
+   */
   knownContributionCount() {
     return [...this.repositories.values()].reduce(
       (total, repoDay) => total + repoDay.count(),
@@ -252,16 +302,19 @@ export class Day {
   }
 }
 
+/**
+ * Represents activity for a single repository on a single day.
+ */
 export class RepositoryDay {
   readonly repository: Repository;
   commitCount = 0;
-  // How many times the repo was created this day. (Typically 0, sometimes 1.)
+  /** How many times the repo was created this day (typically 0, sometimes 1) */
   created = 0;
-  // Issue urls
+  /** Issue URLs */
   issues: string[] = [];
-  // PR urls
+  /** PR URLs */
   prs: string[] = [];
-  // PR review urls
+  /** PR review URLs */
   reviews: string[] = [];
 
   constructor(repository: Repository) {
@@ -286,11 +339,16 @@ export class RepositoryDay {
   }
 }
 
+/**
+ * Represents a GitHub repository with contribution tracking.
+ */
 export class Repository {
   url: string;
   isFork: boolean;
   isPrivate: boolean;
+  /** Color hue assigned for visualization */
   hue = 285;
+  /** Total contribution count across all days */
   contributions = 0;
 
   constructor(url: string, isFork = false, isPrivate = false) {
@@ -299,6 +357,9 @@ export class Repository {
     this.isPrivate = isPrivate;
   }
 
+  /**
+   * Returns an OKLCH color string for this repository.
+   */
   color(lightness = 55, chroma = 0.2) {
     return `oklch(${lightness}% ${chroma} ${this.hue}deg)`;
   }

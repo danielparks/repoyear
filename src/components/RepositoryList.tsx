@@ -1,6 +1,12 @@
 import { Calendar, Day, Filter, Repository } from "../model.ts";
 import { GitHubMark } from "../github/GitHubMark.tsx";
 
+/**
+ * Displays a filterable list of repositories with contribution sparklines.
+ *
+ * Allows users to toggle repository visibility and highlights repositories
+ * on hover.
+ */
 export function RepositoryList(
   { calendar, filter, setFilter, setHighlight }: {
     calendar: Calendar;
@@ -24,7 +30,6 @@ export function RepositoryList(
               setHighlight(repo.url);
             }}
             onMouseLeave={() => {
-              // Only unset highlight if it was for this repo.
               setHighlight((old) => old == repo.url ? null : old);
             }}
           >
@@ -54,6 +59,12 @@ function RepositoryName({ repo }: { repo: Repository }) {
   );
 }
 
+/**
+ * A mini bar chart showing contribution intensity over time.
+ *
+ * Divides the calendar into ~25 segments and displays the contribution
+ * count for each segment as a vertical bar.
+ */
 function Sparkline({ calendar, repo }: {
   calendar: Calendar;
   repo: Repository;
