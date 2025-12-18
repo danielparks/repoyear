@@ -26,7 +26,7 @@ export function Router() {
   return <App username={username} />;
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryCacheProvider>
