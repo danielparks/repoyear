@@ -5,10 +5,7 @@
     "jsxImportSource": "react"
   },
   "exclude": [
-    "rust-crate",
-    "**/*.vitest.tsx",
-    "**/*.vitest.ts",
-    "src/test/"
+    "rust-crate"
   ],
   "fmt": {
     "exclude": [
