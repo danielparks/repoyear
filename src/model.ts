@@ -194,10 +194,6 @@ export class Calendar {
    */
   repoDay(timestamp: string, repository: gql.Repository) {
     const day = this.day(new Date(timestamp));
-    if (!day) {
-      console.warn(`Date "${timestamp}" not in calendar`);
-      return;
-    }
 
     let repoDay = day.repositories.get(repository.url);
     if (!repoDay) {
@@ -211,16 +207,51 @@ export class Calendar {
   }
 
   /**
-   * Gets the Day for a given localtime date.
+   * Gets the Day for a given localtime date, creating it if needed.
    *
-   * FIXME: should create a day if it doesn't exist. Rename method too?
+   * Maintains the invariant that `days[0]` is always a Sunday.
    */
-  day(date: Date): Day | undefined {
+  day(date: Date): Day {
+    const dateMs = toUtcDate(date);
+
     if (this.days.length == 0) {
-      return undefined;
+      const sunday = new Date(date);
+      sunday.setDate(date.getDate() - date.getDay());
+      this.days.push(new Day(sunday));
+
+      const current = new Date(sunday);
+      while (toUtcDate(current) < dateMs) {
+        current.setDate(current.getDate() + 1);
+        this.days.push(new Day(new Date(current)));
+      }
     }
-    const ms_difference = toUtcDate(date) - toUtcDate(this.days[0].date);
-    return this.days[Math.round(ms_difference / 86400000)];
+
+    const firstMs = toUtcDate(this.days[0].date);
+    const lastMs = toUtcDate(this.days[this.days.length - 1].date);
+
+    if (dateMs < firstMs) {
+      const sundayOfDate = new Date(date);
+      sundayOfDate.setDate(date.getDate() - date.getDay());
+
+      const prepend: Day[] = [];
+      const current = new Date(sundayOfDate);
+      while (toUtcDate(current) < firstMs) {
+        prepend.push(new Day(new Date(current)));
+        current.setDate(current.getDate() + 1);
+      }
+      this.days.unshift(...prepend);
+    } else if (dateMs > lastMs) {
+      const current = new Date(this.days[this.days.length - 1].date);
+      while (toUtcDate(current) < dateMs) {
+        current.setDate(current.getDate() + 1);
+        this.days.push(new Day(new Date(current)));
+      }
+    }
+
+    const daysDiff = Math.round(
+      (dateMs - toUtcDate(this.days[0].date)) / 86400000,
+    );
+    return this.days[daysDiff];
   }
 
   /**
@@ -248,25 +279,9 @@ export class Calendar {
 
   /**
    * Yields weeks (7-day arrays) of Days, starting on Sunday.
-   *
-   * Pads the first week if the start date isn't Sunday.
    */
   *weeks() {
-    if (this.days.length == 0) {
-      return;
-    }
-
-    const firstWeek: Day[] = [];
-    const firstDate = this.days[0].date;
-    for (let i = 0; i < firstDate.getDay(); i++) {
-      const date = new Date(firstDate);
-      date.setDate(date.getDate() + i - firstDate.getDay());
-      firstWeek.push(new Day(date));
-    }
-    firstWeek.push(...this.days.slice(0, 7 - firstDate.getDay()));
-    yield firstWeek;
-
-    for (let i = 7 - firstDate.getDay(); i < this.days.length; i += 7) {
+    for (let i = 0; i < this.days.length; i += 7) {
       yield this.days.slice(i, i + 7);
     }
   }
