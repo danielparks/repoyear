@@ -1,6 +1,8 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@std/assert@^1.0.16": "1.0.16",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:@deno/vite-plugin@^1.0.5": "1.0.5_vite@7.3.0__@types+node@24.10.4__picomatch@4.0.3_@types+node@24.10.4",
     "npm:@graphql-codegen/add@6": "6.0.0_graphql@16.12.0",
     "npm:@graphql-codegen/cli@^6.1.0": "6.1.0_graphql@16.12.0_@types+node@24.10.4_typescript@5.9.3",
@@ -29,6 +31,17 @@
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:vite@^7.3.0": "7.3.0_@types+node@24.10.4_picomatch@4.0.3",
     "npm:vitest@^4.0.16": "4.0.16_@types+node@24.10.4_@vitest+ui@4.0.16__vitest@4.0.16__@types+node@24.10.4__happy-dom@20.0.11_happy-dom@20.0.11_vite@7.3.0__@types+node@24.10.4__picomatch@4.0.3"
+  },
+  "jsr": {
+    "@std/assert@1.0.16": {
+      "integrity": "6a7272ed1eaa77defe76e5ff63ca705d9c495077e2d5fd0126d2b53fc5bd6532",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    }
   },
   "npm": {
     "@adobe/css-tools@4.4.4": {
@@ -3174,6 +3187,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@^1.0.16",
       "npm:@types/react@19.2.7",
       "npm:react@19.2.3"
     ],
