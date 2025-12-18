@@ -1,3 +1,10 @@
+exclude: |
+  (?x)(
+    ^rust-crate/target/|
+    ^src/github/gql[.]ts$|
+    ^src/github/schema[.]graphql$
+  )
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -17,14 +24,12 @@ repos:
       - id: detect-private-key
       - id: mixed-line-ending
         args: ["--fix=no"]
-        exclude: "^rust-crate/target/"
       - id: no-commit-to-branch
   - repo: https://github.com/crate-ci/typos
     rev: v1.40.0
     hooks:
       - id: typos
         args: []
-        exclude: "^rust-crate/target/"
   - repo: local
     hooks:
       - id: cargo clippy
