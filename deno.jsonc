@@ -22,10 +22,6 @@
       "src/api/http-client.ts",
       "src/api/util.ts",
       "src/github/gql.ts"
-    ],
-    "rules": {
-      // eslint already catches explicit any
-      "exclude": ["no-explicit-any"]
-    }
+    ]
   }
 }

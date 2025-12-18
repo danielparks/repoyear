@@ -214,8 +214,6 @@ export class GitHub {
         login: user.login,
         name: user.name || "",
         calendar: collection.contributionCalendar,
-        // The following isn’t actually always truthy.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         commits: collection.commitContributionsByRepository || [],
         issues: cleanNodes(collection.issueContributions.nodes),
         prs: cleanNodes(collection.pullRequestContributions.nodes),
