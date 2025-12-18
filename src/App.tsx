@@ -72,7 +72,8 @@ export default function App({ username }: { username: string | null }) {
         if (token) {
           setAuthError(null);
           setAccessToken(token);
-          // FIXME? This will be available to the entire origin.
+          // This is available to the entire origin. Cookies aren't any better;
+          // see https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie#security
           localStorage.setItem("github_token", token);
         } else {
           setAuthError("Error during authentication");
