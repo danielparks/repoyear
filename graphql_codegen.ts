@@ -1,3 +1,9 @@
+/**
+ * Configure GraphQL type code generation.
+ *
+ * `deno run generate:graphql`
+ */
+
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
@@ -10,12 +16,11 @@ const config: CodegenConfig = {
         useTypeImports: true,
       },
       plugins: [
-        { add: { content: "/* eslint-disable */" } },
-        { add: { content: "// deno-lint-ignore-file" } },
         "typescript",
       ],
     },
   },
-  hooks: { afterAllFileWrite: ["deno fmt src/github/gql.ts"] },
+  // deno fmt will be passed src/github/gql.ts
+  hooks: { afterAllFileWrite: ["deno fmt"] },
 };
 export default config;

@@ -13,6 +13,7 @@ export default defineConfig([
     "src/api/Api.ts",
     "src/api/http-client.ts",
     "src/api/util.ts",
+    "src/github/gql.ts",
   ]),
   {
     files: ["**/*.{ts,tsx}"],
