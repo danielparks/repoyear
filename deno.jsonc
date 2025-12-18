@@ -5,7 +5,10 @@
     "jsxImportSource": "react"
   },
   "exclude": [
-    "rust-crate"
+    "rust-crate",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/test/"
   ],
   "fmt": {
     "exclude": [
@@ -24,7 +27,9 @@
       "src/api/Api.ts",
       "src/api/http-client.ts",
       "src/api/util.ts",
-      "src/github/gql.ts"
+      "src/github/gql.ts",
+      "**/*.test.ts",
+      "**/*.test.tsx"
     ]
   }
 }
