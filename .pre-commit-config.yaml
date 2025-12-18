@@ -60,6 +60,13 @@ repos:
         types_or: [ts, tsx]
         pass_filenames: false
         language: system
+      - id: deno run vitest:run
+        name: vitest
+        description: Run vitest
+        entry: deno run vitest:run
+        types_or: [ts, tsx]
+        pass_filenames: false
+        language: system
       - id: api-types-check
         name: api types check
         description: Ensure API types are up-to-date
@@ -73,4 +80,3 @@ repos:
       - id: deno-fmt-check
       - id: deno-lint
       - id: deno-test
-        args: ["--permit-no-files"]

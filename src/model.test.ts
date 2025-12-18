@@ -1,127 +1,127 @@
-import { describe, expect, it } from "vitest";
+import { assertEquals, assertStrictEquals } from "@std/assert";
 import { Calendar, Day, Filter, Repository, RepositoryDay } from "./model.ts";
 import * as gql from "./github/gql.ts";
 
-describe("Filter", () => {
-  it("should be on by default for any repo", () => {
+Deno.test("Filter", async (t) => {
+  await t.step("should be on by default for any repo", () => {
     const filter = new Filter();
-    expect(filter.isOn("https://github.com/test/repo")).toBe(true);
-    expect(filter.isOn("https://github.com/another/repo")).toBe(true);
+    assertEquals(filter.isOn("https://github.com/test/repo"), true);
+    assertEquals(filter.isOn("https://github.com/another/repo"), true);
   });
 
-  it("should create filter with only specified repos", () => {
+  await t.step("should create filter with only specified repos", () => {
     const filter = Filter.withOnlyRepos(
       "https://github.com/test/repo1",
       "https://github.com/test/repo2",
     );
 
-    expect(filter.isOn("https://github.com/test/repo1")).toBe(true);
-    expect(filter.isOn("https://github.com/test/repo2")).toBe(true);
-    expect(filter.isOn("https://github.com/other/repo")).toBe(false);
+    assertEquals(filter.isOn("https://github.com/test/repo1"), true);
+    assertEquals(filter.isOn("https://github.com/test/repo2"), true);
+    assertEquals(filter.isOn("https://github.com/other/repo"), false);
   });
 
-  it("should switch repo on/off", () => {
+  await t.step("should switch repo on/off", () => {
     const filter = new Filter();
     filter.switchRepo("https://github.com/test/repo", false);
-    expect(filter.isOn("https://github.com/test/repo")).toBe(false);
+    assertEquals(filter.isOn("https://github.com/test/repo"), false);
 
     filter.switchRepo("https://github.com/test/repo", true);
-    expect(filter.isOn("https://github.com/test/repo")).toBe(true);
+    assertEquals(filter.isOn("https://github.com/test/repo"), true);
   });
 
-  it("should clone with same state", () => {
+  await t.step("should clone with same state", () => {
     const filter = new Filter();
     filter.defaultState = false;
     filter.switchRepo("https://github.com/test/repo", true);
 
     const cloned = filter.clone();
-    expect(cloned.defaultState).toBe(false);
-    expect(cloned.isOn("https://github.com/test/repo")).toBe(true);
-    expect(cloned.isOn("https://github.com/other/repo")).toBe(false);
+    assertEquals(cloned.defaultState, false);
+    assertEquals(cloned.isOn("https://github.com/test/repo"), true);
+    assertEquals(cloned.isOn("https://github.com/other/repo"), false);
   });
 
-  it("should not affect original when cloning", () => {
+  await t.step("should not affect original when cloning", () => {
     const filter = new Filter();
     filter.switchRepo("https://github.com/test/repo", false);
 
     const cloned = filter.clone();
     cloned.switchRepo("https://github.com/test/repo", true);
 
-    expect(filter.isOn("https://github.com/test/repo")).toBe(false);
-    expect(cloned.isOn("https://github.com/test/repo")).toBe(true);
+    assertEquals(filter.isOn("https://github.com/test/repo"), false);
+    assertEquals(cloned.isOn("https://github.com/test/repo"), true);
   });
 });
 
-describe("Repository", () => {
-  it("should create repository with URL", () => {
+Deno.test("Repository", async (t) => {
+  await t.step("should create repository with URL", () => {
     const repo = new Repository("https://github.com/test/repo");
-    expect(repo.url).toBe("https://github.com/test/repo");
-    expect(repo.isFork).toBe(false);
-    expect(repo.isPrivate).toBe(false);
-    expect(repo.contributions).toBe(0);
+    assertEquals(repo.url, "https://github.com/test/repo");
+    assertEquals(repo.isFork, false);
+    assertEquals(repo.isPrivate, false);
+    assertEquals(repo.contributions, 0);
   });
 
-  it("should create repository with fork and private flags", () => {
+  await t.step("should create repository with fork and private flags", () => {
     const repo = new Repository(
       "https://github.com/test/repo",
       true,
       true,
     );
-    expect(repo.isFork).toBe(true);
-    expect(repo.isPrivate).toBe(true);
+    assertEquals(repo.isFork, true);
+    assertEquals(repo.isPrivate, true);
   });
 
-  it("should generate OKLCH color string", () => {
+  await t.step("should generate OKLCH color string", () => {
     const repo = new Repository("https://github.com/test/repo");
     repo.hue = 120;
     const color = repo.color(55, 0.2);
-    expect(color).toBe("oklch(55% 0.2 120deg)");
+    assertEquals(color, "oklch(55% 0.2 120deg)");
   });
 
-  it("should use default lightness and chroma", () => {
+  await t.step("should use default lightness and chroma", () => {
     const repo = new Repository("https://github.com/test/repo");
     repo.hue = 180;
     const color = repo.color();
-    expect(color).toBe("oklch(55% 0.2 180deg)");
+    assertEquals(color, "oklch(55% 0.2 180deg)");
   });
 });
 
-describe("RepositoryDay", () => {
+Deno.test("RepositoryDay", async (t) => {
   const repo = new Repository("https://github.com/test/repo");
 
-  it("should start with zero counts", () => {
+  await t.step("should start with zero counts", () => {
     const repoDay = new RepositoryDay(repo);
-    expect(repoDay.commitCount).toBe(0);
-    expect(repoDay.created).toBe(0);
-    expect(repoDay.issues).toEqual([]);
-    expect(repoDay.prs).toEqual([]);
-    expect(repoDay.reviews).toEqual([]);
-    expect(repoDay.count()).toBe(0);
+    assertEquals(repoDay.commitCount, 0);
+    assertEquals(repoDay.created, 0);
+    assertEquals(repoDay.issues, []);
+    assertEquals(repoDay.prs, []);
+    assertEquals(repoDay.reviews, []);
+    assertEquals(repoDay.count(), 0);
   });
 
-  it("should add commits", () => {
+  await t.step("should add commits", () => {
     const repoDay = new RepositoryDay(repo);
     repoDay.addCommits(5);
-    expect(repoDay.commitCount).toBe(5);
-    expect(repoDay.count()).toBe(5);
+    assertEquals(repoDay.commitCount, 5);
+    assertEquals(repoDay.count(), 5);
   });
 
-  it("should add multiple commits", () => {
+  await t.step("should add multiple commits", () => {
     const repoDay = new RepositoryDay(repo);
     repoDay.addCommits(3);
     repoDay.addCommits(2);
-    expect(repoDay.commitCount).toBe(5);
-    expect(repoDay.count()).toBe(5);
+    assertEquals(repoDay.commitCount, 5);
+    assertEquals(repoDay.count(), 5);
   });
 
-  it("should add repository creation", () => {
+  await t.step("should add repository creation", () => {
     const repoDay = new RepositoryDay(repo);
     repoDay.addCreate();
-    expect(repoDay.created).toBe(1);
-    expect(repoDay.count()).toBe(1);
+    assertEquals(repoDay.created, 1);
+    assertEquals(repoDay.count(), 1);
   });
 
-  it("should count all contribution types", () => {
+  await t.step("should count all contribution types", () => {
     const repoDay = new RepositoryDay(repo);
     repoDay.addCommits(3);
     repoDay.addCreate();
@@ -132,31 +132,31 @@ describe("RepositoryDay", () => {
     repoDay.prs.push("https://github.com/test/repo/pull/1");
     repoDay.reviews.push("https://github.com/test/repo/pull/1#review");
 
-    expect(repoDay.count()).toBe(8);
+    assertEquals(repoDay.count(), 8);
   });
 
-  it("should return repository URL", () => {
+  await t.step("should return repository URL", () => {
     const repoDay = new RepositoryDay(repo);
-    expect(repoDay.url()).toBe("https://github.com/test/repo");
+    assertEquals(repoDay.url(), "https://github.com/test/repo");
   });
 });
 
-describe("Day", () => {
+Deno.test("Day", async (t) => {
   const date = new Date(2025, 0, 15);
 
-  it("should create day with date", () => {
+  await t.step("should create day with date", () => {
     const day = new Day(date);
-    expect(day.date).toBe(date);
-    expect(day.contributionCount).toBe(null);
-    expect(day.repositories.size).toBe(0);
+    assertStrictEquals(day.date, date);
+    assertEquals(day.contributionCount, null);
+    assertEquals(day.repositories.size, 0);
   });
 
-  it("should create day with contribution count", () => {
+  await t.step("should create day with contribution count", () => {
     const day = new Day(date, 5);
-    expect(day.contributionCount).toBe(5);
+    assertEquals(day.contributionCount, 5);
   });
 
-  it("should calculate known contribution count", () => {
+  await t.step("should calculate known contribution count", () => {
     const day = new Day(date, 10);
     const repo1 = new Repository("https://github.com/test/repo1");
     const repo2 = new Repository("https://github.com/test/repo2");
@@ -170,30 +170,30 @@ describe("Day", () => {
     repoDay2.issues.push("https://github.com/test/repo2/issues/1");
     day.repositories.set(repo2.url, repoDay2);
 
-    expect(day.knownContributionCount()).toBe(6);
+    assertEquals(day.knownContributionCount(), 6);
   });
 
-  it("should check if contributions add up", () => {
+  await t.step("should check if contributions add up", () => {
     const day = new Day(date, 5);
     const repo = new Repository("https://github.com/test/repo");
     const repoDay = new RepositoryDay(repo);
     repoDay.addCommits(5);
     day.repositories.set(repo.url, repoDay);
 
-    expect(day.addsUp()).toBe(true);
+    assertEquals(day.addsUp(), true);
   });
 
-  it("should return false when contributions don't add up", () => {
+  await t.step("should return false when contributions don't add up", () => {
     const day = new Day(date, 10);
     const repo = new Repository("https://github.com/test/repo");
     const repoDay = new RepositoryDay(repo);
     repoDay.addCommits(5);
     day.repositories.set(repo.url, repoDay);
 
-    expect(day.addsUp()).toBe(false);
+    assertEquals(day.addsUp(), false);
   });
 
-  it("should filter repositories by filter", () => {
+  await t.step("should filter repositories by filter", () => {
     const day = new Day(date);
     const repo1 = new Repository("https://github.com/test/repo1");
     const repo2 = new Repository("https://github.com/test/repo2");
@@ -204,11 +204,11 @@ describe("Day", () => {
     const filter = Filter.withOnlyRepos(repo1.url);
     const filtered = day.filteredRepos(filter);
 
-    expect(filtered.length).toBe(1);
-    expect(filtered[0].url()).toBe(repo1.url);
+    assertEquals(filtered.length, 1);
+    assertEquals(filtered[0].url(), repo1.url);
   });
 
-  it("should calculate filtered count", () => {
+  await t.step("should calculate filtered count", () => {
     const day = new Day(date);
     const repo1 = new Repository("https://github.com/test/repo1");
     const repo2 = new Repository("https://github.com/test/repo2");
@@ -222,40 +222,40 @@ describe("Day", () => {
     day.repositories.set(repo2.url, repoDay2);
 
     const filter = Filter.withOnlyRepos(repo1.url);
-    expect(day.filteredCount(filter)).toBe(3);
+    assertEquals(day.filteredCount(filter), 3);
   });
 
-  it("should check if day has specific repo", () => {
+  await t.step("should check if day has specific repo", () => {
     const day = new Day(date);
     const repo = new Repository("https://github.com/test/repo");
     day.repositories.set(repo.url, new RepositoryDay(repo));
 
-    expect(day.hasRepo("https://github.com/test/repo")).toBe(true);
-    expect(day.hasRepo("https://github.com/other/repo")).toBe(false);
+    assertEquals(day.hasRepo("https://github.com/test/repo"), true);
+    assertEquals(day.hasRepo("https://github.com/other/repo"), false);
   });
 });
 
-describe("Calendar", () => {
+Deno.test("Calendar", async (t) => {
   const startDate = new Date(2025, 0, 1);
 
-  it("should create calendar with name and start date", () => {
+  await t.step("should create calendar with name and start date", () => {
     const calendar = new Calendar("testuser", startDate);
-    expect(calendar.name).toBe("testuser");
-    expect(calendar.start).toBe(startDate);
-    expect(calendar.days).toEqual([]);
-    expect(calendar.repositories.size).toBe(0);
+    assertEquals(calendar.name, "testuser");
+    assertStrictEquals(calendar.start, startDate);
+    assertEquals(calendar.days, []);
+    assertEquals(calendar.repositories.size, 0);
   });
 
-  it("should create calendar with days", () => {
+  await t.step("should create calendar with days", () => {
     const days = [
       new Day(new Date(2025, 0, 1), 5),
       new Day(new Date(2025, 0, 2), 3),
     ];
     const calendar = new Calendar("testuser", startDate, days);
-    expect(calendar.days.length).toBe(2);
+    assertEquals(calendar.days.length, 2);
   });
 
-  it("should get day by date", () => {
+  await t.step("should get day by date", () => {
     const days = [
       new Day(new Date(2025, 0, 1), 5),
       new Day(new Date(2025, 0, 2), 3),
@@ -264,10 +264,10 @@ describe("Calendar", () => {
     const calendar = new Calendar("testuser", startDate, days);
 
     const day = calendar.day(new Date(2025, 0, 2));
-    expect(day?.contributionCount).toBe(3);
+    assertEquals(day?.contributionCount, 3);
   });
 
-  it("should return repository URLs", () => {
+  await t.step("should return repository URLs", () => {
     const calendar = new Calendar("testuser", startDate);
     calendar.repositories.set(
       "https://github.com/test/repo1",
@@ -279,22 +279,22 @@ describe("Calendar", () => {
     );
 
     const urls = [...calendar.repoUrls()];
-    expect(urls).toContain("https://github.com/test/repo1");
-    expect(urls).toContain("https://github.com/test/repo2");
-    expect(urls.length).toBe(2);
+    assertEquals(urls.includes("https://github.com/test/repo1"), true);
+    assertEquals(urls.includes("https://github.com/test/repo2"), true);
+    assertEquals(urls.length, 2);
   });
 
-  it("should calculate max contributions", () => {
+  await t.step("should calculate max contributions", () => {
     const days = [
       new Day(new Date(2025, 0, 1), 5),
       new Day(new Date(2025, 0, 2), 10),
       new Day(new Date(2025, 0, 3), 3),
     ];
     const calendar = new Calendar("testuser", startDate, days);
-    expect(calendar.maxContributions()).toBe(10);
+    assertEquals(calendar.maxContributions(), 10);
   });
 
-  it("should sort repos by contribution count", () => {
+  await t.step("should sort repos by contribution count", () => {
     const calendar = new Calendar("testuser", startDate);
 
     const repo1 = new Repository("https://github.com/test/repo1");
@@ -310,12 +310,12 @@ describe("Calendar", () => {
     calendar.repositories.set(repo3.url, repo3);
 
     const sorted = calendar.mostUsedRepos();
-    expect(sorted[0].url).toBe("https://github.com/test/repo2");
-    expect(sorted[1].url).toBe("https://github.com/test/repo1");
-    expect(sorted[2].url).toBe("https://github.com/test/repo3");
+    assertEquals(sorted[0].url, "https://github.com/test/repo2");
+    assertEquals(sorted[1].url, "https://github.com/test/repo1");
+    assertEquals(sorted[2].url, "https://github.com/test/repo3");
   });
 
-  it("should assign distinct hues to repos by usage", () => {
+  await t.step("should assign distinct hues to repos by usage", () => {
     const calendar = new Calendar("testuser", startDate);
 
     const repo1 = new Repository("https://github.com/test/repo1");
@@ -332,12 +332,12 @@ describe("Calendar", () => {
 
     calendar.updateRepoColors();
 
-    expect(repo1.hue).toBe(285);
-    expect(repo2.hue).toBe(340);
-    expect(repo3.hue).toBe(35);
+    assertEquals(repo1.hue, 285);
+    assertEquals(repo2.hue, 340);
+    assertEquals(repo3.hue, 35);
   });
 
-  it("should wrap hues around 360 degrees", () => {
+  await t.step("should wrap hues around 360 degrees", () => {
     const calendar = new Calendar("testuser", startDate);
 
     for (let i = 0; i < 10; i++) {
@@ -349,10 +349,10 @@ describe("Calendar", () => {
     calendar.updateRepoColors();
 
     const repos = calendar.mostUsedRepos();
-    expect(repos[7].hue).toBe((285 + 55 * 7) % 360);
+    assertEquals(repos[7].hue, (285 + 55 * 7) % 360);
   });
 
-  it("should deduplicate repositories", () => {
+  await t.step("should deduplicate repositories", () => {
     const calendar = new Calendar("testuser", startDate);
     const repoData = {
       url: "https://github.com/test/repo",
@@ -363,7 +363,7 @@ describe("Calendar", () => {
     const repo1 = calendar.cleanRepository(repoData);
     const repo2 = calendar.cleanRepository(repoData);
 
-    expect(repo1).toBe(repo2);
-    expect(calendar.repositories.size).toBe(1);
+    assertStrictEquals(repo1, repo2);
+    assertEquals(calendar.repositories.size, 1);
   });
 });

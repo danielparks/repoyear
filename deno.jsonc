@@ -6,8 +6,8 @@
   },
   "exclude": [
     "rust-crate",
-    "src/components/*.test.tsx",
-    "src/model.test.ts",
+    "**/*.vitest.tsx",
+    "**/*.vitest.ts",
     "src/test/"
   ],
   "fmt": {
