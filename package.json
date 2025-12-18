@@ -29,11 +29,11 @@
     "@graphql-codegen/add": "^6.0.0",
     "@graphql-codegen/cli": "^6.1.0",
     "@graphql-codegen/typescript": "^5.0.6",
-    "@types/node": "^24.10.3",
+    "@types/node": "^24.10.4",
     "@types/react-dom": "^19.2.3",
     "chokidar-cli": "^3.0.0",
     "globals": "^16.5.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7"
+    "vite": "^7.3.0"
   }
 }
