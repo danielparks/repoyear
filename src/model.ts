@@ -2,7 +2,7 @@ import * as github from "./github/api.ts";
 import * as gql from "./github/gql.ts";
 
 /**
- * Parses an ISO date string (e.g., "2025-01-15") into a Date object.
+ * Parses an ISO date string, e.g. `"2025-01-15T01:23:45Z"`, into a Date object.
  */
 function parseDateTime(input: string) {
   const [year, month, ...rest] = input
@@ -12,7 +12,7 @@ function parseDateTime(input: string) {
 }
 
 /**
- * Converts a local Date to UTC milliseconds, preserving the date (not time).
+ * Converts a local `Date` to UTC milliseconds, preserving the date (not time).
  *
  * This encodes the localtime date in UTC for simpler date math, since UTC
  * has no daylight saving time.
@@ -54,6 +54,9 @@ export class Filter {
     }
   }
 
+  /**
+   * Clone this object.
+   */
   clone() {
     const filter = new Filter();
     filter.defaultState = this.defaultState;
@@ -61,6 +64,9 @@ export class Filter {
     return filter;
   }
 
+  /**
+   * Enable or disable a repo by its URL.
+   */
   switchRepo(url: string, enabled: boolean) {
     this.states.set(url, enabled);
   }
@@ -104,11 +110,11 @@ export class Calendar {
 
   /**
    * Merges additional contributions data into this calendar.
+   *
+   * FIXME: Ignores contributions.calendar; everything is loaded in first loop.
+   * If we want to add contributions from another date range this won't work.
    */
   updateFromContributions(contributions: github.Contributions) {
-    // FIXME: Ignores contributions.calendar; everything is loaded in first loop.
-    // If we want to add contributions from another date range this won't work.
-
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
@@ -142,6 +148,9 @@ export class Calendar {
     return this;
   }
 
+  /**
+   * Calculate the total number of contributions for each repository.
+   */
   updateRepoCounts() {
     for (const repo of this.repositories.values()) {
       repo.contributions = 0;
@@ -154,6 +163,12 @@ export class Calendar {
     });
   }
 
+  /**
+   * Assigns hues to repos in order of most to least used.
+   *
+   * This ensures that the most commonly seen repos have distinct hues, since
+   * each successive hue is 55° beyond the previous (mod 360°, of course).
+   */
   updateRepoColors() {
     let i = 0;
     for (const repo of this.mostUsedRepos()) {
@@ -170,14 +185,17 @@ export class Calendar {
     return repos;
   }
 
+  /**
+   * Returns all the repository URLs.
+   */
   repoUrls() {
     return this.repositories.keys();
   }
 
   /**
-   * Gets the RepositoryDay for a given timestamp and repository.
+   * Gets the `RepositoryDay` for a given timestamp and repository.
    *
-   * Timestamps (occurredAt) are dates or datetimes in UTC (e.g.,
+   * Timestamps (`occurredAt`) are dates or datetimes in UTC (e.g.,
    * "2025-10-02T07:00:00Z"), so parsing with `new Date(str)` works correctly.
    */
   repoDay(timestamp: string, repository: gql.Repository) {
@@ -219,6 +237,9 @@ export class Calendar {
     return repository;
   }
 
+  /**
+   * Get the maximum number of contributions on one day.
+   */
   maxContributions() {
     return Math.max(
       ...this.days
@@ -231,9 +252,9 @@ export class Calendar {
    * Yields weeks (7-day arrays) of Days, starting on Sunday.
    *
    * Pads the first week if the start date isn't Sunday.
-   * FIXME: test this.
    */
   *weeks() {
+    // FIXME test this
     const firstWeek: Day[] = [];
     const date = new Date(this.start);
     for (let i = 0; i < this.start.getDay(); i++) {
@@ -284,12 +305,19 @@ export class Day {
     );
   }
 
+  /**
+   * Get `RepositoryDay`s that are enabled by `filter`.
+   */
   filteredRepos(filter: Filter) {
     return [...this.repositories.values()].filter((repoDay) =>
       filter.isOn(repoDay.url())
     );
   }
 
+  /**
+   * Calculate the known contribution count including just the repositories
+   * enabled in `filter`.
+   */
   filteredCount(filter: Filter) {
     return this.filteredRepos(filter).reduce(
       (total, repoDay) => total + repoDay.count(),
@@ -297,6 +325,9 @@ export class Day {
     );
   }
 
+  /**
+   * Was there a contribution to the passed repo on this day?
+   */
   hasRepo(url: string) {
     return this.repositories.has(url);
   }
@@ -321,18 +352,34 @@ export class RepositoryDay {
     this.repository = repository;
   }
 
+  /**
+   * Record commits for this day.
+   */
   addCommits(count: number) {
     this.commitCount += count;
   }
 
+  /**
+   * Record repository creation for this day.
+   */
   addCreate(count = 1) {
     this.created += count;
   }
 
+  /**
+   * Returns the repository URL.
+   */
   url() {
     return this.repository.url;
   }
 
+  /**
+   * Returns the contribution count for this repository on this day.
+   *
+   * This only includes "known" contributions for events that we track, like
+   * commits and PRs. The contribution count returned by the contribution
+   * calendar may include other contributions we don't check for.
+   */
   count() {
     return this.created + this.commitCount + this.issues.length +
       this.prs.length + this.reviews.length;
@@ -346,7 +393,7 @@ export class Repository {
   url: string;
   isFork: boolean;
   isPrivate: boolean;
-  /** Color hue assigned for visualization */
+  /** Hue assigned for visualization (as degrees) */
   hue = 285;
   /** Total contribution count across all days */
   contributions = 0;
@@ -358,7 +405,8 @@ export class Repository {
   }
 
   /**
-   * Returns an OKLCH color string for this repository.
+   * Returns an [OKLCH](https://en.wikipedia.org/wiki/Oklab_color_space) color
+   * string for this repository.
    */
   color(lightness = 55, chroma = 0.2) {
     return `oklch(${lightness}% ${chroma} ${this.hue}deg)`;

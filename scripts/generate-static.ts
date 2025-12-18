@@ -107,8 +107,6 @@ async function fetchContributions(
 
 /**
  * Writes content to a file atomically using a temp file and rename.
- *
- * This ensures the target file is never partially written.
  */
 async function atomicWrite(path: string, content: string) {
   let attempt = 1;

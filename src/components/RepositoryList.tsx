@@ -50,6 +50,9 @@ export function RepositoryList(
   );
 }
 
+/**
+ * An easy to read, clickable repository name.
+ */
 function RepositoryName({ repo }: { repo: Repository }) {
   return (
     <a style={{ color: repo.color() }} href={repo.url}>
@@ -97,6 +100,9 @@ function Sparkline({ calendar, repo }: {
   );
 }
 
+/**
+ * One of the bars in the mini bar chart.
+ */
 function SparklineElement({ days, repo, max }: {
   days: Day[];
   repo: Repository;

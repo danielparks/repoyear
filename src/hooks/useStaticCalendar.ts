@@ -9,7 +9,7 @@ export interface UseStaticCalendarResult {
 }
 
 /**
- * Fetches and builds a Calendar from pre-generated contributions JSON.
+ * Fetches and builds a `Calendar` from pre-generated contributions JSON.
  *
  * Used by the static entry points (static.html and compact.html) to load
  * contribution data without requiring GitHub API access.
