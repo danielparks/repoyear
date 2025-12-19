@@ -235,7 +235,7 @@ export class Calendar {
       // Fill gap between date and firstDate.
       if (firstEpochDay !== null) {
         const gap = firstEpochDay - dateEpochDay;
-        for (let i = 0; i < gap; i++) {
+        for (let i = 1; i < gap; i++) {
           prefix.push(new Day(addDays(new Date(date), i)));
         }
       }
@@ -246,8 +246,16 @@ export class Calendar {
 
     const relativeDay = dateEpochDay - firstEpochDay;
     if (relativeDay >= this.days.length) {
-      for (let i = this.days.length - relativeDay; i <= 0; i++) {
-        this.days.push(new Day(addDays(new Date(date), i)));
+      const lastDay = this.days[this.days.length - 1];
+      const numDaysToAdd = relativeDay - this.days.length + 1;
+      for (let i = 1; i <= numDaysToAdd; i++) {
+        this.days.push(new Day(addDays(new Date(lastDay.date), i)));
+      }
+
+      const lastAddedDay = this.days[this.days.length - 1];
+      const daysUntilSaturday = 6 - lastAddedDay.date.getDay();
+      for (let i = 1; i <= daysUntilSaturday; i++) {
+        this.days.push(new Day(addDays(new Date(lastAddedDay.date), i)));
       }
     }
 
@@ -258,7 +266,37 @@ export class Calendar {
    * Add `Day`s to `Calendar`, replacing any that already exist.
    */
   replaceDays(days: Day[]) {
-    // FIXME fill in
+    if (days.length === 0) {
+      return;
+    }
+
+    const daysByEpochDay = new Map<number, Day>();
+    for (const day of days) {
+      daysByEpochDay.set(toEpochDays(day.date), day);
+    }
+
+    const firstDate = days[0].date;
+    const lastDate = days[days.length - 1].date;
+    const lastEpochDay = toEpochDays(lastDate);
+
+    const sundayBeforeFirst = new Date(firstDate);
+    sundayBeforeFirst.setDate(firstDate.getDate() - firstDate.getDay());
+    const startEpochDay = toEpochDays(sundayBeforeFirst);
+
+    const endEpochDay = startEpochDay +
+      Math.ceil((lastEpochDay - startEpochDay + 1) / 7) * 7 - 1;
+
+    this.days = [];
+    for (let epochDay = startEpochDay; epochDay <= endEpochDay; epochDay++) {
+      const existingDay = daysByEpochDay.get(epochDay);
+      if (existingDay) {
+        this.days.push(existingDay);
+      } else {
+        const date = new Date(sundayBeforeFirst);
+        date.setDate(date.getDate() + (epochDay - startEpochDay));
+        this.days.push(new Day(date));
+      }
+    }
   }
 
   /**

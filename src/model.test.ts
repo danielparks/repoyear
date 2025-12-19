@@ -322,8 +322,8 @@ function assertWeeks(weeks: Day[][], count: number, startDate: Date, msg = "") {
 
   const sunday = new Date(startDate);
   weeks.forEach((week, i) => {
+    assertWeek(week, sunday, `${prefix}week ${i}`);
     sunday.setDate(sunday.getDate() + 7);
-    assertWeek(week, startDate, `${prefix}week ${i}`);
   });
 }
 
@@ -443,7 +443,7 @@ Deno.test("Calendar.day() should prepend days before initial week", () => {
   ]);
   calendar.day(new Date(2024, 11, 24)).contributionCount = 3;
 
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
     [null, null, 3, null, null, null, null],
     [null, null, null, 10, null, null, null],
   ]);
