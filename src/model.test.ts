@@ -178,43 +178,6 @@ Deno.test("Day should check if day has specific repo", () => {
   assert(!day.hasRepo("https://github.com/other/repo"));
 });
 
-Deno.test("Calendar should get day by date", () => {
-  const days = [
-    new Day(new Date(2025, 0, 1), 5),
-    new Day(new Date(2025, 0, 2), 3),
-    new Day(new Date(2025, 0, 3), 2),
-  ];
-  const calendar = new Calendar("testuser", days);
-
-  const day = calendar.day(new Date(2025, 0, 2));
-  assertEquals(day?.contributionCount, 3);
-});
-
-Deno.test("Calendar should start first week on Sunday", () => {
-  const days = [
-    new Day(new Date(2025, 0, 1), 5),
-    new Day(new Date(2025, 0, 2), 3),
-    new Day(new Date(2025, 0, 3), 2),
-  ];
-  assertEquals(days[0].date.getDay(), 3);
-
-  const calendar = new Calendar("testuser", days);
-  calendar.day(new Date(2024, 11, 28));
-
-  const weeks = [...calendar.weeks()];
-  assertEquals(weeks.length, 2);
-  assertEquals(weeks[0].length, 7);
-
-  const sunday = weeks[0][0];
-  assertEquals(sunday.date, new Date(2024, 11, 22), "first day date");
-  assertEquals(sunday.date.getDay(), 0, "first day should be Sunday");
-  assertEquals(sunday.contributionCount, null, "first day contributions");
-
-  const saturday = weeks[0][weeks[0].length - 1];
-  assertEquals(saturday.date, new Date(2024, 11, 28), "last day date");
-  assertEquals(saturday.date.getDay(), 6, "last day should be Saturday");
-});
-
 Deno.test("Calendar should return repository URLs", () => {
   const calendar = new Calendar("testuser");
   calendar.repositories.set(
@@ -319,6 +282,125 @@ Deno.test("Calendar should deduplicate repositories", () => {
   assertEquals(calendar.repositories.size, 1);
 });
 
+/**
+ * Check that a week has 7 sequential days starting with `startDate`, a Sunday.
+ */
+function assertWeek(week: Day[], startDate: Date, msg = "") {
+  let prefix = "";
+  if (msg.length > 0) {
+    prefix = `${msg}: `;
+  }
+
+  assertEquals(week.length, 7, `${prefix}week has 7 days`);
+
+  const date = new Date(week[0].date);
+  assertEquals(date, startDate, `${prefix}week starts ${startDate.toString()}`);
+  assertEquals(date.getDay(), 0, `${prefix}week starts on Sunday`);
+  week.forEach((day, i) => {
+    assertEquals(
+      day.date,
+      date,
+      `${prefix}day ${i} must equal day ${i - 1} + 1`,
+    );
+    date.setDate(date.getDate() + 1);
+  });
+}
+
+/**
+ * Check that there are `count` valid, sequential weeks in `weeks`.
+ */
+function assertWeeks(weeks: Day[][], count: number, startDate: Date, msg = "") {
+  let prefix = "";
+  if (msg.length > 0) {
+    prefix = `${msg}: `;
+  }
+
+  assertEquals(weeks.length, count, `${prefix}has ${count} weeks`);
+  if (count == 0) {
+    return;
+  }
+
+  const sunday = new Date(startDate);
+  weeks.forEach((week, i) => {
+    sunday.setDate(sunday.getDate() + 7);
+    assertWeek(week, startDate, `${prefix}week ${i}`);
+  });
+}
+
+/**
+ * Convert weeks to contributions.
+ */
+function weeksToContributions(weeks: Day[][]): (number | null)[][] {
+  return weeks.map((week) => week.map((day) => day.contributionCount));
+}
+
+/**
+ * Check that there are `count` valid, sequential weeks in `weeks`.
+ */
+function assertWeeksContributions(
+  weeks: Day[][],
+  startDate: Date,
+  contributions: (number | null)[][],
+  msg = "",
+) {
+  let prefix = "";
+  if (msg.length > 0) {
+    prefix = `${msg}: `;
+  }
+
+  assertWeeks(weeks, contributions.length, startDate, msg);
+  assertEquals(
+    weeksToContributions(weeks),
+    contributions,
+    `${prefix}expected contributions`,
+  );
+}
+
+Deno.test("Calendar.weeks() should returns 7 day weeks", () => {
+  const days = [
+    new Day(new Date(2025, 0, 1), 5),
+    new Day(new Date(2025, 0, 2), 3),
+    new Day(new Date(2025, 0, 3), 2),
+  ];
+  assertEquals(days[0].date.getDay(), 3);
+
+  const calendar = new Calendar("testuser", days);
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+    [null, null, null, 5, 3, 2, null],
+  ]);
+});
+
+Deno.test("Calendar.weeks() should return 7 day weeks after prepending", () => {
+  const days = [
+    new Day(new Date(2025, 0, 1), 5),
+    new Day(new Date(2025, 0, 2), 3),
+    new Day(new Date(2025, 0, 3), 2),
+  ];
+  assertEquals(days[0].date.getDay(), 3);
+
+  const calendar = new Calendar("testuser", days);
+  const day = calendar.day(new Date(2024, 11, 28));
+  day.contributionCount = 7;
+
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
+    [null, null, null, null, null, null, 7],
+    [null, null, null, 5, 3, 2, null],
+  ]);
+});
+
+Deno.test("Calendar.day() should return existing day when in range", () => {
+  const days = [
+    new Day(new Date(2025, 0, 1), 5),
+    new Day(new Date(2025, 0, 2), 3),
+    new Day(new Date(2025, 0, 3), 2),
+  ];
+  const calendar = new Calendar("testuser", days);
+
+  const day = calendar.day(new Date(2025, 0, 2));
+  assertStrictEquals(day, days[1]);
+  assertEquals(day.contributionCount, 3);
+});
+
 Deno.test("Calendar.day() should create day when calendar is empty", () => {
   const calendar = new Calendar("testuser");
   const wednesday = new Date(2025, 0, 1);
@@ -326,75 +408,55 @@ Deno.test("Calendar.day() should create day when calendar is empty", () => {
 
   const day = calendar.day(wednesday);
   assertEquals(day.date, wednesday);
+  day.contributionCount = 9;
 
-  assertEquals(calendar.days[0].date.getDay(), 0);
-  assertEquals(calendar.days[0].date, new Date(2024, 11, 29));
+  const dayAgain = calendar.day(wednesday);
+  assertStrictEquals(day, dayAgain);
+  assertEquals(dayAgain.contributionCount, 9);
 });
 
-Deno.test("Calendar.day() should prepend days before first day", () => {
+Deno.test("Calendar.day() should handle earlier day in the initial week", () => {
   const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 5), 5),
+    new Day(new Date(2025, 0, 1), 10),
   ]);
-  assertEquals(calendar.days[0].date.getDay(), 0);
+  calendar.day(new Date(2024, 11, 30)).contributionCount = 3;
 
-  const day = calendar.day(new Date(2025, 0, 2));
-  assertEquals(day.date, new Date(2025, 0, 2));
-
-  assertEquals(calendar.days[0].date.getDay(), 0);
-  assertEquals(calendar.days[0].date, new Date(2024, 11, 29));
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+    [null, 3, null, 10, null, null, null],
+  ]);
 });
 
-Deno.test("Calendar.day() should append days after last day", () => {
+Deno.test("Calendar.day() should handle later day in the initial week", () => {
   const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 5), 5),
+    new Day(new Date(2025, 0, 1), 10),
   ]);
+  calendar.day(new Date(2025, 0, 3)).contributionCount = 3;
 
-  const day = calendar.day(new Date(2025, 0, 10));
-  assertEquals(day.date, new Date(2025, 0, 10));
-
-  assertEquals(calendar.days[0].date.getDay(), 0);
-  assertEquals(
-    calendar.days[calendar.days.length - 1].date,
-    new Date(2025, 0, 10),
-  );
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+    [null, null, null, 10, null, 3, null],
+  ]);
 });
 
-Deno.test("Calendar.day() should maintain Sunday start when prepending", () => {
+Deno.test("Calendar.day() should prepend days before initial week", () => {
   const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 8), 5),
+    new Day(new Date(2025, 0, 1), 10),
   ]);
-  assertEquals(calendar.days[0].date.getDay(), 3);
+  calendar.day(new Date(2024, 11, 24)).contributionCount = 3;
 
-  calendar.day(new Date(2025, 0, 1));
-
-  assertEquals(calendar.days[0].date.getDay(), 0);
-  assertEquals(calendar.days[0].date, new Date(2024, 11, 29));
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+    [null, null, 3, null, null, null, null],
+    [null, null, null, 10, null, null, null],
+  ]);
 });
 
-Deno.test("Calendar.weeks() should yield complete weeks without padding", () => {
-  const calendar = new Calendar("testuser");
-  calendar.day(new Date(2025, 0, 1));
-  calendar.day(new Date(2025, 0, 14));
+Deno.test("Calendar.day() should append days after initial week", () => {
+  const calendar = new Calendar("testuser", [
+    new Day(new Date(2025, 0, 1), 10),
+  ]);
+  calendar.day(new Date(2025, 0, 10)).contributionCount = 3;
 
-  const weeks = [...calendar.weeks()];
-  assertEquals(weeks.length, 3);
-
-  assertEquals(weeks[0].length, 7);
-  assertEquals(weeks[0][0].date.getDay(), 0);
-  assertEquals(weeks[0][0].date, new Date(2024, 11, 29));
-
-  assertEquals(weeks[1].length, 7);
-  assertEquals(weeks[1][0].date.getDay(), 0);
-
-  assertEquals(weeks[2].length, 3);
-  assertEquals(weeks[2][0].date.getDay(), 0);
-});
-
-Deno.test("Calendar.day() should return existing day when in range", () => {
-  const existingDay = new Day(new Date(2025, 0, 5), 10);
-  const calendar = new Calendar("testuser", [existingDay]);
-
-  const day = calendar.day(new Date(2025, 0, 5));
-  assertStrictEquals(day, existingDay);
-  assertEquals(day.contributionCount, 10);
+  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+    [null, null, null, 10, null, null, null],
+    [null, null, null, null, null, 3, null],
+  ]);
 });

@@ -12,13 +12,12 @@ function parseDateTime(input: string) {
 }
 
 /**
- * Converts a local `Date` to UTC milliseconds, preserving the date (not time).
- *
- * This encodes the localtime date in UTC for simpler date math, since UTC
- * has no daylight saving time.
+ * Converts a local time `Date` to days since the epoch.
  */
-function toUtcDate(input: Date) {
-  return Date.UTC(input.getFullYear(), input.getMonth(), input.getDate());
+function toEpochDays(input: Date) {
+  return Math.round(
+    Date.UTC(input.getFullYear(), input.getMonth(), input.getDate()) / 86400000,
+  );
 }
 
 /**
@@ -84,7 +83,8 @@ export class Calendar {
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
-    this.days = days;
+    this.days = [];
+    this.replaceDays(days);
   }
 
   /**
@@ -212,46 +212,53 @@ export class Calendar {
    * Maintains the invariant that `days[0]` is always a Sunday.
    */
   day(date: Date): Day {
-    const dateMs = toUtcDate(date);
+    // FIXME assumes date is midnight local time.
+    const dateEpochDay = toEpochDays(date);
 
-    if (this.days.length == 0) {
-      const sunday = new Date(date);
-      sunday.setDate(date.getDate() - date.getDay());
-      this.days.push(new Day(sunday));
+    let firstEpochDay = null;
+    if (this.days.length != 0) {
+      firstEpochDay = toEpochDays(this.days[0].date);
+    }
 
-      const current = new Date(sunday);
-      while (toUtcDate(current) < dateMs) {
-        current.setDate(current.getDate() + 1);
-        this.days.push(new Day(new Date(current)));
+    if (firstEpochDay === null || dateEpochDay < firstEpochDay) {
+      // Either there are no existing days, or the requested date is before the
+      // first existing day. Make a prefix array to prepend.
+
+      // Pad prefix to start with Sunday (date - date.getDay())
+      const prefix = [];
+      for (let i = -date.getDay(); i < 0; i++) {
+        prefix.push(new Day(addDays(new Date(date), i)));
+      }
+      const returnDay = new Day(new Date(date));
+      prefix.push(returnDay);
+
+      // Fill gap between date and firstDate.
+      if (firstEpochDay !== null) {
+        const gap = firstEpochDay - dateEpochDay;
+        for (let i = 0; i < gap; i++) {
+          prefix.push(new Day(addDays(new Date(date), i)));
+        }
+      }
+
+      this.days.unshift(...prefix);
+      return returnDay;
+    }
+
+    const relativeDay = dateEpochDay - firstEpochDay;
+    if (relativeDay >= this.days.length) {
+      for (let i = this.days.length - relativeDay; i <= 0; i++) {
+        this.days.push(new Day(addDays(new Date(date), i)));
       }
     }
 
-    const firstMs = toUtcDate(this.days[0].date);
-    const lastMs = toUtcDate(this.days[this.days.length - 1].date);
+    return this.days[relativeDay];
+  }
 
-    if (dateMs < firstMs) {
-      const sundayOfDate = new Date(date);
-      sundayOfDate.setDate(date.getDate() - date.getDay());
-
-      const prepend: Day[] = [];
-      const current = new Date(sundayOfDate);
-      while (toUtcDate(current) < firstMs) {
-        prepend.push(new Day(new Date(current)));
-        current.setDate(current.getDate() + 1);
-      }
-      this.days.unshift(...prepend);
-    } else if (dateMs > lastMs) {
-      const current = new Date(this.days[this.days.length - 1].date);
-      while (toUtcDate(current) < dateMs) {
-        current.setDate(current.getDate() + 1);
-        this.days.push(new Day(new Date(current)));
-      }
-    }
-
-    const daysDiff = Math.round(
-      (dateMs - toUtcDate(this.days[0].date)) / 86400000,
-    );
-    return this.days[daysDiff];
+  /**
+   * Add `Day`s to `Calendar`, replacing any that already exist.
+   */
+  replaceDays(days: Day[]) {
+    // FIXME fill in
   }
 
   /**
@@ -293,6 +300,7 @@ export class Calendar {
  * Tracks total contributions and per-repository activity.
  */
 export class Day {
+  /** Local time date */
   date: Date;
   contributionCount: number | null = null;
   repositories: Map<string, RepositoryDay> = new Map();
@@ -301,6 +309,7 @@ export class Day {
     date: Date,
     contributionCount: number | null = null,
   ) {
+    // FIXME? ensure it's midnight local time?
     this.date = date;
     this.contributionCount = contributionCount;
   }
@@ -428,4 +437,14 @@ export class Repository {
   color(lightness = 55, chroma = 0.2) {
     return `oklch(${lightness}% ${chroma} ${this.hue}deg)`;
   }
+}
+
+/**
+ * Adds `days` days to `date` and returns it.
+ *
+ * Modifies `date`. To make a copy, use `addDays(new Date(date), days)`.
+ */
+function addDays(date: Date, days: number) {
+  date.setDate(date.getDate() + days);
+  return date;
 }
