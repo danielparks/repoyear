@@ -4,111 +4,105 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.tsx";
 import type { Contributions } from "./github/api.ts";
-import fixtureData from "./__fixtures__/github-contributions.json";
+import fixtureData from "./__fixtures__/github-contributions.json" with {
+  type: "json",
+};
 
-// Mock the github/api module
+vi.stubEnv("VITE_FRONTEND_URL", "/");
+vi.stubEnv("VITE_GITHUB_CLIENT_ID", "CLIENT_ID");
+
+vi.spyOn(console, "error").mockImplementation(() => undefined);
+
 vi.mock("./github/api.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("./github/api.ts")>();
   return {
     ...original,
     GitHub: class {
-      octokit = {};
+      octokit: { token: null | string } = { token: null };
+
+      constructor(token: string) {
+        this.octokit = { token };
+      }
 
       installRateLimitReport() {
         // No-op for testing
       }
 
-      async *queryBase(_username?: string): AsyncGenerator<Contributions> {
-        // Yield fixture data
-        for (const contribution of fixtureData as Contributions[]) {
-          yield contribution;
+      async *queryBase(_username?: string) {
+        if (!this.octokit.token) {
+          throw new Error("Octokit token is null");
+        } else if (!this.octokit.token.startsWith("good")) {
+          throw new Error(
+            `Octokit token does not start with "good": "${this.octokit.token}"`,
+          );
         }
+        yield* fixtureData as Contributions[];
       }
     },
   };
 });
 
-// Mock the OAuth exchange to avoid network calls
 vi.mock("./api/client.ts", () => ({
-  exchangeOAuthCode: vi.fn().mockResolvedValue("fake-token"),
+  exchangeOAuthCode: vi.fn().mockResolvedValue("good-exchanged"),
 }));
 
+function renderApp() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <App username={null} />
+    </QueryClientProvider>,
+  );
+}
+
 describe("App smoke test", () => {
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    });
-
     localStorage.clear();
   });
 
-  it("should load and render contributions from fixture data", async () => {
-    localStorage.setItem("github_token", "test-token");
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <App username={null} />
-      </QueryClientProvider>,
-    );
-
-    await waitFor(
-      () => {
-        expect(screen.queryByText(/Loading contributions/i)).not
-          .toBeInTheDocument();
-      },
-      { timeout: 5000 },
-    );
-
-    const firstContribution = fixtureData[0] as Contributions;
-    expect(
-      screen.getByText(`Contribution Graph for ${firstContribution.name}`),
-    ).toBeInTheDocument();
-  });
-
-  it("should process contribution data into calendar model", async () => {
-    localStorage.setItem("github_token", "test-token");
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <App username={null} />
-      </QueryClientProvider>,
-    );
-
-    await waitFor(
-      () => {
-        expect(screen.queryByText(/Loading contributions/i)).not
-          .toBeInTheDocument();
-      },
-      { timeout: 5000 },
-    );
-
-    const contributionsTable = document.querySelector("table.contributions");
-    expect(contributionsTable).toBeInTheDocument();
-  });
-
-  it("should handle multiple contribution updates", async () => {
-    localStorage.setItem("github_token", "test-token");
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <App username={null} />
-      </QueryClientProvider>,
-    );
-
-    await waitFor(
-      () => {
-        expect(screen.queryByText(/Loading contributions/i)).not
-          .toBeInTheDocument();
-      },
-      { timeout: 5000 },
-    );
-
+  it("should show a login prompt if there is no token", () => {
+    renderApp();
+    expect(screen.queryByText(/Log in with GitHub/i)).toBeInTheDocument();
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+  });
+
+  it("should show an error if the token is invalid", async () => {
+    localStorage.setItem("github_token", "error");
+    renderApp();
+
+    expect(screen.queryByText(/Contribution Graph/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Contribution Graph/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Error getting contribution data/i))
+        .toBeInTheDocument();
+    }, { timeout: 500 });
+  });
+
+  it("should load and render contributions from fixture data", async () => {
+    localStorage.setItem("github_token", "good");
+    renderApp();
+
+    expect(screen.queryByText(/Loading contributions/i))
+      .toBeInTheDocument();
+
+    await waitFor(() => {
+      const { name } = fixtureData[0] as Contributions;
+      expect(
+        screen.getByText(`Contribution Graph for ${name}`),
+      ).toBeInTheDocument();
+
+      expect(document.querySelector("table.contributions")).toBeInTheDocument();
+    }, { timeout: 500 });
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading contributions/i)).not
+        .toBeInTheDocument();
+    }, { timeout: 5000 });
   });
 });

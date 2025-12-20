@@ -64,7 +64,6 @@ compile-time type checking of calls across the API boundary.
 
 ## To do
 
-- [ ] Automated testing.
 - [ ] Load information about local repositories in backend.
 
 ### Likely incompatible

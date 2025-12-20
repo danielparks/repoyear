@@ -1,20 +1,20 @@
 #!/usr/bin/env -S deno run -A
-/**
- * Generate a fixture file from real GitHub API data.
- *
- * Usage:
- *   GITHUB_READONLY_TOKEN=ghp_xxx deno run -A scripts/generate-fixture.ts [username]
- *   npm run generate:fixture [username]
- *
- * The token can also be passed via command line:
- *   deno run -A scripts/generate-fixture.ts --token=ghp_xxx [username]
- *
- * Environment variables (in order of precedence):
- *   GITHUB_READONLY_TOKEN - preferred to avoid conflicts with gh CLI
- *   GITHUB_TOKEN - fallback
- */
 
 import { type Contributions, GitHub } from "../src/github/api.ts";
+import * as path from "@std/path";
+
+const USAGE = `Usage: generate-fixture.ts [options] [USERNAME]
+
+or, more typically
+
+  GITHUB_READONLY_TOKEN=ghp_xxx deno run generate:fixture [USERNAME]
+
+Generates a fixture file from real GitHub API data.
+
+Options:
+  --token <TOKEN>  GitHub personal access (classic) token with minimal access.
+                   May be passed with $GITHUB_READONLY_TOKEN or $GITHUB_TOKEN.
+  --help           Show this output.`;
 
 function parseArgs() {
   const args = Deno.args;
@@ -22,19 +22,29 @@ function parseArgs() {
     Deno.env.get("GITHUB_TOKEN");
   let username: string | undefined;
 
-  for (const arg of args) {
-    if (arg.startsWith("--token=")) {
-      token = arg.slice(8);
-    } else if (!arg.startsWith("--")) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--help") {
+      console.log(USAGE);
+      Deno.exit(0);
+    } else if (arg === "--token") {
+      i++;
+      if (i >= args.length) {
+        throw new Error(`${arg} requires an argument`);
+      }
+      token = args[i];
+    } else if (arg.startsWith("-")) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      if (username) {
+        throw new Error(`Multiple usernames specified: ${username}, ${arg}`);
+      }
       username = arg;
     }
   }
 
   if (!token) {
-    console.error("Error: GitHub token required");
-    console.error(
-      "Provide via GITHUB_READONLY_TOKEN or GITHUB_TOKEN environment variable, or --token=xxx argument",
-    );
+    console.error(`Error: GitHub token required\n\n${USAGE}`);
     Deno.exit(1);
   }
 
@@ -44,11 +54,27 @@ function parseArgs() {
 async function main() {
   const { token, username } = parseArgs();
 
-  console.log("Fetching contributions from GitHub...");
+  const fixturePath = path.join(
+    import.meta.dirname || "scripts",
+    "../src/__fixtures__/github-contributions.json",
+  );
+
+  const directory = path.dirname(fixturePath);
+  try {
+    if (!(await Deno.stat(directory)).isDirectory) {
+      throw new Error(`${directory} is not a directory`);
+    }
+  } catch (error: unknown) {
+    if (error instanceof Deno.errors.NotFound) {
+      throw new Error(`Fixtures directory (${directory}) does not exist`);
+    }
+    throw error;
+  }
+
   if (username) {
-    console.log(`Username: ${username}`);
+    console.log(`Fetching contributions from GitHub for user ${username}`);
   } else {
-    console.log("Username: (authenticated user)");
+    console.log(`Fetching contributions from GitHub for authenticated user`);
   }
 
   const github = new GitHub(token);
@@ -56,35 +82,36 @@ async function main() {
 
   for await (const contribution of github.queryBase(username)) {
     contributions.push(contribution);
+
+    const commitCount = contribution.commits.map(
+      ({ contributions }) =>
+        (contributions.nodes ?? []).map(
+          (node) => node?.commitCount ?? 0,
+        ),
+    ).flat().reduce((sum, n) => sum + n, 0);
+
     console.log(
-      `Received update ${contributions.length} (${contribution.commits.length} commit repos, ` +
-        `${contribution.issues.length} issues, ${contribution.prs.length} PRs)`,
+      `Update ${contributions.length} (` +
+        `${commitCount} commits, ` +
+        `${contribution.issues.length} issues, ` +
+        `${contribution.prs.length} PRs, ` +
+        `${contribution.reviews.length} PR reviews, ` +
+        `${contribution.repositories.length} new repos)`,
     );
   }
 
-  console.log(`\nTotal updates received: ${contributions.length}`);
-
-  const fixturePath = new URL(
-    "../src/__fixtures__/github-contributions.json",
-    import.meta.url,
-  );
-
-  await Deno.mkdir(new URL("../src/__fixtures__/", import.meta.url), {
-    recursive: true,
-  });
-
   await Deno.writeTextFile(
     fixturePath,
-    JSON.stringify(contributions, null, 2),
+    JSON.stringify(contributions, null, 2) + "\n",
   );
 
-  console.log(`\nFixture saved to: ${fixturePath.pathname}`);
-  console.log(`File size: ${(await Deno.stat(fixturePath)).size} bytes`);
+  const { size } = await Deno.stat(fixturePath);
+  console.log(`\nFixture saved to: ${fixturePath} (${size} bytes)`);
 
   Deno.exit(0);
 }
 
 main().catch((error) => {
-  console.error("Error:", error);
+  console.error("Error:", error instanceof Error ? error.message : error);
   Deno.exit(1);
 });
