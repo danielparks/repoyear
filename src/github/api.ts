@@ -27,8 +27,7 @@ export type GithubError = GraphqlResponseError<GraphQlQueryResponseData>;
  * FIXME: Does mostRecentCollectionWithActivity catch recent changes (e.g.
  *        deleting a repo) that affect the past?
  */
-export const CONTRIBUTIONS_QUERY_TEMPLATE =
-  `query ( $includeCommits:Boolean!, {{PARAMETERS}} ) {
+export const CONTRIBUTIONS_QUERY_TEMPLATE = `query ( {{PARAMETERS}} ) {
   user: {{ROOT_FIELD}} {
     login
     name
@@ -43,9 +42,7 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           }
         }
       }
-      commitContributionsByRepository(maxRepositories: 100)
-        @include(if: $includeCommits)
-      {
+      commitContributionsByRepository(maxRepositories: 100) {
         repository {
           isFork
           isPrivate
@@ -204,7 +201,6 @@ export class GitHub {
         query: CONTRIBUTIONS_QUERY_TEMPLATE
           .replace("{{ROOT_FIELD}}", rootField)
           .replace("{{PARAMETERS}}", parameters.join(", ")),
-        includeCommits: pageInfo.commitCursor.hasNextPage,
         ...parameterObject,
       });
 
@@ -214,7 +210,7 @@ export class GitHub {
         login: user.login,
         name: user.name || "",
         calendar: collection.contributionCalendar,
-        commits: collection.commitContributionsByRepository || [],
+        commits: collection.commitContributionsByRepository,
         issues: cleanNodes(collection.issueContributions.nodes),
         prs: cleanNodes(collection.pullRequestContributions.nodes),
         repositories: cleanNodes(collection.repositoryContributions.nodes),
@@ -223,21 +219,17 @@ export class GitHub {
 
       // Try to request next pages
       if (pageInfo.commitCursor.hasNextPage) {
-        const newPageInfo = collection
-          .commitContributionsByRepository
-          .find(({ contributions }) => contributions.pageInfo.hasNextPage)
-          ?.contributions
-          .pageInfo;
-        if (newPageInfo) {
-          pageInfo.commitCursor = newPageInfo;
-        } else {
-          // FIXME? why does this require hasPreviousPage?
-          pageInfo.commitCursor = {
-            endCursor: null,
-            hasNextPage: false,
-            hasPreviousPage: false,
-          };
-        }
+        const commits = collection.commitContributionsByRepository;
+        pageInfo.commitCursor = (
+          // All repos with more data have the same cursor; find the first.
+          commits.find(({ contributions }) =>
+            contributions.pageInfo.hasNextPage
+          ) ||
+          // No repos have more data, get the first for a finished cursor.
+          commits[0]
+        )?.contributions.pageInfo ||
+          // No repos; just disable this next iteration.
+          { endCursor: null, hasNextPage: false };
       }
 
       if (pageInfo.issueCursor.hasNextPage) {
