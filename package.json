@@ -12,7 +12,8 @@
     "vitest:run": "vitest run",
     "generate:api": "scripts/generate-api.sh",
     "generate:api:watch": "chokidar 'openapi.json' -c 'npm run generate:api' --initial --silent",
-    "generate:graphql": "deno run -A npm:@graphql-codegen/cli/graphql-codegen-esm --config graphql_codegen.ts"
+    "generate:graphql": "deno run -A npm:@graphql-codegen/cli/graphql-codegen-esm --config graphql_codegen.ts",
+    "generate:fixture": "deno run -A scripts/generate-fixture.ts"
   },
   "dependencies": {
     "@deno/vite-plugin": "^1.0.5",
