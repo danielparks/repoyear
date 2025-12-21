@@ -47,30 +47,6 @@ repos:
         priority: 0
   - repo: local
     hooks:
-      - id: cargo clippy
-        name: cargo clippy
-        language: system
-        entry: cargo clippy --manifest-path rust-crate/Cargo.toml --all-targets --all-features -- -D warnings
-        args: []
-        files: (\.rs|Cargo\.toml)$
-        pass_filenames: false
-        priority: 0
-      - id: cargo doc
-        name: cargo doc
-        language: system
-        entry: sh -c 'RUSTDOCFLAGS=-Dwarnings cargo doc --manifest-path rust-crate/Cargo.toml --all-features --workspace --no-deps --document-private-items' --
-        args: []
-        files: \.rs$
-        pass_filenames: false
-        priority: 0
-      - id: cargo fmt
-        name: cargo fmt
-        language: system
-        entry: cargo fmt --manifest-path rust-crate/Cargo.toml --check
-        args: []
-        files: (\.rs|rustfmt\.toml)$
-        pass_filenames: false
-        priority: 0
       - id: deno-check
         name: deno check
         description: Check all TypeScript source code files.
