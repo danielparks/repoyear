@@ -83,7 +83,7 @@ export class Calendar {
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
-    this.replaceDays(days);
+    this.updateSummary(days);
   }
 
   /**
@@ -105,7 +105,13 @@ export class Calendar {
    */
   updateFromContributions(contributions: github.Contributions) {
     if (contributions.calendar) {
-      this.updateSummary(contributions.calendar);
+      this.updateSummary(
+        contributions.calendar.weeks.map((week) =>
+          week.contributionDays.map((day) =>
+            new Day(parseDateTime(day.date), day.contributionCount)
+          )
+        ).flat(),
+      );
     }
 
     for (const entry of contributions.commits) {
@@ -139,21 +145,6 @@ export class Calendar {
     this.updateRepoCounts();
     this.updateRepoColors();
     return this;
-  }
-
-  /**
-   * Update summary data.
-   *
-   * FIXME: this replaces the days involved, which removes the detail data.
-   */
-  updateSummary(summary: gql.ContributionCalendar) {
-    this.replaceDays(
-      summary.weeks.map((week) =>
-        week.contributionDays.map((day) =>
-          new Day(parseDateTime(day.date), day.contributionCount)
-        )
-      ).flat(),
-    );
   }
 
   /**
@@ -270,9 +261,12 @@ export class Calendar {
   }
 
   /**
-   * Add `Day`s to `Calendar`, replacing any that already exist.
+   * Update summary contribution counts or add `Day`s.
+   *
+   * For existing days, only `contributionCounts` will be changed. For new days,
+   * the `Day` object is inserted into the `Calendar`.
    */
-  replaceDays(newDays: Day[]) {
+  updateSummary(newDays: Day[]) {
     if (newDays.length === 0) {
       return;
     }
@@ -282,7 +276,13 @@ export class Calendar {
       daysByEpochDay.set(toEpochDays(day.date), day);
     }
     for (const day of newDays) {
-      daysByEpochDay.set(toEpochDays(day.date), day);
+      const i = toEpochDays(day.date);
+      const oldDay = daysByEpochDay.get(i);
+      if (oldDay) {
+        oldDay.contributionCount = day.contributionCount;
+      } else {
+        daysByEpochDay.set(i, day);
+      }
     }
 
     let firstEpochDay = Math.min(...daysByEpochDay.keys());

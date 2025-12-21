@@ -461,11 +461,11 @@ Deno.test("Calendar.day() should append days after initial week", () => {
   ]);
 });
 
-Deno.test("Calendar.replaceDays() can prepend days", () => {
+Deno.test("Calendar.updateSummary() can prepend days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
   ]);
-  calendar.replaceDays([new Day(new Date(2024, 11, 24), 3)]);
+  calendar.updateSummary([new Day(new Date(2024, 11, 24), 3)]);
 
   assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
     [null, null, 3, null, null, null, null],
@@ -473,11 +473,11 @@ Deno.test("Calendar.replaceDays() can prepend days", () => {
   ]);
 });
 
-Deno.test("Calendar.replaceDays() can append days", () => {
+Deno.test("Calendar.updateSummary() can append days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
   ]);
-  calendar.replaceDays([new Day(new Date(2025, 0, 10), 3)]);
+  calendar.updateSummary([new Day(new Date(2025, 0, 10), 3)]);
 
   assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
     [null, null, null, 10, null, null, null],
@@ -485,11 +485,11 @@ Deno.test("Calendar.replaceDays() can append days", () => {
   ]);
 });
 
-Deno.test("Calendar.replaceDays() can prepend and append days", () => {
+Deno.test("Calendar.updateSummary() can prepend and append days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
   ]);
-  calendar.replaceDays([
+  calendar.updateSummary([
     new Day(new Date(2024, 11, 24), 1),
     new Day(new Date(2025, 0, 10), 3),
   ]);
@@ -501,13 +501,13 @@ Deno.test("Calendar.replaceDays() can prepend and append days", () => {
   ]);
 });
 
-Deno.test("Calendar.replaceDays() replaces days", () => {
+Deno.test("Calendar.updateSummary() updates days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
     new Day(new Date(2025, 0, 2), 11),
     new Day(new Date(2025, 0, 3), 12),
   ]);
-  calendar.replaceDays([
+  calendar.updateSummary([
     new Day(new Date(2024, 11, 31), 1),
     new Day(new Date(2025, 0, 1), 2),
   ]);
@@ -517,13 +517,13 @@ Deno.test("Calendar.replaceDays() replaces days", () => {
   ]);
 });
 
-Deno.test("Calendar.replaceDays() can accept out-of-order days", () => {
+Deno.test("Calendar.updateSummary() can accept out-of-order days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 3), 12),
     new Day(new Date(2025, 0, 1), 10),
     new Day(new Date(2025, 0, 2), 11),
   ]);
-  calendar.replaceDays([
+  calendar.updateSummary([
     new Day(new Date(2025, 0, 1), 2),
     new Day(new Date(2024, 11, 31), 1),
     new Day(new Date(2025, 0, 5), 5),
