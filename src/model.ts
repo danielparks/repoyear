@@ -102,11 +102,17 @@ export class Calendar {
 
   /**
    * Merges additional contributions data into this calendar.
+   *
+   * This is idempotent to handle progressive updates to the calendar. It will
+   * be run on the same contributions data multiple times during progressive
+   * loading. The work could be de-duplicated at the cost of increased
+   * complexity and possibly a chance of missing data, depending on whether or
+   * not `useMemo()` always triggers on changes (even very rapid ones).
    */
   updateFromContributions(contributions: github.Contributions) {
-    // Timestamps (`occurredAt`) are UTC datetimes, e.g. "2025-10-02T07:00:00Z",
-    // so parsing with `new Date(str)` works correctly.
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
+      // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
+      // so parsing with `new Date(str)` works correctly.
       this.repoDay(new Date(timestamp), repository);
 
     if (contributions.calendar) {
@@ -122,6 +128,10 @@ export class Calendar {
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
+        // If GitHub ever returns separate nodes for the same repo/date pair,
+        // this will miss some commits. It will show up in the UI as a day not
+        // adding up and thus being marked with the “unknown” CSS class. See doc
+        // comment about idempotency above.
         findRepoDay(node.occurredAt, repository)?.setCommits(node.commitCount);
       }
     }
@@ -139,10 +149,9 @@ export class Calendar {
     }
 
     for (const node of contributions.repositories) {
-      // FIXME: If a repo is created twice in one day (I’m not sure that is
-      // possible) this code will only record one creation. This is because
-      // this code needs to be idempotent to handle progressive updates to
-      // the calendar.
+      // If a repo is created twice in one day (I’m not sure that is possible)
+      // this code will only record one creation. See doc comment about
+      // idempotency above.
       findRepoDay(node.occurredAt, node.repository)?.setCreate(1);
     }
 
