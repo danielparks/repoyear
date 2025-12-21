@@ -124,11 +124,22 @@ export default function App({ username }: { username: string | null }) {
     },
   });
 
-  // Transform contributions to Calendar model
-  const calendar = useMemo(
-    () => Calendar.fromContributions(...contributions || []),
-    [contributions],
-  );
+  // Progressively transform contributions into `Calendar`.
+  const calendarRef = useRef<Calendar | null>(null);
+  const calendar = useMemo(() => {
+    if (contributions) {
+      if (calendarRef.current) {
+        console.log("update calendar with", contributions.length);
+        for (const contribution of contributions) {
+          calendarRef.current.updateFromContributions(contribution);
+        }
+      } else {
+        console.log("new calendar", contributions.length);
+        calendarRef.current = Calendar.fromContributions(...contributions);
+      }
+    }
+    return calendarRef.current;
+  }, [contributions]);
 
   let errorMessage = authError;
   if (queryError) {
