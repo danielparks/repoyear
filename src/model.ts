@@ -118,29 +118,30 @@ export class Calendar {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
         this._repoDay(node.occurredAt, repository)
-          ?.addCommits(node.commitCount);
+          ?.setCommits(node.commitCount);
       }
     }
 
     for (const node of contributions.issues) {
-      this._repoDay(node.occurredAt, node.issue.repository)?.issues.push(
+      this._repoDay(node.occurredAt, node.issue.repository)?.issues.add(
         node.issue.url,
       );
     }
 
     for (const node of contributions.prs) {
-      this._repoDay(node.occurredAt, node.pullRequest.repository)?.prs.push(
+      this._repoDay(node.occurredAt, node.pullRequest.repository)?.prs.add(
         node.pullRequest.url,
       );
     }
 
     for (const node of contributions.repositories) {
-      this._repoDay(node.occurredAt, node.repository)?.addCreate();
+      // FIXME this cannot handle a repo being created twice in a day.
+      this._repoDay(node.occurredAt, node.repository)?.setCreate(1);
     }
 
     for (const node of contributions.reviews) {
       this._repoDay(node.occurredAt, node.pullRequestReview.repository)?.reviews
-        .push(node.pullRequestReview.url);
+        .add(node.pullRequestReview.url);
     }
 
     this.updateRepoCounts();
@@ -431,11 +432,11 @@ export class RepositoryDay {
   /** How many times the repo was created this day (typically 0, sometimes 1) */
   created = 0;
   /** Issue URLs */
-  issues: string[] = [];
+  issues: Set<string> = new Set();
   /** PR URLs */
-  prs: string[] = [];
+  prs: Set<string> = new Set();
   /** PR review URLs */
-  reviews: string[] = [];
+  reviews: Set<string> = new Set();
 
   constructor(repository: Repository) {
     this.repository = repository;
@@ -449,10 +450,24 @@ export class RepositoryDay {
   }
 
   /**
+   * Record commit counts for this day.
+   */
+  setCommits(count: number) {
+    this.commitCount = count;
+  }
+
+  /**
    * Record repository creation for this day.
    */
   addCreate(count = 1) {
     this.created += count;
+  }
+
+  /**
+   * Record repository creation count for this day.
+   */
+  setCreate(count: number) {
+    this.created = count;
   }
 
   /**
@@ -470,8 +485,8 @@ export class RepositoryDay {
    * calendar may include other contributions we don’t check for.
    */
   count() {
-    return this.created + this.commitCount + this.issues.length +
-      this.prs.length + this.reviews.length;
+    return this.created + this.commitCount + this.issues.size + this.prs.size +
+      this.reviews.size;
   }
 }
 

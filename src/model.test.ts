@@ -60,9 +60,9 @@ Deno.test("RepositoryDay should start with zero counts", () => {
   const repoDay = testRepoDay();
   assertEquals(repoDay.commitCount, 0);
   assertEquals(repoDay.created, 0);
-  assertEquals(repoDay.issues, []);
-  assertEquals(repoDay.prs, []);
-  assertEquals(repoDay.reviews, []);
+  assertEquals(repoDay.issues, new Set());
+  assertEquals(repoDay.prs, new Set());
+  assertEquals(repoDay.reviews, new Set());
   assertEquals(repoDay.count(), 0);
 });
 
@@ -92,12 +92,10 @@ Deno.test("RepositoryDay should count all contribution types", () => {
   const repoDay = testRepoDay();
   repoDay.addCommits(3);
   repoDay.addCreate();
-  repoDay.issues.push(
-    "https://github.com/test/repo/issues/1",
-    "https://github.com/test/repo/issues/2",
-  );
-  repoDay.prs.push("https://github.com/test/repo/pull/1");
-  repoDay.reviews.push("https://github.com/test/repo/pull/1#review");
+  repoDay.issues.add("https://github.com/test/repo/issues/1");
+  repoDay.issues.add("https://github.com/test/repo/issues/2");
+  repoDay.prs.add("https://github.com/test/repo/pull/1");
+  repoDay.reviews.add("https://github.com/test/repo/pull/1#review");
 
   assertEquals(repoDay.count(), 8);
 });
@@ -113,7 +111,7 @@ Deno.test("Day should calculate known contribution count", () => {
 
   const repoDay2 = new RepositoryDay(repo2);
   repoDay2.addCommits(2);
-  repoDay2.issues.push("https://github.com/test/repo2/issues/1");
+  repoDay2.issues.add("https://github.com/test/repo2/issues/1");
   day.repositories.set(repo2.url, repoDay2);
 
   assertEquals(day.knownContributionCount(), 6);
