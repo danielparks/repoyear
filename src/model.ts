@@ -103,11 +103,10 @@ export class Calendar {
   /**
    * Merges additional contributions data into this calendar.
    *
-   * This is idempotent to handle progressive updates to the calendar. It will
-   * be run on the same contributions data multiple times during progressive
-   * loading. The work could be de-duplicated at the cost of increased
-   * complexity and possibly a chance of missing data, depending on whether or
-   * not `useMemo()` always triggers on changes (even very rapid ones).
+   * This is idempotent to handle progressive updates to the calendar. It is run
+   * on the entirety of the contributions data each time the query returns
+   * another incremental chunk. The work could be de-duplicated at the cost of
+   * increased complexity.
    */
   updateFromContributions(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
