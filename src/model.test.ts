@@ -507,14 +507,22 @@ Deno.test("Calendar.updateSummary() updates days", () => {
     new Day(new Date(2025, 0, 2), 11),
     new Day(new Date(2025, 0, 3), 12),
   ]);
+  calendar.repoDay(new Date(2025, 0, 1), "test-repo").commitCount = 1;
   calendar.updateSummary([
     new Day(new Date(2024, 11, 31), 1),
     new Day(new Date(2025, 0, 1), 2),
   ]);
 
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
+  const weeks = [...calendar.weeks()];
+  assertWeeksContributions(weeks, new Date(2024, 11, 29), [
     [null, null, 1, 2, 11, 12, null],
   ]);
+
+  assertEquals(
+    weeks[0][3].repositories.get("test-repo")?.commitCount,
+    1,
+    "Must not update details",
+  );
 });
 
 Deno.test("Calendar.updateSummary() can accept out-of-order days", () => {

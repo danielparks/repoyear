@@ -117,28 +117,29 @@ export class Calendar {
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
-        this.repoDay(node.occurredAt, repository)?.addCommits(node.commitCount);
+        this._repoDay(node.occurredAt, repository)
+          ?.addCommits(node.commitCount);
       }
     }
 
     for (const node of contributions.issues) {
-      this.repoDay(node.occurredAt, node.issue.repository)?.issues.push(
+      this._repoDay(node.occurredAt, node.issue.repository)?.issues.push(
         node.issue.url,
       );
     }
 
     for (const node of contributions.prs) {
-      this.repoDay(node.occurredAt, node.pullRequest.repository)?.prs.push(
+      this._repoDay(node.occurredAt, node.pullRequest.repository)?.prs.push(
         node.pullRequest.url,
       );
     }
 
     for (const node of contributions.repositories) {
-      this.repoDay(node.occurredAt, node.repository)?.addCreate();
+      this._repoDay(node.occurredAt, node.repository)?.addCreate();
     }
 
     for (const node of contributions.reviews) {
-      this.repoDay(node.occurredAt, node.pullRequestReview.repository)?.reviews
+      this._repoDay(node.occurredAt, node.pullRequestReview.repository)?.reviews
         .push(node.pullRequestReview.url);
     }
 
@@ -194,19 +195,34 @@ export class Calendar {
   /**
    * Gets the `RepositoryDay` for a given timestamp and repository.
    *
+   * Used for GraphQL query results.
+   *
    * Timestamps (`occurredAt`) are dates or datetimes in UTC (e.g.,
    * "2025-10-02T07:00:00Z"), so parsing with `new Date(str)` works correctly.
    */
-  repoDay(timestamp: string, repository: gql.Repository) {
+  _repoDay(timestamp: string, repository: gql.Repository) {
     const day = this.day(new Date(timestamp));
 
     let repoDay = day.repositories.get(repository.url);
     if (!repoDay) {
       repoDay = new RepositoryDay(this.cleanRepository(repository));
-      day.repositories.set(
-        repository.url,
-        repoDay,
-      );
+      day.repositories.set(repository.url, repoDay);
+    }
+    return repoDay;
+  }
+
+  /**
+   * Gets the `RepositoryDay` for a given time and repository URL.
+   *
+   * Convenience for testing.
+   */
+  repoDay(time: Date, repository: string) {
+    const day = this.day(time);
+
+    let repoDay = day.repositories.get(repository);
+    if (!repoDay) {
+      repoDay = new RepositoryDay(new Repository(repository));
+      day.repositories.set(repository, repoDay);
     }
     return repoDay;
   }
