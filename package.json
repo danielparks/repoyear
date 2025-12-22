@@ -11,7 +11,7 @@
     "vitest:ui": "vitest --ui",
     "vitest:run": "vitest run",
     "generate:api": "scripts/generate-api.sh",
-    "generate:api:watch": "chokidar 'openapi.json' -c 'npm run generate:api' --initial --silent",
+    "generate:api:watch": "chokidar src/api/openapi.json -c 'npm run generate:api' --initial --silent",
     "generate:graphql": "deno run -A npm:@graphql-codegen/cli/graphql-codegen-esm --config graphql_codegen.ts",
     "generate:fixture": "deno run -A scripts/generate-fixture.ts"
   },
