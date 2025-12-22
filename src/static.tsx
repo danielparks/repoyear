@@ -9,7 +9,7 @@ import { useStaticCalendar } from "./hooks/useStaticCalendar.ts";
 import { getAppVersion } from "./version.ts";
 
 export function StaticApp() {
-  const { calendar, error, loading } = useStaticCalendar();
+  const { calendar, error, loading, fetchedAt } = useStaticCalendar();
 
   if (error) {
     return (
@@ -43,7 +43,10 @@ export function StaticApp() {
         <h1>Contribution Graph for {calendar.name}</h1>
       </header>
       <ContributionsView calendar={calendar} />
-      <Footer version={getAppVersion()} />
+      <Footer
+        version={getAppVersion()}
+        lastFetched={fetchedAt || undefined}
+      />
     </>
   );
 }
