@@ -1,19 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Calendar } from "../model.ts";
 import type { Contributions } from "../github/api.ts";
-
-interface StaticDataFile {
-  schemaVersion: number;
-  queryHash: string;
-  generatedAt: string;
-  contributions: Contributions[];
-}
+import type { StaticDataFile } from "../staticData.ts";
 
 export interface UseStaticCalendarResult {
   calendar: Calendar | null;
   error: string | null;
   loading: boolean;
-  fetchedAt: string | null;
+  fetchedAt: string | undefined;
 }
 
 /**
@@ -26,7 +20,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   const [contributions, setContributions] = useState<Contributions[] | null>(
     null,
   );
-  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [fetchedAt, setFetchedAt] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,15 +33,12 @@ export function useStaticCalendar(): UseStaticCalendarResult {
         }
         return response.json();
       })
-      .then((data: StaticDataFile | Contributions[]) => {
-        // Support both old (array) and new (object with metadata) formats
-        if (Array.isArray(data)) {
-          setContributions(data);
-          setFetchedAt(null);
-        } else {
-          setContributions(data.contributions);
-          setFetchedAt(data.generatedAt);
+      .then((data: StaticDataFile) => {
+        if (!data.contributions) {
+          throw new Error("Invalid contributions data format");
         }
+        setContributions(data.contributions);
+        setFetchedAt(data.generatedAt);
       })
       .catch((error: unknown) => {
         console.error(`Error loading ${url}`, error);

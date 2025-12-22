@@ -229,7 +229,7 @@ export default function App({ username }: { username: string | null }) {
         : <div className="info-message">No contributions data</div>}
       <Footer
         version={getAppVersion()}
-        lastFetched={dataUpdatedAt || undefined}
+        lastFetched={dataUpdatedAt}
       />
     </>
   );

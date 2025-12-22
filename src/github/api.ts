@@ -20,12 +20,6 @@ import type {
 export type GithubError = GraphqlResponseError<GraphQlQueryResponseData>;
 
 /**
- * Version number for the static data file format.
- * Increment when making incompatible structural changes to the file format.
- */
-export const STATIC_DATA_SCHEMA_VERSION = 2;
-
-/**
  * GraphQL query template for fetching GitHub contributions.
  * FIXME: Consider adding joinedGitHubContribution
  * FIXME: What about joining an organization (see ~danielparks on 2025-12-04)
@@ -139,19 +133,6 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
     }
   }
 }`;
-
-/**
- * Generates a SHA-256 hash of the contributions query template.
- * This hash is used to detect when the query has changed and static data
- * needs to be regenerated.
- */
-export async function getQueryHash(): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(CONTRIBUTIONS_QUERY_TEMPLATE);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 export class GitHub {
   readonly octokit: Octokit;

@@ -45,7 +45,7 @@ export function StaticApp() {
       <ContributionsView calendar={calendar} />
       <Footer
         version={getAppVersion()}
-        lastFetched={fetchedAt || undefined}
+        lastFetched={fetchedAt}
       />
     </>
   );

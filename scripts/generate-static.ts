@@ -1,18 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env
 
-import {
-  getQueryHash,
-  GitHub,
-  STATIC_DATA_SCHEMA_VERSION,
-} from "../src/github/api.ts";
-import type { Contributions } from "../src/github/api.ts";
-
-interface StaticDataFile {
-  schemaVersion: number;
-  queryHash: string;
-  generatedAt: string;
-  contributions: Contributions[];
-}
+import { getQueryHash, STATIC_DATA_SCHEMA_VERSION } from "../src/staticData.ts";
+import { type Contributions, GitHub } from "../src/github/api.ts";
 
 interface Args {
   username: string;
@@ -149,17 +138,15 @@ async function main() {
     }
     const token = await readToken(tokenFile);
 
-    const contributions = await fetchContributions(token, username, verbose);
-    const queryHash = await getQueryHash();
-
-    const staticData: StaticDataFile = {
-      schemaVersion: STATIC_DATA_SCHEMA_VERSION,
-      queryHash,
-      generatedAt: new Date().toISOString(),
-      contributions,
-    };
-
-    await atomicWrite(outputFile, JSON.stringify(staticData));
+    await atomicWrite(
+      outputFile,
+      JSON.stringify({
+        schemaVersion: STATIC_DATA_SCHEMA_VERSION,
+        queryHash: await getQueryHash(),
+        generatedAt: new Date().toISOString(),
+        contributions: await fetchContributions(token, username, verbose),
+      }),
+    );
 
     if (verbose) {
       console.log(`Generated ${outputFile}`);

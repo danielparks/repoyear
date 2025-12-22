@@ -1,8 +1,5 @@
 function formatTimestamp(timestamp: number | string): string {
-  const date = typeof timestamp === "number"
-    ? new Date(timestamp)
-    : new Date(timestamp);
-  return date.toLocaleString();
+  return new Date(timestamp).toLocaleString();
 }
 
 export function Footer(
@@ -14,7 +11,7 @@ export function Footer(
         github.com/danielparks/contributions-tracker
       </a>{" "}
       • {version}
-      {lastFetched && ` • Data from ${formatTimestamp(lastFetched)}`}
+      {lastFetched && ` • Last updated ${formatTimestamp(lastFetched)}`}
     </footer>
   );
 }
