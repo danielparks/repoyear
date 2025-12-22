@@ -17,6 +17,13 @@ pub struct HealthResponse {
     pub status: String,
 }
 
+/// Response from `/api/version`
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct VersionResponse {
+    /// Version string from git describe.
+    pub version: String,
+}
+
 /// Parameters for `/api/oauth/callback`
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct CallbackParams {
@@ -42,6 +49,9 @@ pub trait ApiBase: Send + Sync {
     /// If the API server is up, this always returns `{"status":"ok"}`. It
     /// intentionally does not check anything else.
     fn check_health(&self) -> impl Future<Output = String> + Send;
+
+    /// Get the application version.
+    fn get_version(&self) -> impl Future<Output = String> + Send;
 
     /// Exchange a GitHub OAuth code for an access token.
     ///
@@ -75,6 +85,18 @@ pub trait ContributionsApi {
     ) -> Result<HttpResponseOk<HealthResponse>, HttpError> {
         let status = rqctx.context().check_health().await;
         Ok(HttpResponseOk(HealthResponse { status }))
+    }
+
+    /// Handle `/api/version`
+    #[endpoint {
+        method = GET,
+        path = "/api/version",
+    }]
+    async fn version(
+        rqctx: RequestContext<Self::Context>,
+    ) -> Result<HttpResponseOk<VersionResponse>, HttpError> {
+        let version = rqctx.context().get_version().await;
+        Ok(HttpResponseOk(VersionResponse { version }))
     }
 
     /// Handle `/api/oauth/callback`

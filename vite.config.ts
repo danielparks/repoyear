@@ -2,12 +2,22 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import fs from "node:fs";
+import { execSync } from "node:child_process";
 
 // https://vite.dev/config/
 export default defineConfig({
   base: "",
   plugins: [
     react(),
+    {
+      name: "inject-version",
+      transformIndexHtml(html) {
+        const version = execSync("sh scripts/get-version.sh")
+          .toString()
+          .trim();
+        return html.replace(/@APP-VERSION@/g, version);
+      },
+    },
     {
       name: "serve-static-data",
       configureServer(server) {

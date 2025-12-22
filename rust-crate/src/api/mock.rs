@@ -46,6 +46,10 @@ impl ApiBase for MockAppState {
         self.health_status.clone()
     }
 
+    async fn get_version(&self) -> String {
+        env!("GIT_VERSION").to_owned()
+    }
+
     async fn exchange_oauth_token(
         &self,
         _code: String,

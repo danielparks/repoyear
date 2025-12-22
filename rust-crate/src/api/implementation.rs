@@ -42,6 +42,10 @@ impl ApiBase for AppState {
         "ok".to_owned()
     }
 
+    async fn get_version(&self) -> String {
+        env!("GIT_VERSION").to_owned()
+    }
+
     async fn exchange_oauth_token(
         &self,
         code: String,
