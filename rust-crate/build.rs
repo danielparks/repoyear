@@ -1,8 +1,7 @@
-//! Build script to embed the git version at build time.
+//! Build script to embed the version at build time.
 
 fn main() {
-    let version = std::process::Command::new("sh")
-        .arg("../scripts/get-version.sh")
+    let version = std::process::Command::new("../scripts/get-version.sh")
         .output()
         .ok()
         .and_then(|output| String::from_utf8(output.stdout).ok())

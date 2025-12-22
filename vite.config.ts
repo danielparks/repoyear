@@ -12,10 +12,12 @@ export default defineConfig({
     {
       name: "inject-version",
       transformIndexHtml(html) {
-        const version = execSync("sh scripts/get-version.sh")
-          .toString()
-          .trim();
-        return html.replace(/@APP-VERSION@/g, version);
+        return html.replace(
+          /@APP-VERSION@/g,
+          execSync("scripts/get-version.sh")
+            .toString()
+            .trim(),
+        );
       },
     },
     {
