@@ -99,6 +99,7 @@ export default function App({ username }: { username: string | null }) {
   ];
   const {
     data: contributions,
+    dataUpdatedAt,
     error: queryError,
   } = useQuery({
     enabled: !!accessToken,
@@ -226,7 +227,10 @@ export default function App({ username }: { username: string | null }) {
       {calendar
         ? <ContributionsView calendar={calendar} />
         : <div className="info-message">No contributions data</div>}
-      <Footer version={getAppVersion()} />
+      <Footer
+        version={getAppVersion()}
+        lastFetched={dataUpdatedAt || undefined}
+      />
     </>
   );
 }
