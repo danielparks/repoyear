@@ -24,3 +24,10 @@ repos:
         files: (\.rs|rustfmt\.toml)$
         pass_filenames: false
         priority: 0
+      - id: cargo run openapi
+        name: cargo run openapi
+        language: system
+        entry: sh -c 'cargo run --quiet -- openapi -o target/openapi.json && diff -u --color=always ../src/api/openapi.json target/openapi.json'
+        files: (\.rs|Cargo\.(lock|toml))$
+        pass_filenames: false
+        priority: 0
