@@ -24,7 +24,6 @@ export function CompactApp() {
     <ContributionsGraph
       calendar={calendar}
       clickUrl={clickUrl}
-      showTooltip={false}
     />
   );
 }

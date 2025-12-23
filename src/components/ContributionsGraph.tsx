@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { Calendar, Day, Filter } from "../model/index.ts";
 
 export interface ContributionsGraphProps {
@@ -6,13 +5,12 @@ export interface ContributionsGraphProps {
   filter?: Filter;
   highlight?: string | null;
   clickUrl?: string;
-  showTooltip?: boolean;
 }
 
 /**
  * Renders the contribution calendar as a grid of colored cells.
  *
- * Supports optional filtering, highlighting, tooltips, and click navigation.
+ * Supports optional filtering, highlighting, and click navigation.
  * Can be used in both interactive (with filter/highlight) and static modes.
  */
 export function ContributionsGraph(
@@ -21,7 +19,6 @@ export function ContributionsGraph(
     filter = new Filter(),
     highlight = null,
     clickUrl,
-    showTooltip = true,
   }: ContributionsGraphProps,
 ) {
   const dayMax = calendar.maxContributions();
@@ -48,7 +45,6 @@ export function ContributionsGraph(
                 filter={filter}
                 max={dayMax}
                 highlight={highlight}
-                showTooltip={showTooltip}
               />
             ))}
           </div>
@@ -63,17 +59,16 @@ export interface GraphDayProps {
   filter: Filter;
   max: number;
   highlight?: string | null;
-  showTooltip?: boolean;
 }
 
 /**
  * Renders a single day cell in the contribution graph.
  *
  * The cell is subdivided by repository contributions, with colors indicating
- * intensity. Optionally shows a tooltip on hover with contribution details.
+ * intensity.
  */
 export function GraphDay(
-  { day, filter, max, highlight, showTooltip = true }: GraphDayProps,
+  { day, filter, max, highlight }: GraphDayProps,
 ) {
   const className: string[] = [];
   if (highlight && day.hasRepo(highlight)) {
@@ -128,82 +123,9 @@ export function GraphDay(
 
   return (
     <div style={style} className={className.join(" ")}>
-      {showTooltip && <DayInfo day={day} />}
       <ol>
         {subdivisions.map(({ key, style }) => <li key={key} style={style} />)}
       </ol>
-    </div>
-  );
-}
-
-/**
- * Tooltip displaying detailed contribution information for a day.
- *
- * Automatically positions itself to avoid overflowing the window.
- */
-function DayInfo({ day }: { day: Day }) {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [classNames, setClassNames] = useState(["day-info"]);
-
-  useEffect(() => {
-    function checkOverflow() {
-      if (divRef.current && divRef.current.parentNode) {
-        const rect = (divRef.current.parentNode as HTMLDivElement)
-          .getBoundingClientRect();
-        const newClassNames = ["day-info", "align-top"];
-        // FIXME: this assumes the window is large enough.
-        if (rect.right > globalThis.innerWidth - 460) {
-          newClassNames.push("align-right");
-        } else {
-          newClassNames.push("align-left");
-        }
-        setClassNames(newClassNames);
-      }
-    }
-
-    checkOverflow();
-    addEventListener("resize", checkOverflow);
-
-    return () => {
-      removeEventListener("resize", checkOverflow);
-    };
-  }, []);
-
-  return (
-    <div ref={divRef} className={classNames.join(" ")}>
-      <table>
-        <tbody>
-          {[...day.repositories.values()].map((repoDay) => (
-            <tr key={repoDay.repository.url}>
-              <td className="count">
-                {repoDay.count()}
-              </td>
-              <th>
-                {repoDay.repository.url} {repoDay.created > 0 && <>(Created)</>}
-              </th>
-            </tr>
-          ))}
-          {day.addsUp() ||
-            (
-              <tr key="unknown">
-                <td className="count">
-                  {(day.contributionCount || 0) - day.knownContributionCount()}
-                </td>
-                <th>
-                  Unknown contributions
-                </th>
-              </tr>
-            )}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td className="count">
-              {day.contributionCount}
-            </td>
-            <th className="date">{day.date.toLocaleDateString()}</th>
-          </tr>
-        </tfoot>
-      </table>
     </div>
   );
 }
