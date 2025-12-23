@@ -55,7 +55,7 @@ export function RepositoryList(
 /**
  * An easy to read, clickable repository name.
  */
-function RepositoryName({ repo }: { repo: Repository }) {
+export function RepositoryName({ repo }: { repo: Repository }) {
   return (
     <a style={{ color: repo.color() }} href={repo.url}>
       <GitHubMark />

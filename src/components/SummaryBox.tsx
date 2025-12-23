@@ -1,4 +1,5 @@
 import { Calendar, Day, Filter, Repository } from "../model/index.ts";
+import { RepositoryName } from "./RepositoryList.tsx";
 
 export interface SummaryBoxProps {
   calendar: Calendar;
@@ -55,9 +56,7 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
         {topRepos.map((repo) => (
           <li key={repo.url}>
             <div className="repo-header">
-              <a style={{ color: repo.color() }} href={repo.url}>
-                {repo.url.replace("https://github.com/", "")}
-              </a>
+              <RepositoryName repo={repo} />
               <span className="contribution-count">{repo.contributions}</span>
             </div>
             <Sparkline repo={repo} calendar={calendar} />
@@ -92,12 +91,7 @@ function DaySummary({ day }: { day: Day }) {
             {[...day.repositories.values()].map((repoDay) => (
               <li key={repoDay.repository.url}>
                 <div className="repo-header">
-                  <a
-                    style={{ color: repoDay.repository.color() }}
-                    href={repoDay.repository.url}
-                  >
-                    {repoDay.repository.url.replace("https://github.com/", "")}
-                  </a>
+                  <RepositoryName repo={repoDay.repository} />
                   {repoDay.created > 0 && (
                     <span className="repo-badge">Created</span>
                   )}

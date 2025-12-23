@@ -242,12 +242,6 @@ ol.repository-list > li > label > h3 {
   text-overflow: ellipsis;
 }
 
-ol.repository-list > li > label > h3 svg {
-  height: 1em;
-  vertical-align: text-top;
-  margin: 0 4px 0 0;
-}
-
 ol.repository-list > li > label > .contribution-count {
   flex-shrink: 0;
   color: #666;
@@ -423,4 +417,11 @@ ol.repository-list > li > label > .contribution-count {
   position: absolute;
   bottom: 0;
   width: 100%;
+}
+
+/* Repo icon */
+a > svg {
+  height: 1em;
+  vertical-align: text-top;
+  margin: 0 5px 0 0;
 }
