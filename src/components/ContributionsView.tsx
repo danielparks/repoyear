@@ -12,8 +12,8 @@ export interface ContributionsViewProps {
  * Displays a contribution graph and repository list with interactive filtering.
  *
  * This component manages the interactive state (highlight, filter, and selected
- * day) and can be rendered either client-side (with data from React Query) or
- * server-side (with pre-loaded data for static generation).
+ * day) and can use data loaded by the client (via React Query) or data loaded
+ * server side and transmitted to the client as JSON.
  */
 export function ContributionsView({
   calendar,

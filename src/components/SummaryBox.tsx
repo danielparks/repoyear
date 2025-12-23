@@ -14,9 +14,9 @@ export interface SummaryBoxProps {
 export function SummaryBox({ calendar, selectedDay }: SummaryBoxProps) {
   if (selectedDay) {
     return <DaySummary day={selectedDay} />;
+  } else {
+    return <YearSummary calendar={calendar} />;
   }
-
-  return <YearSummary calendar={calendar} />;
 }
 
 /**
@@ -33,7 +33,7 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
   const firstDay = calendar.days[0]?.date;
   const lastDay = calendar.days[calendar.days.length - 1]?.date;
   const dateRange = firstDay && lastDay
-    ? `${firstDay.toLocaleDateString()} - ${lastDay.toLocaleDateString()}`
+    ? `${firstDay.toLocaleDateString()} – ${lastDay.toLocaleDateString()}`
     : "";
 
   return (

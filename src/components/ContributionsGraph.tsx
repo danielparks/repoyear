@@ -72,8 +72,11 @@ export interface GraphDayProps {
 /**
  * Renders a single day cell in the contribution graph.
  *
- * The cell is subdivided by repository contributions, with colors indicating
- * intensity. Can be selected via click.
+ * The cell is subdivided by repository contributions, with hue indicating
+ * repository. The entire cell should be perceptually the same lightness, which
+ * represents the total number of contributions that day.
+ *
+ * Can be selected via click.
  */
 export function GraphDay(
   { day, filter, max, highlight, selected = false, onClick }: GraphDayProps,
