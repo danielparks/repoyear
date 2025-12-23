@@ -1,8 +1,8 @@
-import { Calendar, Day, Filter, Repository } from "../model/index.ts";
+import { Calendar, Filter, Repository } from "../model/index.ts";
 import { GitHubMark } from "../github/GitHubMark.tsx";
 
 /**
- * Displays a filterable list of repositories with contribution sparklines.
+ * Displays a filterable list of repositories.
  *
  * Allows users to toggle repository visibility and highlights repositories
  * on hover.
@@ -42,7 +42,9 @@ export function RepositoryList(
             <h3>
               <RepositoryName repo={repo} />
             </h3>
-            <Sparkline repo={repo} calendar={calendar} />
+            <span className="contribution-count">
+              {repo.contributions}
+            </span>
           </label>
         </li>
       ))}
@@ -59,67 +61,5 @@ function RepositoryName({ repo }: { repo: Repository }) {
       <GitHubMark />
       {repo.url.replace("https://github.com/", "")}
     </a>
-  );
-}
-
-/**
- * A mini bar chart showing contribution intensity over time.
- *
- * Divides the calendar into ~25 segments and displays the contribution
- * count for each segment as a vertical bar.
- */
-function Sparkline({ calendar, repo }: {
-  calendar: Calendar;
-  repo: Repository;
-}) {
-  const segments: Day[][] = [];
-  const segmentLength = Math.ceil(calendar.days.length / 25);
-  for (let i = 0; i < calendar.days.length; i += segmentLength) {
-    segments.push(calendar.days.slice(i, i + segmentLength));
-  }
-  const segmentMax = Math.max(
-    ...segments.map((days) =>
-      days.reduce((total, day) => total + (day.contributionCount || 0), 0)
-    ),
-  );
-
-  return (
-    <div
-      className="sparkline"
-      style={{ borderBottomColor: repo.color(80, 0.05) }}
-    >
-      {segments.map((days) => (
-        <SparklineElement
-          key={days[0].date.toString()}
-          days={days}
-          repo={repo}
-          max={segmentMax}
-        />
-      ))}
-    </div>
-  );
-}
-
-/**
- * One of the bars in the mini bar chart.
- */
-function SparklineElement({ days, repo, max }: {
-  days: Day[];
-  repo: Repository;
-  max: number;
-}) {
-  const filter = Filter.withOnlyRepos(repo.url);
-  const count = days.reduce(
-    (total, day) => total + day.filteredCount(filter),
-    0,
-  );
-  let height = 0;
-  if (count) {
-    height = 2 + 98 * count / max;
-  }
-  return (
-    <div>
-      <div style={{ height: `${height}%`, background: repo.color() }} />
-    </div>
   );
 }

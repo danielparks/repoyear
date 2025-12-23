@@ -239,24 +239,8 @@ ol.repository-list > li > label > h3 svg {
   margin: 0 4px 0 0;
 }
 
-.sparkline {
-  width: 101px;
-  display: flex;
-  gap: 1px;
-  height: 20px;
-  margin: -3px 0 3px 0; /* Move up a bit; graph is mostly a bottom */
-  padding: 0;
-  border-bottom: 1px solid hsl(270deg 40% 70%);
-}
-
-.sparkline > div {
-  position: relative;
-  flex: 1;
-  height: 100%;
-}
-
-.sparkline > div > div {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+ol.repository-list > li > label > .contribution-count {
+  flex-shrink: 0;
+  color: #666;
+  font-size: 14px;
 }
