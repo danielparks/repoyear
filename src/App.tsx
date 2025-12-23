@@ -64,7 +64,30 @@ export default function App({ username }: { username: string | null }) {
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [shiftPressed, setShiftPressed] = useState<boolean>(false);
   const queryClient = useQueryClient();
+
+  // Track shift key state.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftPressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftPressed(false);
+      }
+    };
+
+    globalThis.addEventListener("keydown", handleKeyDown);
+    globalThis.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      globalThis.removeEventListener("keydown", handleKeyDown);
+      globalThis.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   // Handle OAuth callback.
   useEffect(() => {
@@ -165,6 +188,9 @@ export default function App({ username }: { username: string | null }) {
   }
 
   function reload() {
+    if (shiftPressed) {
+      calendarRef.current = null;
+    }
     setLoading(true);
     queryClient.refetchQueries({ queryKey }).catch((error: unknown) => {
       console.error("Error refetching query:", error);
@@ -213,7 +239,7 @@ export default function App({ username }: { username: string | null }) {
         </h1>
         <div className="button-group">
           <button type="button" onClick={reload}>
-            Reload
+            {shiftPressed ? "Reload" : "Refresh"}
           </button>
           <button type="button" onClick={logout} className="logout-button">
             Log out
