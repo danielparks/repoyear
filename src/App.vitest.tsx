@@ -97,7 +97,8 @@ describe("App smoke test", () => {
         screen.getByText(`Contribution Graph for ${name}`),
       ).toBeInTheDocument();
 
-      expect(document.querySelector("table.contributions")).toBeInTheDocument();
+      expect(document.querySelector(".contributions-graph"))
+        .toBeInTheDocument();
     }, { timeout: 500 });
 
     await waitFor(() => {

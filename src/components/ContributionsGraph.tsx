@@ -33,14 +33,14 @@ export function ContributionsGraph(
     : undefined;
 
   return (
-    <table
-      className="contributions"
+    <div
+      className="contributions-graph"
       onClick={handleClick}
       style={clickUrl ? { cursor: "pointer" } : undefined}
     >
-      <tbody>
+      <div className="weeks">
         {[...calendar.weeks()].map((week) => (
-          <tr key={`week ${week[0].date}`} className="week">
+          <div key={`week ${week[0].date}`} className="week">
             {week.map((day) => (
               <GraphDay
                 key={day.date.toString()}
@@ -51,10 +51,10 @@ export function ContributionsGraph(
                 showTooltip={showTooltip}
               />
             ))}
-          </tr>
+          </div>
         ))}
-      </tbody>
-    </table>
+      </div>
+    </div>
   );
 }
 
@@ -127,12 +127,12 @@ export function GraphDay(
   }
 
   return (
-    <td style={style} className={className.join(" ")}>
+    <div style={style} className={className.join(" ")}>
       {showTooltip && <DayInfo day={day} />}
       <ol>
         {subdivisions.map(({ key, style }) => <li key={key} style={style} />)}
       </ol>
-    </td>
+    </div>
   );
 }
 
@@ -148,7 +148,7 @@ function DayInfo({ day }: { day: Day }) {
   useEffect(() => {
     function checkOverflow() {
       if (divRef.current && divRef.current.parentNode) {
-        const rect = (divRef.current.parentNode as HTMLTableCellElement)
+        const rect = (divRef.current.parentNode as HTMLDivElement)
           .getBoundingClientRect();
         const newClassNames = ["day-info", "align-top"];
         // FIXME: this assumes the window is large enough.

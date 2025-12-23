@@ -131,20 +131,20 @@ button.logout-button:hover {
   margin: 10px 0;
 }
 
-table.contributions {
+.contributions-graph {
   display: block;
 }
 
-table.contributions > tbody {
+.contributions-graph > .weeks {
   display: flex;
 }
 
-table.contributions > tbody > tr {
+.contributions-graph > .weeks > .week {
   display: block;
   flex: 1;
 }
 
-table.contributions > tbody > tr > td {
+.contributions-graph > .weeks > .week > div {
   display: block;
   position: relative;
   text-align: center;
@@ -153,23 +153,23 @@ table.contributions > tbody > tr > td {
   aspect-ratio: 1/1;
 }
 
-table.contributions > tbody > tr > td.unknown > ol {
+.contributions-graph > .weeks > .week > div.unknown > ol {
   filter: blur(1px);
 }
 
-table.contributions > tbody > tr > td.unknown > ol {
+.contributions-graph > .weeks > .week > div.unknown > ol {
   border: 1px solid #fff;
 }
 
-table.contributions > tbody > tr > td.empty > ol {
+.contributions-graph > .weeks > .week > div.empty > ol {
   border: 1px solid #eee;
 }
 
-table.contributions > tbody > tr > td.highlight > ol {
+.contributions-graph > .weeks > .week > div.highlight > ol {
   border: 1px solid hsl(30deg 100% 50%);
 }
 
-table.contributions > tbody > tr > td > ol {
+.contributions-graph > .weeks > .week > div > ol {
   display: flex;
   list-style: none;
   margin: 0;
@@ -178,7 +178,7 @@ table.contributions > tbody > tr > td > ol {
   box-sizing: border-box;
 }
 
-table.contributions > tbody > tr > td > ol > li {
+.contributions-graph > .weeks > .week > div > ol > li {
   margin: 0;
   padding: 0;
   height: 100%;
