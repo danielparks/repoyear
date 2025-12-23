@@ -40,27 +40,22 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
 
   return (
     <div className="summary-box">
-      <h2>Year Summary</h2>
+      <h2>{dateRange}</h2>
       <div className="summary-stats">
         <div className="stat">
           <span className="stat-value">{totalContributions}</span>
           <span className="stat-label">Total Contributions</span>
         </div>
-        {dateRange && (
-          <div className="stat">
-            <span className="stat-label">{dateRange}</span>
-          </div>
-        )}
       </div>
       <h3>Top Repositories</h3>
       <ol className="top-repos">
         {topRepos.map((repo) => (
           <li key={repo.url}>
-            <div className="repo-header">
+            <Sparkline repo={repo} calendar={calendar} />
+            <div className="repo-label">
               <RepositoryName repo={repo} />
               <span className="contribution-count">{repo.contributions}</span>
             </div>
-            <Sparkline repo={repo} calendar={calendar} />
           </li>
         ))}
       </ol>
@@ -91,7 +86,7 @@ function DaySummary({ day }: { day: Day }) {
           <ol className="day-repos">
             {[...day.repositories.values()].map((repoDay) => (
               <li key={repoDay.repository.url}>
-                <div className="repo-header">
+                <div className="repo-label">
                   <RepositoryName repo={repoDay.repository} />
                   {repoDay.created > 0 && (
                     <span className="repo-badge">Created</span>
