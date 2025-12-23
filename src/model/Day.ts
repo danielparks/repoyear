@@ -1,5 +1,5 @@
 import { Repository } from "./Repository.ts";
-import { Filter } from "./Filter.ts";
+import { ALL_ON, Filter } from "./Filter.ts";
 
 /**
  * Represents a single day in the contribution calendar.
@@ -54,6 +54,36 @@ export class Day {
   filteredCount(filter: Filter) {
     return this.filteredRepos(filter).reduce(
       (total, repoDay) => total + repoDay.count(),
+      0,
+    );
+  }
+
+  /**
+   * Get number of issues opened on this repository on this day.
+   */
+  issueCount(filter: Filter = ALL_ON) {
+    return this.filteredRepos(filter).reduce(
+      (total, repoDay) => total + repoDay.issues.size,
+      0,
+    );
+  }
+
+  /**
+   * Get number of PRs opened on this repository on this day.
+   */
+  prCount(filter: Filter = ALL_ON) {
+    return this.filteredRepos(filter).reduce(
+      (total, repoDay) => total + repoDay.prs.size,
+      0,
+    );
+  }
+
+  /**
+   * Get number of PR reviews opened on this repository on this day.
+   */
+  reviewCount(filter: Filter = ALL_ON) {
+    return this.filteredRepos(filter).reduce(
+      (total, repoDay) => total + repoDay.reviews.size,
       0,
     );
   }

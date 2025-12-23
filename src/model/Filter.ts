@@ -48,3 +48,5 @@ export class Filter {
     this.states.set(url, enabled);
   }
 }
+
+export const ALL_ON = new Filter();

@@ -278,8 +278,9 @@ ol.repository-list > li > label > .contribution-count {
 }
 
 .summary-stats {
-  display: flex;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   margin-bottom: 10px;
 }
 

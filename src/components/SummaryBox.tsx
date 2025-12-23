@@ -26,10 +26,13 @@ export function SummaryBox({ calendar, selectedDay }: SummaryBoxProps) {
  */
 function YearSummary({ calendar }: { calendar: Calendar }) {
   const topRepos = calendar.mostUsedRepos().slice(0, 5);
-  const totalContributions = calendar.days.reduce(
-    (total, day) => total + (day.contributionCount || 0),
-    0,
+  const totalContributions = sum(
+    calendar.days,
+    (day) => day.contributionCount || 0,
   );
+  const totalIssues = sum(calendar.days, (day) => day.issueCount());
+  const totalPrs = sum(calendar.days, (day) => day.prCount());
+  const totalReviews = sum(calendar.days, (day) => day.reviewCount());
 
   // Get the date range
   const firstDay = calendar.days[0]?.date;
@@ -44,7 +47,19 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
       <div className="summary-stats">
         <div className="stat">
           <span className="stat-value">{totalContributions}</span>
-          <span className="stat-label">Total Contributions</span>
+          <span className="stat-label">Contributions</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value">{totalIssues}</span>
+          <span className="stat-label">Issues</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value">{totalPrs}</span>
+          <span className="stat-label">PRs</span>
+        </div>
+        <div className="stat">
+          <span className="stat-value">{totalReviews}</span>
+          <span className="stat-label">PR reviews</span>
         </div>
       </div>
       <h3>Top Repositories</h3>
@@ -158,6 +173,16 @@ function RepoDayDetail(
       ))}
     </span>
   );
+}
+
+/**
+ * Sum an array-like.
+ */
+function sum<T>(
+  items: Iterable<T> | ArrayLike<T>,
+  getValue: (item: T) => number,
+): number {
+  return Array.from(items).reduce((total, entry) => total + getValue(entry), 0);
 }
 
 /**
