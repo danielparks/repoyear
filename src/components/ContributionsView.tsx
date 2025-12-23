@@ -35,13 +35,15 @@ export function ContributionsView({
         selectedDay={selectedDay}
         onDayClick={handleDayClick}
       />
-      <SummaryBox calendar={calendar} selectedDay={selectedDay} />
-      <RepositoryList
-        calendar={calendar}
-        filter={repoFilter}
-        setFilter={setRepoFilter}
-        setHighlight={setHighlight}
-      />
+      <div className="info-container">
+        <SummaryBox calendar={calendar} selectedDay={selectedDay} />
+        <RepositoryList
+          calendar={calendar}
+          filter={repoFilter}
+          setFilter={setRepoFilter}
+          setHighlight={setHighlight}
+        />
+      </div>
     </>
   );
 }
