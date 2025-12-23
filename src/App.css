@@ -197,8 +197,8 @@ ol.repository-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2px;
 }
 
@@ -261,9 +261,9 @@ ol.repository-list > li > label > .contribution-count {
   margin-bottom: 20px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .info-container {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(300px, 400px) 1fr;
   }
 }
 
