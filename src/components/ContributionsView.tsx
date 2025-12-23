@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Calendar, Filter } from "../model/index.ts";
 import { ContributionsGraph } from "./ContributionsGraph.tsx";
 import { RepositoryList } from "./RepositoryList.tsx";
+import { SummaryBox } from "./SummaryBox.tsx";
 
 export interface ContributionsViewProps {
   calendar: Calendar;
@@ -27,6 +28,7 @@ export function ContributionsView({
         filter={repoFilter}
         highlight={highlight}
       />
+      <SummaryBox calendar={calendar} selectedDay={null} />
       <RepositoryList
         calendar={calendar}
         filter={repoFilter}

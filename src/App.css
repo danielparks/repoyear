@@ -244,3 +244,96 @@ ol.repository-list > li > label > .contribution-count {
   color: #666;
   font-size: 14px;
 }
+
+.summary-box {
+  padding: 20px;
+  background: hsl(0deg 0% 98%);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.summary-box h2 {
+  margin: 0 0 15px 0;
+  font-size: 20px;
+}
+
+.summary-box h3 {
+  margin: 20px 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 10px;
+}
+
+.summary-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.summary-stats .stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: hsl(210deg 100% 50%);
+}
+
+.summary-stats .stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.top-repos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.top-repos > li {
+  margin-bottom: 15px;
+}
+
+.top-repos .repo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.top-repos .repo-header a {
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.top-repos .repo-header a:hover {
+  text-decoration: underline;
+}
+
+.top-repos .contribution-count {
+  color: #666;
+  font-size: 14px;
+}
+
+.sparkline {
+  width: 100%;
+  display: flex;
+  gap: 1px;
+  height: 20px;
+  padding: 0;
+  border-bottom: 1px solid hsl(270deg 40% 70%);
+}
+
+.sparkline > div {
+  position: relative;
+  flex: 1;
+  height: 100%;
+}
+
+.sparkline > div > div {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
