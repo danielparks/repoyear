@@ -109,7 +109,7 @@ Deno.test("Day should filter repositories by filter", () => {
   assertEquals(filtered[0].url(), repo1.url);
 });
 
-Deno.test("Day should calculate filtered count", () => {
+Deno.test("Day.filteredCount() should only include filtered repos", () => {
   const day = new Day(new Date(2025, 0, 15));
   const repo1 = new Repository("https://github.com/test/repo1");
   const repo2 = new Repository("https://github.com/test/repo2");
@@ -124,6 +124,23 @@ Deno.test("Day should calculate filtered count", () => {
 
   const filter = Filter.withOnlyRepos(repo1.url);
   assertEquals(day.filteredCount(filter), 3);
+});
+
+Deno.test("Day.filteredCount() should include unknowns", () => {
+  const day = new Day(new Date(2025, 0, 15), 9);
+  const repo1 = new Repository("https://github.com/test/repo1");
+  const repo2 = new Repository("https://github.com/test/repo2");
+
+  const repoDay1 = new RepositoryDay(repo1);
+  repoDay1.addCommits(3);
+  day.repositories.set(repo1.url, repoDay1);
+
+  const repoDay2 = new RepositoryDay(repo2);
+  repoDay2.addCommits(5);
+  day.repositories.set(repo2.url, repoDay2);
+
+  const filter = Filter.withOnlyRepos(repo1.url);
+  assertEquals(day.filteredCount(filter), 4);
 });
 
 Deno.test("Day should check if day has specific repo", () => {

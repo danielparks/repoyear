@@ -362,14 +362,14 @@ table.stats > tbody > tr > th {
   color: hsl(210deg 100% 45%);
 }
 
-.unknown-contributions {
-  margin-top: 15px;
+.message {
+  margin: 1em 0;
   padding: 10px;
   background: hsl(30deg 100% 95%);
   color: hsl(30deg 100% 30%);
   border-left: 3px solid hsl(30deg 100% 50%);
   font-size: 14px;
-  border-radius: 3px;
+  border-radius: 5px;
 }
 
 .sparkline {

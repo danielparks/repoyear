@@ -4,6 +4,7 @@ import { Fragment } from "react";
 
 export interface SummaryBoxProps {
   calendar: Calendar;
+  filter: Filter;
   selectedDay: Day | null;
 }
 
@@ -13,11 +14,11 @@ export interface SummaryBoxProps {
  * When no day is selected, shows top 5 repositories with sparklines.
  * When a day is selected, shows details for that specific day.
  */
-export function SummaryBox({ calendar, selectedDay }: SummaryBoxProps) {
+export function SummaryBox({ calendar, filter, selectedDay }: SummaryBoxProps) {
   if (selectedDay) {
-    return <DaySummary day={selectedDay} />;
+    return <DaySummary day={selectedDay} filter={filter} />;
   } else {
-    return <YearSummary calendar={calendar} />;
+    return <YearSummary calendar={calendar} filter={filter} />;
   }
 }
 
@@ -26,10 +27,14 @@ export function SummaryBox({ calendar, selectedDay }: SummaryBoxProps) {
  *
  * FIXME: filter
  */
-function YearSummary({ calendar }: { calendar: Calendar }) {
-  const topRepos = calendar.mostUsedRepos().slice(0, 5);
+function YearSummary(
+  { calendar, filter }: { calendar: Calendar; filter: Filter },
+) {
+  const topRepos = calendar.mostUsedRepos(filter).slice(0, 5);
+  const filtered = calendar.repositories.size -
+    calendar.filteredRepos(filter).length;
 
-  // Get the date range
+  // Get the date range (FIXME handle partial weeks)
   const firstDay = calendar.days[0]?.date;
   const lastDay = calendar.days[calendar.days.length - 1]?.date;
   const dateRange = firstDay && lastDay
@@ -39,14 +44,16 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
   return (
     <div className="summary-box">
       <h2>{dateRange}</h2>
+      {filtered > 0 && (
+        <p className="message filtered">
+          {countNoun(filtered, "repository")} hidden
+        </p>
+      )}
       <SummaryStats
-        contributions={sum(
-          calendar.days,
-          (day) => day.contributionCount || 0,
-        )}
-        issues={sum(calendar.days, (day) => day.issueCount())}
-        prs={sum(calendar.days, (day) => day.prCount())}
-        reviews={sum(calendar.days, (day) => day.reviewCount())}
+        contributions={sum(calendar.days, (day) => day.filteredCount(filter))}
+        issues={sum(calendar.days, (day) => day.issueCount(filter))}
+        prs={sum(calendar.days, (day) => day.prCount(filter))}
+        reviews={sum(calendar.days, (day) => day.reviewCount(filter))}
       />
       <h3>Top Repositories</h3>
       <ol className="top-repos">
@@ -67,21 +74,28 @@ function YearSummary({ calendar }: { calendar: Calendar }) {
 /**
  * Shows details for a specific day.
  */
-function DaySummary({ day }: { day: Day }) {
+function DaySummary({ day, filter }: { day: Day; filter: Filter }) {
+  const repos = day.filteredRepos(filter);
+  const filtered = day.repositories.size - repos.length;
   return (
     <div className="summary-box">
       <h2>{day.date.toLocaleDateString()}</h2>
+      {filtered > 0 && (
+        <p className="message filtered">
+          {countNoun(filtered, "repository")} hidden
+        </p>
+      )}
       <SummaryStats
-        contributions={day.contributionCount || 0}
-        issues={day.issueCount()}
-        prs={day.prCount()}
-        reviews={day.reviewCount()}
+        contributions={day.filteredCount(filter)}
+        issues={day.issueCount(filter)}
+        prs={day.prCount(filter)}
+        reviews={day.reviewCount(filter)}
       />
-      {day.repositories.size > 0 && (
+      {repos.length > 0 && (
         <>
-          <h3>{countNoun(day.repositories.size, "Repository")}</h3>
+          <h3>{countNoun(repos.length, "Repository")}</h3>
           <ol className="day-repos">
-            {[...day.repositories.values()].map((repoDay) => (
+            {repos.map((repoDay) => (
               <li key={repoDay.repository.url}>
                 <h3>
                   <RepositoryName repo={repoDay.repository} />
@@ -95,18 +109,24 @@ function DaySummary({ day }: { day: Day }) {
                   )}
                   <RepoDayDetail
                     noun="PR"
-                    links={makeLinks(repoDay.prs, (url) =>
-                      `#${url.split("/").pop()}`)}
+                    links={makeLinks(
+                      repoDay.prs,
+                      (url) => `#${url.split("/").pop()}`,
+                    )}
                   />
                   <RepoDayDetail
                     noun="issue"
-                    links={makeLinks(repoDay.issues, (url) =>
-                      `#${url.split("/").pop()}`)}
+                    links={makeLinks(
+                      repoDay.issues,
+                      (url) => `#${url.split("/").pop()}`,
+                    )}
                   />
                   <RepoDayDetail
                     noun="review"
-                    links={makeLinks(repoDay.reviews, (url) =>
-                      `#${url.split("/").pop()?.replace(/#.*/, "")}`)}
+                    links={makeLinks(
+                      repoDay.reviews,
+                      (url) => `#${url.split("/").pop()?.replace(/#.*/, "")}`,
+                    )}
                   />
                 </ul>
               </li>
@@ -115,7 +135,7 @@ function DaySummary({ day }: { day: Day }) {
         </>
       )}
       {day.unknownCount() > 0 && (
-        <p className="unknown-contributions">
+        <p className="message unknown-contributions">
           {countNoun(day.unknownCount(), "contribution")} from unknown sources
         </p>
       )}

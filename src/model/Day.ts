@@ -48,14 +48,15 @@ export class Day {
   }
 
   /**
-   * Calculate the known contribution count including just the repositories
-   * enabled in `filter`.
+   * Calculate the contribution count for repositories enabled in `filter`.
+   *
+   * This includes unknown contributions unconditionally.
    */
   filteredCount(filter: Filter) {
     return this.filteredRepos(filter).reduce(
       (total, repoDay) => total + repoDay.count(),
       0,
-    );
+    ) + Math.max(this.unknownCount(), 0);
   }
 
   /**

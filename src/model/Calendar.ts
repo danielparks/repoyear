@@ -2,6 +2,7 @@ import * as github from "../github/api.ts";
 import * as gql from "../github/gql.ts";
 import { Repository, RepositorySource } from "./Repository.ts";
 import { Day, RepositoryDay } from "./Day.ts";
+import { ALL_ON, Filter } from "./Filter.ts";
 
 /**
  * Represents a user’s contribution calendar over a date range.
@@ -127,10 +128,19 @@ export class Calendar {
   /**
    * Returns all repositories sorted by contribution count (highest first).
    */
-  mostUsedRepos() {
-    const repos = [...this.repositories.values()];
+  mostUsedRepos(filter = ALL_ON) {
+    const repos = this.filteredRepos(filter);
     repos.sort((a, b) => b.contributions - a.contributions);
     return repos;
+  }
+
+  /**
+   * Get `Repository`s that are enabled by `filter`.
+   */
+  filteredRepos(filter: Filter) {
+    return [...this.repositories.values()].filter((repo) =>
+      filter.isOn(repo.url)
+    );
   }
 
   /**

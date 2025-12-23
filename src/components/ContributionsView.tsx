@@ -36,7 +36,11 @@ export function ContributionsView({
         onDayClick={handleDayClick}
       />
       <div className="info-container">
-        <SummaryBox calendar={calendar} selectedDay={selectedDay} />
+        <SummaryBox
+          calendar={calendar}
+          filter={filter}
+          selectedDay={selectedDay}
+        />
         <RepositoryList
           calendar={calendar}
           filter={filter}
