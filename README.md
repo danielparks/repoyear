@@ -74,6 +74,19 @@ compile-time type checking of calls across the API boundary.
   `TcpListener`, or some sort of generic that supports
   `systemd_socket::SocketAddr`. This would require changes to Dropshot.
 
+## Alternatives
+
+There are lots of similar projects out there. A few of them:
+
+- https://github.com/tsaitoh/concal
+- https://github.com/fledra/contribmap
+- https://github.com/yaolifeng0629/contribution-map
+- https://github.com/ammsa/Githeat
+- https://github.com/sallar/github-contributions-chart
+- https://github.com/james-stoup/heatwave
+- https://github.com/SeiwonPark/react-contribution-calendar
+- https://sourceforge.net/projects/repoheat/
+
 ## License
 
 Unless otherwise noted, this project is dual-licensed under the Apache 2 and MIT
