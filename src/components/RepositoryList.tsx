@@ -1,3 +1,4 @@
+import "./RepositoryList.css";
 import { Calendar, Filter, Repository } from "../model/index.ts";
 import { GitHubMark } from "../github/GitHubMark.tsx";
 

@@ -1,0 +1,133 @@
+.summary-box {
+  max-width: 370px;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.summary-box > h3 {
+  margin: 30px 0 15px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+table.stats {
+  display: block;
+  border-collapse: collapse;
+}
+
+table.stats > tbody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+
+table.stats > tbody > tr {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+table.stats > tbody > tr > td {
+  display: block;
+  padding: 0;
+  font-size: 28px;
+  font-weight: bold;
+  color: hsl(210deg 100% 45%);
+}
+
+table.stats > tbody > tr > th {
+  display: block;
+  padding: 0;
+  font-size: 14px;
+  font-weight: normal;
+  text-align: left;
+  color: #666;
+}
+
+.top-repos > li {
+  margin-bottom: 15px;
+}
+
+.top-repos > li > h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 5px 0 5px 0;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.top-repos .contribution-count {
+  color: #666;
+  font-size: 14px;
+}
+
+.day-repos > li {
+  margin-bottom: 15px;
+  clear: both;
+}
+
+.day-repos > li > h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.day-repos > li > h3 > a {
+  display: inline-block;
+  margin-bottom: 5px;
+}
+
+.day-repos .repo-badge {
+  display: inline-block;
+  float: right;
+  background: hsl(120deg 60% 90%);
+  color: hsl(120deg 60% 30%);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.day-repos > li > ul > li {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.day-repos > li > ul > li a {
+  color: hsl(210deg 100% 45%);
+}
+
+.message {
+  margin: 1em 0;
+  padding: 10px;
+  background: hsl(30deg 100% 95%);
+  color: hsl(30deg 100% 30%);
+  border-left: 3px solid hsl(30deg 100% 50%);
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.sparkline {
+  width: 100%;
+  display: flex;
+  gap: 1px;
+  height: 20px;
+  padding: 0;
+  border-bottom: 1px solid hsl(270deg 40% 70%);
+}
+
+.sparkline > div {
+  position: relative;
+  flex: 1;
+  height: 100%;
+}
+
+.sparkline > div > div {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}

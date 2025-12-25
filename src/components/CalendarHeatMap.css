@@ -1,0 +1,56 @@
+.calendar-heat-map {
+  display: block;
+}
+
+.calendar-heat-map > .weeks {
+  display: flex;
+}
+
+.calendar-heat-map > .weeks > .week {
+  display: block;
+  flex: 1;
+}
+
+.calendar-heat-map > .weeks > .week > div {
+  display: block;
+  position: relative;
+  text-align: center;
+  margin: 1px;
+  padding: 0;
+  aspect-ratio: 1/1;
+}
+
+.calendar-heat-map > .weeks > .week > div.unknown > ol {
+  filter: blur(1px);
+}
+
+.calendar-heat-map > .weeks > .week > div.unknown > ol {
+  border: 1px solid #fff;
+}
+
+.calendar-heat-map > .weeks > .week > div.empty > ol {
+  border: 1px solid #eee;
+}
+
+.calendar-heat-map > .weeks > .week > div.highlight > ol {
+  border: 1px solid hsl(30deg 100% 50%);
+}
+
+.calendar-heat-map > .weeks > .week > div.selected > ol {
+  border: 2px solid hsl(210deg 100% 50%);
+  box-shadow: 0 0 5px hsl(210deg 100% 50% / 0.5);
+}
+
+.calendar-heat-map > .weeks > .week > div[role="button"] {
+  cursor: pointer;
+}
+
+.calendar-heat-map > .weeks > .week > div > ol {
+  display: flex;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-heat-map > .weeks > .week > div > ol > li {
+  height: 100%;
+}

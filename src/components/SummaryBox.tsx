@@ -1,3 +1,4 @@
+import "./SummaryBox.css";
 import { Calendar, Day, Filter, Repository } from "../model/index.ts";
 import { RepositoryName } from "./RepositoryList.tsx";
 import { Fragment } from "react";

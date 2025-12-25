@@ -1,3 +1,4 @@
+import "./CalendarHeatMap.css";
 import { Calendar, Day, Filter } from "../model/index.ts";
 
 export interface CalendarHeatMapProps {
