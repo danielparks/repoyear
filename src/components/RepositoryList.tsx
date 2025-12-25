@@ -22,33 +22,36 @@ export function RepositoryList(
     setFilter(newFilter);
   }
   return (
-    <ol className="repository-list">
-      {calendar.mostUsedRepos().map((repo) => (
-        <li key={repo.url}>
-          <label
-            onMouseEnter={() => {
-              setHighlight(repo.url);
-            }}
-            onMouseLeave={() => {
-              setHighlight((old) => old == repo.url ? null : old);
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={filter.isOn(repo.url) || false}
-              value={repo.url}
-              onChange={onChange}
-            />
-            <h3>
-              <RepositoryName repo={repo} />
-            </h3>
-            <span className="contribution-count">
-              {repo.contributions}
-            </span>
-          </label>
-        </li>
-      ))}
-    </ol>
+    <div className="repository-list">
+      <h2>Visible Repositories</h2>
+      <ol>
+        {calendar.mostUsedRepos().map((repo) => (
+          <li key={repo.url}>
+            <label
+              onMouseEnter={() => {
+                setHighlight(repo.url);
+              }}
+              onMouseLeave={() => {
+                setHighlight((old) => old == repo.url ? null : old);
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={filter.isOn(repo.url) || false}
+                value={repo.url}
+                onChange={onChange}
+              />
+              <h3>
+                <RepositoryName repo={repo} />
+              </h3>
+              <span className="contribution-count">
+                {repo.contributions}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 

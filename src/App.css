@@ -1,5 +1,6 @@
 body {
   font-family: sans-serif;
+  margin: 1em 2em;
 }
 
 ul, ol, li {
@@ -8,8 +9,12 @@ ul, ol, li {
   padding: 0;
 }
 
+header, footer, .info-container {
+  margin: 1rem 0.5em;
+}
+
 footer {
-  margin: 2rem 0;
+  margin-top: 2rem;
   text-align: center;
   font-size: 80%;
   color: #666;
@@ -24,13 +29,13 @@ button, a.button, .pressed-button {
   background: hsl(210deg 100% 50%);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 0.5rem 1rem;
   font-size: 16px;
-  border-radius: 6px;
+  border-radius: 0.5rem;
   font-weight: normal;
   text-decoration: none;
   transition: background 0.2s, transform 0.1s;
-  margin: 5px;
+  margin: 0;
 }
 
 button, a.button {
@@ -87,18 +92,17 @@ button.logout-button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
-  border-bottom: 2px solid #eee;
 }
 
 .app-header h1 {
   margin: 0;
+  font-size: 1.5em;
+  font-weight: normal;
 }
 
 .button-group {
   display: flex;
-  gap: 5px;
+  gap: 10px;
 }
 
 .error-message {
@@ -194,22 +198,31 @@ button.logout-button:hover {
   height: 100%;
 }
 
-ol.repository-list {
+.repository-list {
   grid-column: 2 / -1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   column-gap: 10px;
   row-gap: 5px;
   align-items: start;
+  padding-top: 1rem;
+  border-top: 1px solid transparent;
 }
 
-ol.repository-list > li {
+.repository-list > h2 {
+  margin-bottom: calc(1rem - 2px); /* align li > label */
+}
+
+.repository-list > ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.repository-list > ol > li {
   max-width: 400px;
   margin: 0;
   padding: 0;
 }
 
-ol.repository-list > li > label {
+.repository-list > ol > li > label {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -219,11 +232,11 @@ ol.repository-list > li > label {
   transition: background 0.2s;
 }
 
-ol.repository-list > li > label:hover {
+.repository-list > ol > li > label:hover {
   background: hsl(0deg 0% 96%);
 }
 
-ol.repository-list > li > label > input[type="checkbox"] {
+.repository-list > ol > li > label > input[type="checkbox"] {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
@@ -231,7 +244,7 @@ ol.repository-list > li > label > input[type="checkbox"] {
   cursor: pointer;
 }
 
-ol.repository-list > li > label > h3 {
+.repository-list > ol > li > label > h3 {
   flex: 1;
   margin: 0;
   font-size: 14px;
@@ -243,7 +256,7 @@ ol.repository-list > li > label > h3 {
   text-overflow: ellipsis;
 }
 
-ol.repository-list > li > label > .contribution-count {
+.repository-list > ol > li > label > .contribution-count {
   flex-shrink: 0;
   color: #666;
   font-size: 14px;
@@ -252,20 +265,20 @@ ol.repository-list > li > label > .contribution-count {
 .info-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 10px;
+  gap: 1rem;
   align-items: start;
-  margin: 10px 0;
+  margin-top: 1.5rem;
 }
 
 .summary-box {
-  max-width: 360px;
-  padding: 20px;
+  max-width: 370px;
+  padding: 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
 }
 
-.summary-box > h2 {
-  margin: 0 0 20px 0;
+h2 {
+  margin: 0 0 1rem 0;
   font-size: 20px;
 }
 
@@ -277,6 +290,7 @@ ol.repository-list > li > label > .contribution-count {
 
 table.stats {
   display: block;
+  border-collapse: collapse;
 }
 
 table.stats > tbody {
@@ -294,6 +308,7 @@ table.stats > tbody > tr {
 
 table.stats > tbody > tr > td {
   display: block;
+  padding: 0;
   font-size: 28px;
   font-weight: bold;
   color: hsl(210deg 100% 45%);
@@ -301,6 +316,7 @@ table.stats > tbody > tr > td {
 
 table.stats > tbody > tr > th {
   display: block;
+  padding: 0;
   font-size: 14px;
   font-weight: normal;
   text-align: left;
@@ -405,12 +421,17 @@ a > svg {
 }
 
 /* Collapse to 1 column */
-@media (max-width: 510px) {
-  ol.repository-list {
-    grid-column: 1 / -1;
+@media (max-width: 650px) {
+  .info-container {
+    display: block;
   }
 
-  ol.repository-list > li, .summary-box {
+  .repository-list > ol > li, .summary-box {
     max-width: 100%;
+  }
+
+  .repository-list > h2 {
+    grid-column: 1 / -1;
+    max-width: none;
   }
 }
