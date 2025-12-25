@@ -1,7 +1,6 @@
 .summary-box {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding-right: 2rem;
+  border-right: 1px dashed #000;
 }
 
 .summary-box > h3 {
@@ -129,4 +128,13 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+}
+
+/* Collapse to 1 column */
+@media (max-width: 650px) {
+  .summary-box {
+    max-width: 100%;
+    padding-right: 0;
+    border-right: none;
+  }
 }
