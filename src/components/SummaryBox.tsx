@@ -255,10 +255,10 @@ function pluralize(singular: string, count = 2) {
 }
 
 /**
- * A mini bar chart showing contribution intensity over time.
+ * A sparkline showing contribution intensity over time.
  *
  * Divides the calendar into ~25 segments and displays the contribution
- * count for each segment as a vertical bar.
+ * count for each segment as a connected line graph.
  */
 function Sparkline({ calendar, repo }: {
   calendar: Calendar;
@@ -269,49 +269,34 @@ function Sparkline({ calendar, repo }: {
   for (let i = 0; i < calendar.days.length; i += segmentLength) {
     segments.push(calendar.days.slice(i, i + segmentLength));
   }
-  const segmentMax = Math.max(
-    ...segments.map((days) =>
-      days.reduce((total, day) => total + (day.contributionCount || 0), 0)
-    ),
-  );
 
-  return (
-    <div
-      className="sparkline"
-      style={{ borderBottomColor: repo.color(80, 0.05) }}
-    >
-      {segments.map((days) => (
-        <SparklineElement
-          key={days[0].date.toString()}
-          days={days}
-          repo={repo}
-          max={segmentMax}
-        />
-      ))}
-    </div>
-  );
-}
-
-/**
- * One of the bars in the mini bar chart.
- */
-function SparklineElement({ days, repo, max }: {
-  days: Day[];
-  repo: Repository;
-  max: number;
-}) {
   const filter = Filter.withOnlyRepos(repo.url);
-  const count = days.reduce(
-    (total, day) => total + day.filteredCount(filter),
-    0,
+  const counts = segments.map((days) =>
+    days.reduce((total, day) => total + day.filteredCount(filter), 0)
   );
-  let height = 0;
-  if (count) {
-    height = 2 + 98 * count / max;
-  }
+  const max = Math.max(...counts);
+
+  const width = 100;
+  const height = 20;
+  const points = counts.map((count, i) => {
+    const x = (i / (counts.length - 1)) * width;
+    const y = height - (count / max) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
   return (
-    <div>
-      <div style={{ height: `${height}%`, background: repo.color() }} />
-    </div>
+    <svg
+      className="sparkline"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke={repo.color()}
+        strokeWidth="2"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
