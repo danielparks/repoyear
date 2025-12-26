@@ -36,7 +36,7 @@ const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
 function YearSummary(
   { calendar, filter }: { calendar: Calendar; filter: Filter },
 ) {
-  const topRepos = calendar.mostUsedRepos(filter).slice(0, 5);
+  const topRepos = calendar.mostUsedRepos(filter).slice(0, 6);
   const filtered = calendar.repositories.size -
     calendar.filteredRepos(filter).length;
 
@@ -97,11 +97,11 @@ function YearSummary(
       <ol className="top-repos">
         {topRepoValues.map(({ repo, values }) => (
           <li key={repo.url}>
-            <Sparkline values={values} color={repo.color()} />
-            <h3>
+            <h4>
               <RepositoryName repo={repo} />
               <span className="contribution-count">{repo.contributions}</span>
-            </h3>
+            </h4>
+            <Sparkline values={values} color={repo.color()} />
           </li>
         ))}
       </ol>
@@ -135,12 +135,12 @@ function DaySummary({ day, filter }: { day: Day; filter: Filter }) {
           <ol className="day-repos">
             {repos.map((repoDay) => (
               <li key={repoDay.repository.url}>
-                <h3>
+                <h4>
                   <RepositoryName repo={repoDay.repository} />
                   {repoDay.created > 0 && (
                     <span className="repo-badge">Created</span>
                   )}
-                </h3>
+                </h4>
                 <ul>
                   {repoDay.commitCount > 0 && (
                     <li>{countNoun(repoDay.commitCount, "commit")}</li>

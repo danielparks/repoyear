@@ -47,9 +47,22 @@
   color: #666;
 }
 
+.summary-box > .top-repos,
+.summary-box > .day-repos {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+}
+
+.summary-box h4 {
+  font-size: 14px;
+  line-height: 1rem;
+  font-weight: normal;
+}
+
 .summary-box > .top-repos > li {
-  margin-bottom: 1rem;
-  padding: 0;
+  display: flex;
+  flex-flow: column-reverse;
 }
 
 .summary-box > .top-repos > li > svg {
@@ -58,35 +71,34 @@
   width: 100%;
 }
 
-.summary-box > .top-repos > li > h3 {
+.summary-box > .top-repos > li > h4 {
   display: flex;
+  gap: 1ch;
   justify-content: space-between;
   align-items: center;
-  margin: 0.5rem 0;
-  font-size: 16px;
-  line-height: 1rem;
-  font-weight: normal;
+  margin: 0.5rem 0 0 0;
+}
+
+.summary-box > .top-repos > li > h4 > a {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .summary-box > .top-repos .contribution-count {
+  display: block;
   color: #666;
   font-size: 14px;
 }
 
-.summary-box > .day-repos > li {
-  margin-bottom: 1rem;
-  clear: both;
-}
-
-.summary-box > .day-repos > li > h3 {
-  margin: 0;
-  font-size: 16px;
-  line-height: 2rem;
-  font-weight: normal;
+.summary-box > .day-repos > li > h4 {
   display: flex;
+  margin: 0;
+  align-items: start;
 }
 
-.summary-box > .day-repos > li > h3 > a {
+.summary-box > .day-repos > li > h4 > a {
   flex: 1;
 }
 
@@ -98,7 +110,6 @@
   font-size: 12px;
   font-weight: normal;
   line-height: 1rem;
-  margin: 0.5rem 0;
 }
 
 .summary-box > .day-repos > li > ul > li {

@@ -60,10 +60,12 @@ export function RepositoryList(
  * An easy to read, clickable repository name.
  */
 export function RepositoryName({ repo }: { repo: Repository }) {
+  const names = repo.url.replace("https://github.com/", "").split("/");
   return (
     <a style={{ color: repo.color() }} href={repo.url}>
       <GitHubMark />
-      {repo.url.replace("https://github.com/", "")}
+      {names[0]}/<wbr />
+      {names[1]}
     </a>
   );
 }
