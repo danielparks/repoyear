@@ -14,7 +14,7 @@ ul, ol, li {
 }
 
 header, footer, .info-container {
-  margin: 1rem 0.5em;
+  margin: 1rem 0;
 }
 
 footer {
@@ -74,10 +74,9 @@ button.logout-button:hover {
 }
 
 .login-container {
-  max-width: 30em;
+  max-width: 30rem;
   text-align: center;
-  padding: 20px;
-  margin: 2rem auto 0 auto;
+  margin: 4rem auto 2rem auto;
 }
 
 .login-container p {
