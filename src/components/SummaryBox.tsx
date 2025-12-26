@@ -252,7 +252,7 @@ function makeLinks(
   arrayLike: Iterable<string> | ArrayLike<string>,
   converter: (url: string) => string,
 ): [string, string][] {
-  return Array.from(arrayLike).map((url) => [url, converter(url)]);
+  return Array.from(arrayLike).sort().map((url) => [url, converter(url)]);
 }
 
 /**
