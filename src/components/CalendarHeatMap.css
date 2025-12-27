@@ -3,6 +3,10 @@
   margin: 1rlh -1rlh;
 }
 
+body.compact .calendar-heat-map {
+  margin: 0;
+}
+
 .calendar-heat-map > .weeks {
   display: flex;
   overflow-x: auto;
