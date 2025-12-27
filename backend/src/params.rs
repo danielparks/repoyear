@@ -2,6 +2,7 @@
 #![allow(clippy::allow_attributes, reason = "framework code from a template")]
 
 use std::io::{self, IsTerminal, Write};
+use std::path::PathBuf;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 pub use clap::Parser;
@@ -31,6 +32,8 @@ pub struct Params {
 pub enum Command {
     /// Start the API server
     Serve(ServeParams),
+    /// Scan a repository and collect contribution information
+    Scan(ScanParams),
     /// Generate `OpenAPI` specification
     Openapi(OpenapiParams),
     /// Display build version
@@ -51,6 +54,13 @@ pub struct ServeParams {
     /// GitHub client secret for OAuth
     #[arg(long, env, hide_env_values = true)]
     pub github_client_secret: String,
+}
+
+/// Parameters for the `scan` subcommand
+#[derive(Debug, clap::Args)]
+pub struct ScanParams {
+    /// The repositories to scan
+    pub repositories: Vec<PathBuf>,
 }
 
 /// Parameters for the `openapi` subcommand

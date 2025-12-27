@@ -2,10 +2,12 @@
 
 use anyhow::anyhow;
 use repoyear_backend::api;
+use std::collections::BTreeMap;
 use std::process::ExitCode;
 
 mod logging;
 mod params;
+mod repos;
 mod server;
 
 use params::{Command, Params, Parser};
@@ -46,6 +48,20 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
                 &serve_params.github_client_secret,
                 &log,
             )?;
+        }
+        Command::Scan(scan_params) => {
+            let mut result = BTreeMap::new();
+            for repo in &scan_params.repositories {
+                match repos::scan(repo) {
+                    Ok(times) => {
+                        result.insert(repo, times);
+                    }
+                    Err(error) => params
+                        .warn(format!("Error in {repo:?}: {error}\n"))
+                        .unwrap(),
+                }
+            }
+            println!("{}", serde_json::to_string(&result)?);
         }
         Command::Openapi(openapi_params) => {
             generate_openapi(openapi_params)?;
