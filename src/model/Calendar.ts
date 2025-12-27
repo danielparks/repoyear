@@ -40,12 +40,15 @@ export class Calendar {
    * on the entirety of the contributions data each time the query returns
    * another incremental chunk. The work could be de-duplicated at the cost of
    * increased complexity.
+   *
+   * Returns the number of specific contributions found.
    */
   updateFromContributions(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
       this.repoDay(new Date(timestamp), repository);
+    let count = 0;
 
     if (contributions.calendar) {
       this.updateSummary(
@@ -65,36 +68,38 @@ export class Calendar {
         // adding up and thus being marked with the “unknown” CSS class. See doc
         // comment about idempotency above.
         findRepoDay(node.occurredAt, repository)?.setCommits(node.commitCount);
+        count += node.commitCount;
       }
     }
 
-    for (const node of contributions.issues) {
-      findRepoDay(node.occurredAt, node.issue.repository)?.issues.add(
-        node.issue.url,
-      );
+    for (const { occurredAt, issue } of contributions.issues) {
+      findRepoDay(occurredAt, issue.repository)?.issues.add(issue.url);
+      count++;
     }
 
-    for (const node of contributions.prs) {
-      findRepoDay(node.occurredAt, node.pullRequest.repository)?.prs.add(
-        node.pullRequest.url,
-      );
+    for (const { occurredAt, pullRequest } of contributions.prs) {
+      findRepoDay(occurredAt, pullRequest.repository)?.prs.add(pullRequest.url);
+      count++;
     }
 
-    for (const node of contributions.repositories) {
+    for (const { occurredAt, repository } of contributions.repositories) {
       // If a repo is created twice in one day (I’m not sure that is possible)
       // this code will only record one creation. See doc comment about
       // idempotency above.
-      findRepoDay(node.occurredAt, node.repository)?.setCreate(1);
+      findRepoDay(occurredAt, repository)?.setCreate(1);
+      count++;
     }
 
-    for (const node of contributions.reviews) {
-      findRepoDay(node.occurredAt, node.pullRequestReview.repository)?.reviews
-        .add(node.pullRequestReview.url);
+    for (const { occurredAt, pullRequestReview } of contributions.reviews) {
+      findRepoDay(occurredAt, pullRequestReview.repository)?.reviews.add(
+        pullRequestReview.url,
+      );
+      count++;
     }
 
     this.updateRepoCounts();
     this.updateRepoColors();
-    return this;
+    return count;
   }
 
   /**

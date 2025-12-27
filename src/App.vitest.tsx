@@ -87,8 +87,7 @@ describe("App smoke test", () => {
     localStorage.setItem("github_token", "good");
     renderApp();
 
-    expect(screen.queryByText(/Loading contributions/i))
-      .toBeInTheDocument();
+    expect(screen.queryByText(/Loading/i)).toBeInTheDocument();
 
     await waitFor(() => {
       const { name } = fixtureData[0] as Contributions;

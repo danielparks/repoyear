@@ -38,13 +38,15 @@ button, a.button, .pressed-button {
   color: white;
   border: none;
   margin: 0;
-  padding: 0 1rlh;
-  line-height: 2rlh;
+  padding: 0 calc(1rlh);
+  box-sizing: box-content;
+  line-height: calc(2rlh);
   font-size: 16px;
   border-radius: 0.5rlh;
   font-weight: normal;
   text-decoration: none;
   transition: background 0.2s, transform 0.1s;
+  box-shadow: 1px 1px 2px rgb(0 0 0/0.3);
 }
 
 button, a.button {
@@ -59,6 +61,7 @@ button, a.button {
 button:hover, a.button:hover {
   background: hsl(210deg 100% 45%);
   transform: translateY(-1px);
+  box-shadow: 1px 2px 2px rgb(0 0 0/0.3);
 }
 
 button:active, a.button:active {
@@ -70,8 +73,44 @@ button:focus, a.button:focus {
   outline-offset: 2px;
 }
 
+@property --progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+button.refresh-button {
+  /* Don't resize when the label changes */
+  width: 95px;
+}
+
+button.refresh-button.loading,
+button.refresh-button.loading:hover {
+  background: linear-gradient(
+    to right,
+    hsl(210deg 100% 50%) 0%,
+    hsl(210deg 100% 50%) var(--progress),
+    hsl(210deg 60% 65%) var(--progress),
+    hsl(210deg 50% 70%) 100%
+  );
+  transition: --progress 0.5s ease;
+  animation: pulse 1.5s ease-in-out infinite;
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 button.logout-button {
   background: hsl(0deg 0% 70%);
+  border-color: hsl(0deg 0% 70%);
 }
 
 button.logout-button:hover {
@@ -116,25 +155,6 @@ button.logout-button:hover {
   border-radius: 6px;
   border-left: 4px solid hsl(0deg 70% 50%);
   margin: 10px 0;
-}
-
-.loading-message {
-  background: hsl(210deg 100% 95%);
-  color: hsl(210deg 70% 40%);
-  padding: 15px;
-  border-radius: 6px;
-  border-left: 4px solid hsl(210deg 70% 50%);
-  margin: 10px 0;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }
 
 .info-message {

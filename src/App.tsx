@@ -64,10 +64,16 @@ export default function App({ username }: { username: string | null }) {
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
   const startedFetch = useRef<boolean>(false);
   const [shiftPressed, setShiftPressed] = useState<boolean>(false);
   const queryClient = useQueryClient();
+
+  // loading and loadingPercent are separate because when we calculate the
+  // loading percentage we don’t know if the query has finished. We might
+  // calculate it to be 97% done, but if the query is finished then we know it
+  // is actually 100%.
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingPercent, setLoadingPercent] = useState<number>(0);
 
   // Track shift key state.
   useEffect(() => {
@@ -132,6 +138,7 @@ export default function App({ username }: { username: string | null }) {
       }
       startedFetch.current = true;
       setLoading(true);
+      setLoadingPercent(0);
       setAuthError(null); // The ability to query implies we’re authenticated.
 
       const gh = new github.GitHub(accessToken);
@@ -167,14 +174,19 @@ export default function App({ username }: { username: string | null }) {
   const calendarRef = useRef<Calendar | null>(null);
   const calendar = useMemo(() => {
     if (contributions) {
-      if (calendarRef.current) {
-        for (const contribution of contributions) {
-          calendarRef.current.updateFromContributions(contribution);
-        }
-      } else {
-        calendarRef.current = Calendar.fromContributions(...contributions);
+      calendarRef.current ??= new Calendar(contributions[0].name);
+
+      let specific = 0;
+      for (const contribution of contributions) {
+        specific += calendarRef.current.updateFromContributions(contribution);
+      }
+
+      const summary = contributions[0].calendar?.totalContributions;
+      if (summary) {
+        setLoadingPercent(Math.round(100 * specific / summary));
       }
     }
+
     return calendarRef.current;
   }, [contributions]);
 
@@ -205,6 +217,7 @@ export default function App({ username }: { username: string | null }) {
       calendarRef.current = null;
     }
     setLoading(true);
+    setLoadingPercent(0);
     query.refetch().catch((error: unknown) => {
       console.error("Error refetching query:", error);
     });
@@ -244,13 +257,25 @@ export default function App({ username }: { username: string | null }) {
     );
   }
 
+  let refreshStyle: React.CSSProperties = {};
+  if (loading) {
+    refreshStyle = {
+      "--progress": `${Math.max(10, loadingPercent)}%`,
+    } as React.CSSProperties;
+  }
+
   const name = calendar?.name ?? username;
   return (
     <>
       <header className="app-header">
         <div className="button-group">
-          <button type="button" onClick={reload}>
-            {shiftPressed ? "Reload" : "Refresh"}
+          <button
+            type="button"
+            onClick={reload}
+            className={`refresh-button${loading ? " loading" : ""}`}
+            style={refreshStyle}
+          >
+            {loading ? "Loading" : shiftPressed ? "Reload" : "Refresh"}
           </button>
           <button type="button" onClick={logout} className="logout-button">
             Log out
@@ -262,9 +287,6 @@ export default function App({ username }: { username: string | null }) {
         </h1>
       </header>
       {errorMessage && <div className="error-message">{errorMessage}</div>}
-      {loading && !errorMessage && (
-        <div className="loading-message">Loading contributions…</div>
-      )}
       {calendar
         ? <RepoYearView calendar={calendar} />
         : <div className="info-message">No contributions data</div>}
