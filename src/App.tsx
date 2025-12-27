@@ -238,21 +238,23 @@ export default function App({ username }: { username: string | null }) {
 
     return (
       <div className="login-container">
-        <h1>
-          <Icon /> RepoYear
-        </h1>
-        <p>Visualize your GitHub contributions over time.</p>
-        {errorMessage && <div className="error-message">{errorMessage}</div>}
-        <p>
-          {loginUrl && (
-            <a href={loginUrl} className="button">Log in with GitHub</a>
-          )}
-          {authCode && <span className="pressed-button">Logging in…</span>}
-        </p>
-        <p className="access-description">
-          This only requests read-only access to your public repositories. This
-          is the minimum access required to use the GitHub GraphQL API.
-        </p>
+        <div>
+          <h1>
+            <Icon /> RepoYear
+          </h1>
+          <p>Visualize your GitHub contributions over time.</p>
+          {errorMessage && <div className="error-message">{errorMessage}</div>}
+          <p>
+            {loginUrl && (
+              <a href={loginUrl} className="button">Log in with GitHub</a>
+            )}
+            {authCode && <span className="pressed-button">Logging in…</span>}
+          </p>
+          <p className="access-description">
+            This only requests read-only access to your public repositories.
+            This is the minimum access required to use the GitHub GraphQL API.
+          </p>
+        </div>
       </div>
     );
   }

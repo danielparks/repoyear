@@ -130,9 +130,22 @@ button.logout-button:hover {
 }
 
 .login-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 2rlh);
   max-width: 30rlh;
   text-align: center;
-  margin: 4rlh auto 2rlh auto;
+  margin: 0 auto;
+}
+
+.login-container::before {
+  content: "";
+  flex: 1;
+}
+
+.login-container::after {
+  content: "";
+  flex: 2;
 }
 
 .login-container p {
