@@ -88,9 +88,14 @@ export function GraphDay(
   }
 
   const unknownCount = day.unknownCount(); // Not filtered.
-  if (unknownCount <= 0 && day.contributionCount === null) {
-    // No data. This day wasn’t returned from the query.
-    return <div></div>;
+  if (day.contributionCount === null) {
+    // Day wasn't in calendar summary data.
+    if (unknownCount <= 0) {
+      // No specific contributions, either.
+      return <div></div>;
+    }
+
+    console.warn(`Day not in summary data: ${day.date.toLocaleDateString()}`);
   }
 
   const className: string[] = [];
