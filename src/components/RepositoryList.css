@@ -76,7 +76,7 @@
 /* Collapse to 1 column */
 @media (max-width: 650px) {
   .repository-list {
-    margin-top: 3rlh;
+    margin-top: 2rlh;
     padding-left: 0;
   }
 

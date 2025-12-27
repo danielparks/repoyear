@@ -7,6 +7,17 @@ body.compact {
   margin: 0;
 }
 
+.baseline {
+  /* baseline reference (enable on .info-container with `setBaseline(true)`) */
+  background-image: linear-gradient(to bottom, #ff000033 1px, transparent 1px);
+  background-size: 100% 1rlh;
+}
+
+h1 {
+  font-size: 1.5rlh;
+  line-height: 2rlh;
+}
+
 ul, ol, li {
   list-style: none;
   margin: 0;
@@ -15,12 +26,13 @@ ul, ol, li {
 
 header, footer, .info-container {
   margin: 1rlh 0;
+  line-height: 1rlh;
 }
 
 footer {
   margin-top: 2rlh;
   text-align: center;
-  font-size: 80%;
+  font-size: 14px;
   color: #666;
 }
 
@@ -127,18 +139,17 @@ button.logout-button:hover {
   color: #666;
   margin: 1rlh 0;
   font-size: 18px;
+  line-height: 1rlh;
 }
 
 .login-container p.access-description {
-  color: #666;
   font-style: italic;
   font-size: 14px;
+  line-height: 1rlh;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.5rlh;
-  line-height: 2rlh;
   font-weight: normal;
 }
 
@@ -172,12 +183,6 @@ button.logout-button:hover {
     repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rlh;
   margin-top: 1.5rlh;
-}
-
-.info-container.baseline {
-  /* baseline reference lines (enable with `setBaseline(true)`) */
-  background-image: linear-gradient(to bottom, #ff000033 1px, transparent 1px);
-  background-size: 100% 1rlh;
 }
 
 h2 {
