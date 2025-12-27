@@ -65,6 +65,7 @@
   flex-flow: column-reverse;
 }
 
+/* sparkline */
 .summary-box > .top-repos > li > svg {
   display: block;
   height: 1.5rem;
@@ -114,7 +115,6 @@
 
 .summary-box > .day-repos > li > ul > li {
   font-size: 14px;
-  line-height: 1rem;
   color: #666;
 }
 
