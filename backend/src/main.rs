@@ -1,13 +1,12 @@
 //! repoyear-backend executable.
 
 use anyhow::anyhow;
-use repoyear_backend::api;
+use repoyear_backend::{api, repos};
 use std::collections::BTreeMap;
 use std::process::ExitCode;
 
 mod logging;
 mod params;
-mod repos;
 mod server;
 
 use params::{Command, Params, Parser};

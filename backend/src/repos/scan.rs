@@ -4,8 +4,19 @@ use git2::{ErrorCode, Oid, Repository};
 use std::path::Path;
 
 /// Scan history of a repository and commit dates as seconds since 1970.
+///
+/// The path must be one of:
+///
+///   * A repository working directory containing a `.git` directory
+///   * A `.git` directory itself
+///   * A bare repository
+///
+/// # Errors
+///
+/// Returns an error if there was a problem with the repository. Returns
+/// `Ok(None)` if the remote HEAD could not be found.
 pub fn scan<P: AsRef<Path>>(repo: P) -> anyhow::Result<Vec<i64>> {
-    let repo = Repository::discover(repo)?;
+    let repo = Repository::open(repo)?;
     let mut revwalk = repo.revwalk()?;
     revwalk.set_sorting(git2::Sort::TIME)?;
 
@@ -129,13 +140,72 @@ fn ref_to_oid(repo: &Repository, name: &str) -> anyhow::Result<Option<Oid>> {
     }
 }
 
-// FIXME tests
-// scan("repo/subdir");
-// scan("non-repo");
-// scan("bare-repo");
-// scan("repo/.git");
-// find default:
-//      with remote
-//      no config
-//      no main or master
-// test having more/less commits than upstream
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test as helper;
+    use assert2::assert;
+    use std::fs;
+    use testdir::testdir;
+
+    // FIXME add test of find default with remote
+    // FIXME add test of find default with no config
+    // FIXME add test of find default with no main or master
+    // FIXME test having more/less commits than upstream
+
+    #[test]
+    fn scan_repo() {
+        let root = testdir!();
+        helper::prepare_root(&root);
+        helper::git_init(&root, "repo");
+        helper::make_commit(&root, "repo", 0);
+        assert!(let Ok([_]) = scan(root.join("repo")).as_deref());
+    }
+
+    #[test]
+    fn scan_repo_dotgit() {
+        let root = testdir!();
+        helper::prepare_root(&root);
+        helper::git_init(&root, "repo");
+        helper::make_commit(&root, "repo", 0);
+        assert!(let Ok([_]) = scan(root.join("repo/.git")).as_deref());
+    }
+
+    #[test]
+    fn scan_repo_subdir() {
+        let root = testdir!();
+        helper::prepare_root(&root);
+        helper::git_init(&root, "repo");
+        fs::create_dir(root.join("repo/dir")).unwrap();
+        fs::write(root.join("repo/dir/a"), "a0").unwrap();
+        helper::git(&root, "repo", ["add", "dir/a"]).unwrap();
+        helper::git(&root, "repo", ["commit", "-m", "commit 0"]).unwrap();
+
+        // FIXME check error code.
+        assert!(let Err(_) = scan(root.join("repo/dir")).as_deref());
+    }
+
+    #[test]
+    fn scan_nonrepo() {
+        let root = testdir!();
+        helper::prepare_root(&root);
+        helper::git_init(&root, "repo");
+        helper::make_commit(&root, "repo", 0);
+
+        // FIXME check error code.
+        assert!(let Err(_) = scan(root).as_deref());
+    }
+
+    #[test]
+    fn scan_bare_repo() {
+        let root = testdir!();
+        helper::prepare_root(&root);
+        helper::git_init_bare(&root, "bare_repo");
+        helper::git(&root, ".", ["clone", "bare_repo", "repo"]).unwrap();
+
+        helper::make_commit(&root, "repo", 0);
+        helper::git(&root, "repo", ["push"]).unwrap();
+
+        assert!(let Ok([_]) = scan(root.join("bare_repo")).as_deref());
+    }
+}
