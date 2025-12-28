@@ -12,6 +12,7 @@ import { RepoYearView } from "./components/RepoYearView.tsx";
 import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
+import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
 
 function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
@@ -65,7 +66,7 @@ export default function App({ username }: { username: string | null }) {
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
   const startedFetch = useRef<boolean>(false);
-  const [shiftPressed, setShiftPressed] = useState<boolean>(false);
+  const shiftPressed = useKeyMonitor("Shift");
   const queryClient = useQueryClient();
 
   // loading and loadingPercent are separate because when we calculate the
@@ -74,28 +75,6 @@ export default function App({ username }: { username: string | null }) {
   // is actually 100%.
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingPercent, setLoadingPercent] = useState<number>(0);
-
-  // Track shift key state.
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftPressed(true);
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftPressed(false);
-      }
-    };
-
-    globalThis.addEventListener("keydown", handleKeyDown);
-    globalThis.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      globalThis.removeEventListener("keydown", handleKeyDown);
-      globalThis.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
 
   // Handle OAuth callback.
   useEffect(() => {
