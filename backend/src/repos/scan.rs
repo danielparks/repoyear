@@ -1,4 +1,4 @@
-//! Collect contribution data from repositories
+//! Scan repos for contribution data.
 
 use git2::{ErrorCode, Oid, Repository};
 use std::path::Path;
