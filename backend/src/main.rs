@@ -60,7 +60,8 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
 /// Generate `OpenAPI` specification.
 ///
 /// Uses the trait-based API stub to generate the spec without requiring
-/// an implementation. This is much faster than compiling the full implementation.
+/// an implementation. This is much faster than compiling the full
+/// implementation.
 ///
 /// # Errors
 ///
