@@ -155,57 +155,52 @@ mod tests {
 
     #[test]
     fn scan_repo() {
-        let root = testdir!();
-        helper::prepare_root(&root);
-        helper::git_init(&root, "repo");
-        helper::make_commit(&root, "repo", 0);
-        assert!(let Ok([_]) = scan(root.join("repo")).as_deref());
+        let home = helper::Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        assert!(let Ok([_]) = scan(repo.path()).as_deref());
     }
 
     #[test]
     fn scan_repo_dotgit() {
-        let root = testdir!();
-        helper::prepare_root(&root);
-        helper::git_init(&root, "repo");
-        helper::make_commit(&root, "repo", 0);
-        assert!(let Ok([_]) = scan(root.join("repo/.git")).as_deref());
+        let home = helper::Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        assert!(let Ok([_]) = scan(repo.path().join(".git")).as_deref());
     }
 
     #[test]
     fn scan_repo_subdir() {
-        let root = testdir!();
-        helper::prepare_root(&root);
-        helper::git_init(&root, "repo");
-        fs::create_dir(root.join("repo/dir")).unwrap();
-        fs::write(root.join("repo/dir/a"), "a0").unwrap();
-        helper::git(&root, "repo", ["add", "dir/a"]).unwrap();
-        helper::git(&root, "repo", ["commit", "-m", "commit 0"]).unwrap();
+        let home = helper::Home::init(testdir!());
+        let repo = home.git_init("repo");
+
+        fs::create_dir(repo.join("dir")).unwrap();
+        fs::write(repo.join("dir/a"), "a0").unwrap();
+        repo.git(["add", "dir/a"]);
+        repo.git(["commit", "-m", "commit 0"]);
 
         // FIXME check error code.
-        assert!(let Err(_) = scan(root.join("repo/dir")).as_deref());
+        assert!(let Err(_) = scan(repo.join("dir")).as_deref());
     }
 
     #[test]
     fn scan_nonrepo() {
-        let root = testdir!();
-        helper::prepare_root(&root);
-        helper::git_init(&root, "repo");
-        helper::make_commit(&root, "repo", 0);
+        let home = helper::Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
 
         // FIXME check error code.
-        assert!(let Err(_) = scan(root).as_deref());
+        assert!(let Err(_) = scan(home.path()).as_deref());
     }
 
     #[test]
     fn scan_bare_repo() {
-        let root = testdir!();
-        helper::prepare_root(&root);
-        helper::git_init_bare(&root, "bare_repo");
-        helper::git(&root, ".", ["clone", "bare_repo", "repo"]).unwrap();
+        let home = helper::Home::init(testdir!());
+        let bare_repo = home.git_init_bare("bare_repo");
+        let repo = bare_repo.clone("repo");
+        repo.make_commit(0);
+        repo.git(["push"]);
 
-        helper::make_commit(&root, "repo", 0);
-        helper::git(&root, "repo", ["push"]).unwrap();
-
-        assert!(let Ok([_]) = scan(root.join("bare_repo")).as_deref());
+        assert!(let Ok([_]) = scan(bare_repo.path()).as_deref());
     }
 }
