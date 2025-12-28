@@ -45,6 +45,11 @@ pub fn scan<P: AsRef<Path>>(repo: P) -> anyhow::Result<Vec<i64>> {
 ///   4. Check if `main` is a branch.
 ///   5. Check if `master` is a branch.
 ///   6. Return `HEAD`
+///
+/// # Errors
+///
+/// Returns an error if there was a problem with the repository. Returns
+/// `Ok(None)` if the remote HEAD could not be found.
 pub fn get_default_branch(repo: &Repository) -> anyhow::Result<Oid> {
     if let Some(branch) = remote_head_to_local_branch(repo, "origin")? {
         if let Some(oid) = ref_to_oid(repo, &branch)? {
@@ -79,9 +84,12 @@ pub fn get_default_branch(repo: &Repository) -> anyhow::Result<Oid> {
     }
 }
 
-/**
- * Get the branch name a remote HEAD points to.
- */
+/// Get the branch name a remote HEAD points to.
+///
+/// # Errors
+///
+/// Returns an error if there was a problem with the repository. Returns
+/// `Ok(None)` if the remote HEAD could not be found.
 fn remote_head_to_local_branch(
     repo: &Repository,
     origin: &str,
@@ -107,9 +115,12 @@ fn remote_head_to_local_branch(
     }
 }
 
-/**
- * Find the `Oid` for a ref.
- */
+/// Find the `Oid` for a ref.
+///
+/// # Errors
+///
+/// Returns an error if there was a problem parsing `name` or with the
+/// repository. Returns `Ok(None)` if the ref could not be found.
 fn ref_to_oid(repo: &Repository, name: &str) -> anyhow::Result<Option<Oid>> {
     match repo.revparse_single(name) {
         Ok(object) => Ok(Some(object.id())),
