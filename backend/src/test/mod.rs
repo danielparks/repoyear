@@ -6,27 +6,53 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Convenience functions for working with directory-like things.
+pub trait FsDirectory {
+    /// Get the path to this directory.
+    #[must_use]
+    fn path(&self) -> &Path;
+
+    /// Join a path to this.
+    ///
+    /// Equivalent to `dir.path().join(...)`.
+    #[must_use]
+    #[inline]
+    fn join<P: AsRef<Path>>(&self, path: P) -> PathBuf {
+        self.path().join(path)
+    }
+
+    /// Make a subdirectory.
+    ///
+    /// Creates all parent directories if necessary.
+    fn mkdir<P: AsRef<Path>>(&self, path: P) {
+        fs::create_dir_all(self.join(path)).unwrap();
+    }
+
+    /// Write a file.
+    ///
+    /// Creates all parent directories if necessary.
+    fn write<P: AsRef<Path>>(&self, path: P, content: &str) {
+        let path = self.join(path);
+        self.mkdir(path.parent().unwrap());
+        fs::write(path, content).unwrap();
+    }
+}
+
 /// The home directory for `git` operations.
 #[derive(Debug)]
 pub struct Home(PathBuf);
+
+impl FsDirectory for Home {
+    /// Get the path to the home directory.
+    fn path(&self) -> &Path {
+        &self.0
+    }
+}
 
 impl Home {
     /// Create a `Home` for an existing directory.
     pub fn existing<P: Into<PathBuf>>(path: P) -> Self {
         Self(path.into())
-    }
-
-    /// Get the path to the home directory.
-    #[must_use]
-    pub fn path(&self) -> &Path {
-        &self.0
-    }
-
-    /// Join a path to the home path.
-    ///
-    /// Equivalent to `home.path().join(...)`.
-    pub fn join<P: AsRef<Path>>(&self, path: P) -> PathBuf {
-        self.0.join(path)
     }
 
     /// # Create a new home directory.
@@ -49,10 +75,9 @@ impl Home {
     ///     already exist.
     ///   * It can’t write `{path}/.gitconfig`.
     pub fn init<P: Into<PathBuf>>(path: P) -> Self {
-        let path: PathBuf = path.into();
-        fs::create_dir_all(&path).unwrap();
-        fs::write(
-            path.join(".gitconfig"),
+        let home = Self::existing(path);
+        home.write(
+            ".gitconfig",
             "[user]\n\
             name = Name\n\
             email = name@example.com\n\
@@ -61,10 +86,8 @@ impl Home {
             [advice]\n\
             detachedHead = false\n\
             skippedCherryPicks = false\n",
-        )
-        .unwrap();
-
-        Self::existing(path)
+        );
+        home
     }
 
     /// Run `git` in the `cwd` directory and report errors.
@@ -139,24 +162,18 @@ pub struct Repo<'a> {
     repo: PathBuf,
 }
 
+impl FsDirectory for Repo<'_> {
+    /// Get the path to this repo.
+    fn path(&self) -> &Path {
+        &self.repo
+    }
+}
+
 impl Repo<'_> {
     /// Get the `Home` for this repo.
     #[must_use]
     pub fn home(&self) -> &Home {
         self.home
-    }
-
-    /// Get the path to this repo.
-    #[must_use]
-    pub fn path(&self) -> &Path {
-        &self.repo
-    }
-
-    /// Join a path to this repo’s path.
-    ///
-    /// Equivalent to `repo.path().join(...)`.
-    pub fn join<P: AsRef<Path>>(&self, path: P) -> PathBuf {
-        self.repo.join(path)
     }
 
     /// Run `git` in the repo directory and panic on errors.
@@ -181,8 +198,8 @@ impl Repo<'_> {
     ///
     /// Panics if there was a problem creating the commit.
     pub fn make_commit(&self, n: u8) {
-        fs::write(self.join("a"), format!("{n}a")).unwrap();
-        fs::write(self.join("b"), format!("{n}b")).unwrap();
+        self.write("a", &format!("{n}a"));
+        self.write("b", &format!("{n}b"));
         self.git(["add", "a", "b"]);
         self.git(["commit", "-m", &format!("commit {n}")]);
     }
@@ -195,24 +212,18 @@ pub struct BareRepo<'a> {
     repo: PathBuf,
 }
 
+impl FsDirectory for BareRepo<'_> {
+    /// Get the path to this repo.
+    fn path(&self) -> &Path {
+        &self.repo
+    }
+}
+
 impl BareRepo<'_> {
     /// Get the `Home` for this repo.
     #[must_use]
     pub fn home(&self) -> &Home {
         self.home
-    }
-
-    /// Get the path to this repo.
-    #[must_use]
-    pub fn path(&self) -> &Path {
-        &self.repo
-    }
-
-    /// Join a path to this repo’s path.
-    ///
-    /// Equivalent to `bare_repo.path().join(...)`.
-    pub fn join<P: AsRef<Path>>(&self, path: P) -> PathBuf {
-        self.repo.join(path)
     }
 
     /// Clone this bare repo into a `Repo`.

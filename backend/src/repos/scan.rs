@@ -143,9 +143,8 @@ fn ref_to_oid(repo: &Repository, name: &str) -> anyhow::Result<Option<Oid>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test as helper;
+    use crate::test::{FsDirectory, Home};
     use assert2::assert;
-    use std::fs;
     use testdir::testdir;
 
     // FIXME add test of find default with remote
@@ -155,7 +154,7 @@ mod tests {
 
     #[test]
     fn scan_repo() {
-        let home = helper::Home::init(testdir!());
+        let home = Home::init(testdir!());
         let repo = home.git_init("repo");
         repo.make_commit(0);
         assert!(let Ok([_]) = scan(repo.path()).as_deref());
@@ -163,7 +162,7 @@ mod tests {
 
     #[test]
     fn scan_repo_dotgit() {
-        let home = helper::Home::init(testdir!());
+        let home = Home::init(testdir!());
         let repo = home.git_init("repo");
         repo.make_commit(0);
         assert!(let Ok([_]) = scan(repo.path().join(".git")).as_deref());
@@ -171,11 +170,10 @@ mod tests {
 
     #[test]
     fn scan_repo_subdir() {
-        let home = helper::Home::init(testdir!());
+        let home = Home::init(testdir!());
         let repo = home.git_init("repo");
 
-        fs::create_dir(repo.join("dir")).unwrap();
-        fs::write(repo.join("dir/a"), "a0").unwrap();
+        repo.write("dir/a", "a0");
         repo.git(["add", "dir/a"]);
         repo.git(["commit", "-m", "commit 0"]);
 
@@ -185,7 +183,7 @@ mod tests {
 
     #[test]
     fn scan_nonrepo() {
-        let home = helper::Home::init(testdir!());
+        let home = Home::init(testdir!());
         let repo = home.git_init("repo");
         repo.make_commit(0);
 
@@ -195,7 +193,7 @@ mod tests {
 
     #[test]
     fn scan_bare_repo() {
-        let home = helper::Home::init(testdir!());
+        let home = Home::init(testdir!());
         let bare_repo = home.git_init_bare("bare_repo");
         let repo = bare_repo.clone("repo");
         repo.make_commit(0);
