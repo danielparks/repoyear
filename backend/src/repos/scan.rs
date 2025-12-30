@@ -73,16 +73,16 @@ pub fn scan_repo(repo: &Repository) -> anyhow::Result<Vec<i64>> {
 /// Returns an error if there was a problem with the repository. Returns
 /// `Ok(None)` if the remote HEAD could not be found.
 pub fn get_default_branch(repo: &Repository) -> anyhow::Result<Oid> {
-    if let Some(branch) = remote_head_to_local_branch(repo, "origin")? {
-        if let Some(oid) = ref_to_oid(repo, &branch)? {
-            return Ok(oid);
-        }
+    if let Some(branch) = remote_head_to_local_branch(repo, "origin")?
+        && let Some(oid) = ref_to_oid(repo, &branch)?
+    {
+        return Ok(oid);
     }
 
-    if let Some(branch) = remote_head_to_local_branch(repo, "upstream")? {
-        if let Some(oid) = ref_to_oid(repo, &branch)? {
-            return Ok(oid);
-        }
+    if let Some(branch) = remote_head_to_local_branch(repo, "upstream")?
+        && let Some(oid) = ref_to_oid(repo, &branch)?
+    {
+        return Ok(oid);
     }
 
     match repo.config()?.get_string("init.defaultBranch") {
@@ -118,16 +118,16 @@ fn remote_head_to_local_branch(
 ) -> anyhow::Result<Option<String>> {
     match repo.find_reference(&format!("refs/remotes/{origin}/HEAD")) {
         Ok(reference) => {
-            if let Some(target) = reference.symbolic_target() {
-                if target.starts_with("refs/remotes/") {
-                    let mut iter = target.splitn(4, '/');
-                    if let Some(branch) = iter.nth(3) {
-                        assert!(iter.next().is_none(), "bug in splitn");
-                        return Ok(Some(branch.to_owned()));
-                    }
+            if let Some(target) = reference.symbolic_target()
+                && target.starts_with("refs/remotes/")
+            {
+                let mut iter = target.splitn(4, '/');
+                if let Some(branch) = iter.nth(3) {
+                    assert!(iter.next().is_none(), "bug in splitn");
+                    return Ok(Some(branch.to_owned()));
                 }
-                // FIXME? log failure?
             }
+            // FIXME? log failure?
             // else: try next thing, though it’s weird this isn’t symbolic.
             // FIXME log?
             Ok(None)
