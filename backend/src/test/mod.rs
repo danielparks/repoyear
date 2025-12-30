@@ -28,6 +28,17 @@ pub trait FsDirectory {
         fs::create_dir_all(self.join(path)).unwrap();
     }
 
+    /// Make a symlink.
+    ///
+    /// Creates all parent directories of `link` if necessary.
+    #[cfg(unix)]
+    fn symlink<O: AsRef<Path>, L: AsRef<Path>>(&self, original: O, link: L) {
+        use std::os::unix::fs::symlink;
+        let link = self.join(link);
+        fs::create_dir_all(link.parent().unwrap()).unwrap();
+        symlink(self.join(original), link).unwrap();
+    }
+
     /// Write a file.
     ///
     /// Creates all parent directories if necessary.

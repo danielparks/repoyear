@@ -3,6 +3,8 @@
 use git2::{ErrorCode, Oid, Repository};
 use std::path::Path;
 
+// FIXME use super::Error and super::Result
+
 /// Scan history of a repository and commit dates as seconds since 1970.
 ///
 /// The path must be one of:
@@ -15,12 +17,21 @@ use std::path::Path;
 ///
 /// Returns an error if there was a problem with the repository. Returns
 /// `Ok(None)` if the remote HEAD could not be found.
-pub fn scan<P: AsRef<Path>>(repo: P) -> anyhow::Result<Vec<i64>> {
-    let repo = Repository::open(repo)?;
+pub fn scan_repo_path<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<i64>> {
+    scan_repo(&Repository::open(path)?)
+}
+
+/// Scan history of a repository and commit dates as seconds since 1970.
+///
+/// # Errors
+///
+/// Returns an error if there was a problem with the repository. Returns
+/// `Ok(None)` if the remote HEAD could not be found.
+pub fn scan_repo(repo: &Repository) -> anyhow::Result<Vec<i64>> {
     let mut revwalk = repo.revwalk()?;
     revwalk.set_sorting(git2::Sort::TIME)?;
 
-    let default_branch_oid = get_default_branch(&repo)?;
+    let default_branch_oid = get_default_branch(repo)?;
     revwalk.push(default_branch_oid)?;
 
     for remote_name in repo.remotes()?.into_iter().flatten() {
@@ -157,7 +168,7 @@ mod tests {
         let home = Home::init(testdir!());
         let repo = home.git_init("repo");
         repo.make_commit(0);
-        assert!(let Ok([_]) = scan(repo.path()).as_deref());
+        assert!(let Ok([_]) = scan_repo_path(repo.path()).as_deref());
     }
 
     #[test]
@@ -165,7 +176,7 @@ mod tests {
         let home = Home::init(testdir!());
         let repo = home.git_init("repo");
         repo.make_commit(0);
-        assert!(let Ok([_]) = scan(repo.path().join(".git")).as_deref());
+        assert!(let Ok([_]) = scan_repo_path(repo.path().join(".git")).as_deref());
     }
 
     #[test]
@@ -178,7 +189,7 @@ mod tests {
         repo.git(["commit", "-m", "commit 0"]);
 
         // FIXME check error code.
-        assert!(let Err(_) = scan(repo.join("dir")).as_deref());
+        assert!(let Err(_) = scan_repo_path(repo.join("dir")).as_deref());
     }
 
     #[test]
@@ -188,7 +199,7 @@ mod tests {
         repo.make_commit(0);
 
         // FIXME check error code.
-        assert!(let Err(_) = scan(home.path()).as_deref());
+        assert!(let Err(_) = scan_repo_path(home.path()).as_deref());
     }
 
     #[test]
@@ -199,6 +210,6 @@ mod tests {
         repo.make_commit(0);
         repo.git(["push"]);
 
-        assert!(let Ok([_]) = scan(bare_repo.path()).as_deref());
+        assert!(let Ok([_]) = scan_repo_path(bare_repo.path()).as_deref());
     }
 }

@@ -32,8 +32,10 @@ pub struct Params {
 pub enum Command {
     /// Start the API server
     Serve(ServeParams),
-    /// Scan a repository and collect contribution information
+    /// Collect contribution information based on a configuration file
     Scan(ScanParams),
+    /// Scan a repository for contribution information
+    ScanRepo(ScanRepoParams),
     /// Generate `OpenAPI` specification
     Openapi(OpenapiParams),
     /// Display build version
@@ -59,6 +61,13 @@ pub struct ServeParams {
 /// Parameters for the `scan` subcommand
 #[derive(Debug, clap::Args)]
 pub struct ScanParams {
+    /// Configuration file to scan from
+    pub config: PathBuf,
+}
+
+/// Parameters for the `scan-repo` subcommand
+#[derive(Debug, clap::Args)]
+pub struct ScanRepoParams {
     /// The repositories to scan
     pub repositories: Vec<PathBuf>,
 }

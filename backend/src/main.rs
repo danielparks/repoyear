@@ -3,6 +3,7 @@
 use anyhow::anyhow;
 use repoyear_backend::{api, repos};
 use std::collections::BTreeMap;
+use std::fs;
 use std::process::ExitCode;
 
 mod logging;
@@ -49,14 +50,33 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
             )?;
         }
         Command::Scan(scan_params) => {
+            let result = repos::Config::parse(&fs::read_to_string(
+                &scan_params.config,
+            )?)?
+            .repo_iter()
+            .filter_map(|result| {
+                result
+                    .map_err(anyhow::Error::from) // FIXME?
+                    .and_then(|(name, repo)| {
+                        Ok((name, repos::scan_repo(&repo)?))
+                    })
+                    .inspect_err(|error| {
+                        params.warn(format!("Warning: {error}\n")).unwrap();
+                    })
+                    .ok()
+            })
+            .collect::<BTreeMap<_, _>>();
+            println!("{}", serde_json::to_string(&result)?);
+        }
+        Command::ScanRepo(scan_repo_params) => {
             let mut result = BTreeMap::new();
-            for repo in &scan_params.repositories {
-                match repos::scan(repo) {
+            for path in &scan_repo_params.repositories {
+                match repos::scan_repo_path(path) {
                     Ok(times) => {
-                        result.insert(repo, times);
+                        result.insert(path, times);
                     }
                     Err(error) => params
-                        .warn(format!("Error in {repo:?}: {error}\n"))
+                        .warn(format!("Error in {path:?}: {error}\n"))
                         .unwrap(),
                 }
             }
