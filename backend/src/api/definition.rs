@@ -31,11 +31,28 @@ pub struct CallbackParams {
     pub code: String,
 }
 
-/// Response from `/api/oauth/callback`
+/// Response from OAuth token endpoints (`/api/oauth/callback` and
+/// `/api/oauth/refresh`).
 #[derive(Debug, Serialize, JsonSchema)]
-pub struct CallbackSuccessResponse {
+pub struct OAuthTokenResponse {
     /// The access token from GitHub.
     pub access_token: String,
+    /// The refresh token from GitHub (for GitHub Apps with token expiration).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refresh_token: Option<String>,
+    /// Number of seconds until the access token expires.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_in: Option<u64>,
+    /// Number of seconds until the refresh token expires.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refresh_token_expires_in: Option<u64>,
+}
+
+/// Parameters for `/api/oauth/refresh`
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RefreshParams {
+    /// The refresh token from GitHub.
+    pub refresh_token: String,
 }
 
 /// Base trait defining the business logic for the API.
@@ -62,7 +79,18 @@ pub trait ApiBase: Send + Sync {
         &self,
         code: String,
         log: &slog::Logger,
-    ) -> impl Future<Output = Result<String, String>> + Send;
+    ) -> impl Future<Output = Result<OAuthTokenResponse, String>> + Send;
+
+    /// Refresh a GitHub OAuth access token using a refresh token.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error message if the token refresh fails.
+    fn refresh_oauth_token(
+        &self,
+        refresh_token: String,
+        log: &slog::Logger,
+    ) -> impl Future<Output = Result<OAuthTokenResponse, String>> + Send;
 }
 
 /// API trait with endpoint definitions.
@@ -107,16 +135,37 @@ pub trait RepoYearApi {
     async fn oauth_callback(
         rqctx: RequestContext<Self::Context>,
         query: Query<CallbackParams>,
-    ) -> Result<HttpResponseOk<CallbackSuccessResponse>, HttpError> {
+    ) -> Result<HttpResponseOk<OAuthTokenResponse>, HttpError> {
         let params = query.into_inner();
         let log = &rqctx.log;
 
-        let access_token = rqctx
+        let response = rqctx
             .context()
             .exchange_oauth_token(params.code, log)
             .await
             .map_err(|e| HttpError::for_bad_request(None, e))?;
 
-        Ok(HttpResponseOk(CallbackSuccessResponse { access_token }))
+        Ok(HttpResponseOk(response))
+    }
+
+    /// Handle `/api/oauth/refresh`
+    #[endpoint {
+        method = GET,
+        path = "/api/oauth/refresh",
+    }]
+    async fn oauth_refresh(
+        rqctx: RequestContext<Self::Context>,
+        query: Query<RefreshParams>,
+    ) -> Result<HttpResponseOk<OAuthTokenResponse>, HttpError> {
+        let params = query.into_inner();
+        let log = &rqctx.log;
+
+        let response = rqctx
+            .context()
+            .refresh_oauth_token(params.refresh_token, log)
+            .await
+            .map_err(|e| HttpError::for_bad_request(None, e))?;
+
+        Ok(HttpResponseOk(response))
     }
 }

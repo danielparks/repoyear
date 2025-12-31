@@ -7,14 +7,6 @@
     export type { ApiResult, ErrorBody, ErrorResult } from './http-client.ts'
     
 /**
-* Response from `/api/oauth/callback`
- */
-export type CallbackSuccessResponse =
-{
-/** The access token from GitHub. */
-"accessToken": string,};
-
-/**
 * Response from `/api/health`
  */
 export type HealthResponse =
@@ -23,6 +15,20 @@ export type HealthResponse =
 
 This indicates that the API server is up and nothing more. */
 "status": string,};
+
+/**
+* Response from OAuth token endpoints (`/api/oauth/callback` and `/api/oauth/refresh`).
+ */
+export type OAuthTokenResponse =
+{
+/** The access token from GitHub. */
+"accessToken": string,
+/** Number of seconds until the access token expires. */
+"expiresIn"?: number | null,
+/** The refresh token from GitHub (for GitHub Apps with token expiration). */
+"refreshToken"?: string | null,
+/** Number of seconds until the refresh token expires. */
+"refreshTokenExpiresIn"?: number | null,};
 
 /**
 * Response from `/api/version`
@@ -34,6 +40,10 @@ export type VersionResponse =
 
 export interface OauthCallbackQueryParams {
   code: string,
+}
+
+export interface OauthRefreshQueryParams {
+  refreshToken: string,
 }
 
 type EmptyObj = Record<string, never>;
@@ -105,8 +115,22 @@ oauthCallback: ({
 query, }: {query: OauthCallbackQueryParams,
 },
 params: FetchParams = {}) => {
-         return this.request<CallbackSuccessResponse>({
+         return this.request<OAuthTokenResponse>({
            path: `/api/oauth/callback`,
+           method: "GET",
+  query,
+  ...params,
+         })
+      },
+/**
+* Handle `/api/oauth/refresh`
+ */
+oauthRefresh: ({ 
+query, }: {query: OauthRefreshQueryParams,
+},
+params: FetchParams = {}) => {
+         return this.request<OAuthTokenResponse>({
+           path: `/api/oauth/refresh`,
            method: "GET",
   query,
   ...params,

@@ -1,6 +1,6 @@
 //! Mock implementation of the API for testing.
 
-use super::definition::{ApiBase, RepoYearApi};
+use super::definition::{ApiBase, OAuthTokenResponse, RepoYearApi};
 
 /// Mock state for testing that returns predefined responses.
 #[derive(Clone, Debug)]
@@ -9,6 +9,8 @@ pub struct MockAppState {
     pub health_status: String,
     /// The access token to return from OAuth.
     pub mock_access_token: Option<String>,
+    /// The refresh token to return from OAuth.
+    pub mock_refresh_token: Option<String>,
     /// Error message to return from OAuth (if Some).
     pub mock_oauth_error: Option<String>,
 }
@@ -20,6 +22,7 @@ impl MockAppState {
         Self {
             health_status: "ok".to_owned(),
             mock_access_token: Some("mock_token_12345".to_owned()),
+            mock_refresh_token: Some("mock_refresh_12345".to_owned()),
             mock_oauth_error: None,
         }
     }
@@ -30,6 +33,7 @@ impl MockAppState {
         Self {
             health_status: "ok".to_owned(),
             mock_access_token: None,
+            mock_refresh_token: None,
             mock_oauth_error: Some(error),
         }
     }
@@ -54,13 +58,47 @@ impl ApiBase for MockAppState {
         &self,
         _code: String,
         _log: &slog::Logger,
-    ) -> Result<String, String> {
+    ) -> Result<OAuthTokenResponse, String> {
         if let Some(error) = &self.mock_oauth_error {
             Err(error.clone())
         } else {
-            self.mock_access_token
+            let access_token = self
+                .mock_access_token
                 .clone()
-                .ok_or_else(|| "No token configured".to_owned())
+                .ok_or_else(|| "No token configured".to_owned())?;
+
+            Ok(OAuthTokenResponse {
+                access_token,
+                refresh_token: self.mock_refresh_token.clone(),
+                expires_in: Some(28_800),
+                refresh_token_expires_in: Some(15_897_600),
+            })
+        }
+    }
+
+    async fn refresh_oauth_token(
+        &self,
+        _refresh_token: String,
+        _log: &slog::Logger,
+    ) -> Result<OAuthTokenResponse, String> {
+        if let Some(error) = &self.mock_oauth_error {
+            Err(error.clone())
+        } else {
+            let access_token = self
+                .mock_access_token
+                .clone()
+                .ok_or_else(|| "No token configured".to_owned())?;
+            let refresh_token = self
+                .mock_refresh_token
+                .clone()
+                .ok_or_else(|| "No refresh token configured".to_owned())?;
+
+            Ok(OAuthTokenResponse {
+                access_token,
+                refresh_token: Some(refresh_token),
+                expires_in: Some(28_800),
+                refresh_token_expires_in: Some(15_897_600),
+            })
         }
     }
 }
@@ -90,7 +128,12 @@ mod tests {
         let result = mock_state
             .exchange_oauth_token("test_code".to_owned(), &log)
             .await;
-        assert_eq!(result.unwrap(), "mock_token_12345");
+        let response = result.unwrap();
+        assert_eq!(response.access_token, "mock_token_12345");
+        assert_eq!(
+            response.refresh_token,
+            Some("mock_refresh_12345".to_owned())
+        );
     }
 
     #[tokio::test]

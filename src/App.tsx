@@ -13,6 +13,13 @@ import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
+import {
+  clearTokenData as clearStoredTokenData,
+  getTokenData as getStoredTokenData,
+  type GitHubTokenData,
+  refreshAccessToken,
+  setTokenData as saveTokenData,
+} from "./auth/tokenManager.ts";
 
 function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
@@ -59,8 +66,8 @@ function githubLoginUrl() {
 }
 
 export default function App({ username }: { username: string | null }) {
-  const [accessToken, setAccessToken] = useState<string | null>(
-    localStorage.getItem("github_token"),
+  const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
+    getStoredTokenData(),
   );
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
@@ -70,7 +77,7 @@ export default function App({ username }: { username: string | null }) {
   const queryClient = useQueryClient();
 
   // loading and loadingPercent are separate because when we calculate the
-  // loading percentage we don’t know if the query has finished. We might
+  // loading percentage we don't know if the query has finished. We might
   // calculate it to be 97% done, but if the query is finished then we know it
   // is actually 100%.
   const [loading, setLoading] = useState<boolean>(false);
@@ -78,15 +85,24 @@ export default function App({ username }: { username: string | null }) {
 
   // Handle OAuth callback.
   useEffect(() => {
-    if (!accessToken && authCode && !authCodeHandled.current) {
+    if (!tokenData && authCode && !authCodeHandled.current) {
       authCodeHandled.current = true;
-      exchangeOAuthCode(authCode).then((token) => {
-        if (token) {
+      exchangeOAuthCode(authCode).then((response) => {
+        if (response.accessToken) {
           setAuthError(null);
-          setAccessToken(token);
-          // This is available to the entire origin. Cookies aren’t any better;
-          // see https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie#security
-          localStorage.setItem("github_token", token);
+          const now = Date.now();
+          const newTokenData: GitHubTokenData = {
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            expiresAt: response.expiresIn
+              ? now + response.expiresIn * 1000
+              : undefined,
+            refreshTokenExpiresAt: response.refreshTokenExpiresIn
+              ? now + response.refreshTokenExpiresIn * 1000
+              : undefined,
+          };
+          saveTokenData(newTokenData); // Save to localStorage
+          setTokenData(newTokenData); // Update React state
         } else {
           setAuthError("Error during authentication");
           console.error("No token in GitHub response");
@@ -99,38 +115,66 @@ export default function App({ username }: { username: string | null }) {
         setAuthCode(null);
       });
     }
-  }, [authCode, accessToken]);
+  }, [authCode, tokenData]);
 
   const queryKey = [
     "contributions.2",
     CONTRIBUTIONS_QUERY_TEMPLATE,
-    accessToken,
+    tokenData?.accessToken,
     username,
   ];
   const query = useQuery({
-    enabled: !!accessToken,
+    enabled: !!tokenData,
     queryKey,
     queryFn: async () => {
-      if (!accessToken) {
-        // Redundant; enabled condition requires accessToken not to be null.
+      if (!tokenData) {
+        // Redundant; enabled condition requires tokenData not to be null.
         throw new Error("Access token is required");
       }
       startedFetch.current = true;
       setLoading(true);
       setLoadingPercent(0);
-      setAuthError(null); // The ability to query implies we’re authenticated.
+      setAuthError(null); // The ability to query implies we're authenticated.
 
-      const gh = new github.GitHub(accessToken);
+      const gh = new github.GitHub(tokenData.accessToken);
       gh.installRateLimitReport();
 
       const contributions: github.Contributions[] = [];
-      for await (const contribution of gh.queryBase(username || undefined)) {
-        contributions.push(contribution);
-        // Incrementally update cache, triggering a re-render.
-        queryClient.setQueryData(queryKey, {
-          complete: false,
-          contributions: [...contributions],
-        });
+      try {
+        for await (
+          const contribution of gh.queryBase(username || undefined)
+        ) {
+          contributions.push(contribution);
+          // Incrementally update cache, triggering a re-render.
+          queryClient.setQueryData(queryKey, {
+            complete: false,
+            contributions: [...contributions],
+          });
+        }
+      } catch (error: unknown) {
+        // Check if this is a 401 error and try to refresh
+        if (
+          error &&
+          typeof error === "object" &&
+          "errors" in error &&
+          Array.isArray((error as { errors: unknown[] }).errors) &&
+          (error as { errors: { message?: string }[] }).errors.some((e) =>
+            e.message?.includes("401")
+          )
+        ) {
+          console.log("Token expired, attempting refresh...");
+          const newTokenData = await refreshAccessToken();
+          if (newTokenData) {
+            setTokenData(newTokenData);
+            // Retry the query by throwing an error that will be caught by React Query
+            throw new Error("Token refreshed, please retry");
+          } else {
+            // Refresh failed
+            setAuthError("Session expired. Please log in again.");
+            throw error;
+          }
+        }
+        throw error;
       }
 
       setLoading(false);
@@ -187,8 +231,8 @@ export default function App({ username }: { username: string | null }) {
   }
 
   function logout(): void {
-    setAccessToken(null);
-    localStorage.removeItem("github_token");
+    setTokenData(null);
+    clearStoredTokenData();
   }
 
   function reload() {
@@ -202,11 +246,11 @@ export default function App({ username }: { username: string | null }) {
     });
   }
 
-  if (accessToken === null) {
+  if (tokenData === null) {
     let loginUrl: string | null = null;
 
     if (!authCode) {
-      // No accessToken, no authCode: user is logged out.
+      // No tokenData, no authCode: user is logged out.
       try {
         loginUrl = githubLoginUrl().href;
       } catch (error: unknown) {

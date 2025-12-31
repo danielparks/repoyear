@@ -40,6 +40,7 @@ pub async fn serve(
     let state = AppState {
         github_client_id: github_client_id.to_owned(),
         github_client_secret: github_client_secret.to_owned(),
+        http_client: reqwest::Client::new(),
     };
 
     let server = HttpServerStarter::new(&config_dropshot, api, state, log)

@@ -21,13 +21,29 @@ export const api = new Api({
     "").replace(/\/+$/, ""),
 });
 
+export interface OAuthTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  refreshTokenExpiresIn?: number;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  refreshTokenExpiresIn?: number;
+}
+
 /**
  * Exchange GitHub OAuth code for access token.
  *
  * @param code - The authorization code from GitHub OAuth callback
- * @returns The access token on success, or undefined on error
+ * @returns The token response on success
  */
-export async function exchangeOAuthCode(code: string) {
+export async function exchangeOAuthCode(
+  code: string,
+): Promise<OAuthTokenResponse> {
   const result = await api.methods.oauthCallback({ query: { code } });
 
   if (result.type === "error") {
@@ -35,6 +51,38 @@ export async function exchangeOAuthCode(code: string) {
   } else if (result.type === "client_error") {
     throw new Error(`OAuth callback client error: ${result.error.message}`);
   } else {
-    return result.data.accessToken;
+    return {
+      accessToken: result.data.accessToken,
+      refreshToken: result.data.refreshToken ?? undefined,
+      expiresIn: result.data.expiresIn ?? undefined,
+      refreshTokenExpiresIn: result.data.refreshTokenExpiresIn ?? undefined,
+    };
+  }
+}
+
+/**
+ * Refresh GitHub OAuth access token.
+ *
+ * @param refreshToken - The refresh token from the initial OAuth exchange
+ * @returns The new token response on success
+ */
+export async function refreshOAuthToken(
+  refreshToken: string,
+): Promise<RefreshTokenResponse> {
+  const result = await api.methods.oauthRefresh({
+    query: { refreshToken },
+  });
+
+  if (result.type === "error") {
+    throw new Error(`OAuth refresh API error: ${result.data.message}`);
+  } else if (result.type === "client_error") {
+    throw new Error(`OAuth refresh client error: ${result.error.message}`);
+  } else {
+    return {
+      accessToken: result.data.accessToken,
+      refreshToken: result.data.refreshToken ?? undefined,
+      expiresIn: result.data.expiresIn ?? undefined,
+      refreshTokenExpiresIn: result.data.refreshTokenExpiresIn ?? undefined,
+    };
   }
 }

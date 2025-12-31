@@ -43,7 +43,12 @@ vi.mock("./github/api.ts", async (importOriginal) => {
 });
 
 vi.mock("./api/client.ts", () => ({
-  exchangeOAuthCode: vi.fn().mockResolvedValue("good-exchanged"),
+  exchangeOAuthCode: vi.fn().mockResolvedValue({
+    accessToken: "good-exchanged",
+    refreshToken: "refresh-token",
+    expiresIn: 28800,
+    refreshTokenExpiresIn: 15897600,
+  }),
 }));
 
 function renderApp() {
@@ -72,7 +77,10 @@ describe("App smoke test", () => {
   });
 
   it("should show an error if the token is invalid", async () => {
-    localStorage.setItem("github_token", "error");
+    localStorage.setItem(
+      "repoyear_github_token_data",
+      JSON.stringify({ accessToken: "error" }),
+    );
     renderApp();
 
     expect(screen.queryAllByText(/RepoYear/i)).not.toHaveLength(0);
@@ -84,7 +92,10 @@ describe("App smoke test", () => {
   });
 
   it("should load and render contributions from fixture data", async () => {
-    localStorage.setItem("github_token", "good");
+    localStorage.setItem(
+      "repoyear_github_token_data",
+      JSON.stringify({ accessToken: "good" }),
+    );
     renderApp();
 
     expect(screen.queryByText(/Loading/i)).toBeInTheDocument();

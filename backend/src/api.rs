@@ -11,8 +11,7 @@ pub mod mock;
 
 // Re-export commonly used items from definition
 pub use definition::{
-    ApiBase, CallbackParams, CallbackSuccessResponse, HealthResponse,
-    RepoYearApi,
+    ApiBase, CallbackParams, HealthResponse, OAuthTokenResponse, RepoYearApi,
 };
 
 // Re-export the generated module containing API description functions
