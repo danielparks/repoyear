@@ -80,8 +80,7 @@ button:active, a.button:active {
 }
 
 button:focus, a.button:focus {
-  outline: 2px solid hsl(210deg 100% 60%);
-  outline-offset: 2px;
+  outline: 2px solid hsl(270deg 100% 40%);
 }
 
 @property --progress {
