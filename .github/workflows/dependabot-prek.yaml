@@ -1,8 +1,9 @@
-name: Dependabot prek auto-update
+name: Dependabot `prek auto-update`
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - "dependabot/github_actions/**"
 
 jobs:
   prek-auto-update:
@@ -12,26 +13,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
-          # Use a token that will trigger workflows
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: taiki-e/install-action@v2
         with:
           tool: prek
-
-      - name: Run prek auto-update
-        run: prek auto-update
+      - run: prek auto-update
 
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           if [[ -n $(git status --porcelain) ]]; then
             git add -A
-            git commit -m '`prek auto-update`.'
+            git commit -m $'`prek auto-update`\n\n[dependabot skip]'
             git push
           fi
