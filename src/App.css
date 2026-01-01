@@ -161,13 +161,23 @@ button.logout-button:hover {
   line-height: 1rlh;
 }
 
+.app-header {
+  display: flex;
+  align-items: start;
+  gap: 1ch;
+}
+
 .app-header h1 {
+  flex: 1;
   margin: 0;
   font-weight: normal;
+  overflow: hidden;
+  height: 1lh;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-header .button-group {
-  float: right;
   display: flex;
   gap: 10px;
 }
@@ -223,5 +233,9 @@ a > svg {
   /* Collapse to 1 column */
   .info-container {
     display: block;
+  }
+
+  h1 > span {
+    display: none;
   }
 }

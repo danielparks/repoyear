@@ -91,9 +91,8 @@ describe("App smoke test", () => {
 
     await waitFor(() => {
       const { name } = fixtureData[0] as Contributions;
-      expect(
-        screen.getByText(`RepoYear: ${name}`),
-      ).toBeInTheDocument();
+      expect(screen.getByText("RepoYear:")).toBeInTheDocument();
+      expect(screen.getByText(name)).toBeInTheDocument();
 
       expect(document.querySelector(".calendar-heat-map"))
         .toBeInTheDocument();

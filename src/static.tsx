@@ -32,7 +32,7 @@ export function StaticApp() {
     <>
       <header className="app-header">
         <h1>
-          <Icon /> RepoYear: {calendar.name}
+          <Icon /> <span>RepoYear:</span> {calendar.name}
         </h1>
       </header>
       <RepoYearView calendar={calendar} />

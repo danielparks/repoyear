@@ -249,6 +249,15 @@ export default function App({ username }: { username: string | null }) {
   return (
     <>
       <header className="app-header">
+        <h1>
+          <Icon /> {name
+            ? (
+              <>
+                <span>RepoYear:</span> {name}
+              </>
+            )
+            : "RepoYear"}
+        </h1>
         <div className="button-group">
           <button
             type="button"
@@ -262,10 +271,6 @@ export default function App({ username }: { username: string | null }) {
             Log out
           </button>
         </div>
-        <h1>
-          <Icon /> RepoYear
-          {name && `: ${name}`}
-        </h1>
       </header>
       {errorMessage && <div className="error-message">{errorMessage}</div>}
       {calendar
