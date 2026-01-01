@@ -46,7 +46,7 @@
         "type": "object"
       },
       "OAuthTokenResponse": {
-        "description": "Response from OAuth token endpoints (`/api/oauth/callback` and `/api/oauth/refresh`).",
+        "description": "Response from OAuth endpoints\n\n* `/api/oauth/callback` * `/api/oauth/refresh`",
         "properties": {
           "access_token": {
             "description": "The access token from GitHub.",
@@ -60,7 +60,7 @@
             "type": "integer"
           },
           "refresh_token": {
-            "description": "The refresh token from GitHub (for GitHub Apps with token expiration).",
+            "description": "The refresh token from GitHub (if tokens are set to expire).",
             "nullable": true,
             "type": "string"
           },

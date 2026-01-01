@@ -1,3 +1,5 @@
+import { useState } from "react";
+import type { OAuthTokenResponse } from "../api/client.ts";
 import * as client from "../api/client.ts";
 
 const STORAGE_KEY = "repoyear_github_token_data";
@@ -10,7 +12,14 @@ export interface GitHubTokenData {
   refreshTokenExpiresAt?: number;
 }
 
-export function getTokenData(): GitHubTokenData | null {
+export function useTokenManager() {
+  const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
+    getStoredTokenData,
+  );
+  return [tokenData, setTokenData];
+}
+
+export function getStoredTokenData(): GitHubTokenData | null {
   clearOldToken();
 
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -25,45 +34,57 @@ export function getTokenData(): GitHubTokenData | null {
   }
 }
 
-export function setTokenData(data: GitHubTokenData): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-export function clearTokenData(): void {
+export function clearStoredTokenData(): void {
   localStorage.removeItem(STORAGE_KEY);
   clearOldToken();
 }
 
+export async function exchangeAccessToken(code: string) {
+  try {
+    const newData = toGitHubTokenData(await client.exchangeOAuthCode(code));
+
+    setStoredTokenData(newData);
+    return newData;
+  } catch (error) {
+    clearStoredTokenData();
+    throw error;
+  }
+}
+
 export async function refreshAccessToken(): Promise<GitHubTokenData | null> {
-  const currentData = getTokenData();
+  const currentData = getStoredTokenData();
   if (!currentData || !currentData.refreshToken) {
     return null;
   }
 
   try {
-    const response = await client.refreshOAuthToken(
-      currentData.refreshToken,
+    const newData = toGitHubTokenData(
+      await client.refreshOAuthToken(currentData.refreshToken),
     );
 
-    const now = Date.now();
-    const newData: GitHubTokenData = {
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      expiresAt: response.expiresIn
-        ? now + response.expiresIn * 1000
-        : undefined,
-      refreshTokenExpiresAt: response.refreshTokenExpiresIn
-        ? now + response.refreshTokenExpiresIn * 1000
-        : undefined,
-    };
-
-    setTokenData(newData);
+    setStoredTokenData(newData);
     return newData;
   } catch (error) {
     console.error("Failed to refresh token:", error);
-    clearTokenData();
+    clearStoredTokenData();
     return null;
   }
+}
+
+function toGitHubTokenData(response: OAuthTokenResponse): GitHubTokenData {
+  const now = Date.now();
+  return {
+    accessToken: response.accessToken,
+    refreshToken: response.refreshToken,
+    expiresAt: response.expiresIn ? now + response.expiresIn * 1000 : undefined,
+    refreshTokenExpiresAt: response.refreshTokenExpiresIn
+      ? now + response.refreshTokenExpiresIn * 1000
+      : undefined,
+  };
+}
+
+function setStoredTokenData(data: GitHubTokenData): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function clearOldToken(): void {

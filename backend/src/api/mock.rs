@@ -56,7 +56,7 @@ impl ApiBase for MockAppState {
 
     async fn exchange_oauth_token(
         &self,
-        _code: String,
+        _code: &str,
         _log: &slog::Logger,
     ) -> Result<OAuthTokenResponse, String> {
         if let Some(error) = &self.mock_oauth_error {
@@ -78,7 +78,7 @@ impl ApiBase for MockAppState {
 
     async fn refresh_oauth_token(
         &self,
-        _refresh_token: String,
+        _refresh_token: &str,
         _log: &slog::Logger,
     ) -> Result<OAuthTokenResponse, String> {
         if let Some(error) = &self.mock_oauth_error {
@@ -125,9 +125,7 @@ mod tests {
     async fn test_mock_oauth_success() {
         let mock_state = MockAppState::new();
         let log = slog::Logger::root(slog::Discard, slog::o!());
-        let result = mock_state
-            .exchange_oauth_token("test_code".to_owned(), &log)
-            .await;
+        let result = mock_state.exchange_oauth_token("test_code", &log).await;
         let response = result.unwrap();
         assert_eq!(response.access_token, "mock_token_12345");
         assert_eq!(
@@ -141,9 +139,7 @@ mod tests {
         let mock_state =
             MockAppState::with_oauth_error("Invalid code".to_owned());
         let log = slog::Logger::root(slog::Discard, slog::o!());
-        let result = mock_state
-            .exchange_oauth_token("test_code".to_owned(), &log)
-            .await;
+        let result = mock_state.exchange_oauth_token("test_code", &log).await;
         assert_eq!(result.unwrap_err(), "Invalid code");
     }
 }

@@ -25,7 +25,7 @@ struct GitHubTokenRequest<'a> {
     /// The GitHub client secret for OAuth.
     client_secret: &'a str,
     /// The code from GitHub.
-    code: String,
+    code: &'a str,
 }
 
 /// A refresh token request to <https://github.com/login/oauth/access_token>
@@ -38,7 +38,7 @@ struct GitHubRefreshRequest<'a> {
     /// The grant type (always "refresh_token" for refresh requests).
     grant_type: &'a str,
     /// The refresh token from GitHub.
-    refresh_token: String,
+    refresh_token: &'a str,
 }
 
 /// A response from <https://github.com/login/oauth/access_token>
@@ -100,12 +100,10 @@ impl AppState {
             return Err(message);
         }
 
-        let access_token = token_data
-            .access_token
-            .ok_or_else(|| "Internal server error".to_owned())?;
-
         Ok(OAuthTokenResponse {
-            access_token,
+            access_token: token_data
+                .access_token
+                .ok_or_else(|| "Internal server error".to_owned())?,
             refresh_token: token_data.refresh_token,
             expires_in: token_data.expires_in,
             refresh_token_expires_in: token_data.refresh_token_expires_in,
@@ -124,7 +122,7 @@ impl ApiBase for AppState {
 
     async fn exchange_oauth_token(
         &self,
-        code: String,
+        code: &str,
         log: &slog::Logger,
     ) -> Result<OAuthTokenResponse, String> {
         self.request_github_token(
@@ -141,7 +139,7 @@ impl ApiBase for AppState {
 
     async fn refresh_oauth_token(
         &self,
-        refresh_token: String,
+        refresh_token: &str,
         log: &slog::Logger,
     ) -> Result<OAuthTokenResponse, String> {
         self.request_github_token(

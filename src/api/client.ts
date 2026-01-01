@@ -6,6 +6,10 @@
  */
 
 import Api from "./Api.ts";
+import type {
+  ApiResult,
+  OAuthTokenResponse as ApiOAuthTokenResponse,
+} from "./Api.ts";
 
 /**
  * API client instance configured for the backend.
@@ -28,13 +32,6 @@ export interface OAuthTokenResponse {
   refreshTokenExpiresIn?: number;
 }
 
-export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn?: number;
-  refreshTokenExpiresIn?: number;
-}
-
 /**
  * Exchange GitHub OAuth code for access token.
  *
@@ -44,20 +41,10 @@ export interface RefreshTokenResponse {
 export async function exchangeOAuthCode(
   code: string,
 ): Promise<OAuthTokenResponse> {
-  const result = await api.methods.oauthCallback({ query: { code } });
-
-  if (result.type === "error") {
-    throw new Error(`OAuth callback API error: ${result.data.message}`);
-  } else if (result.type === "client_error") {
-    throw new Error(`OAuth callback client error: ${result.error.message}`);
-  } else {
-    return {
-      accessToken: result.data.accessToken,
-      refreshToken: result.data.refreshToken ?? undefined,
-      expiresIn: result.data.expiresIn ?? undefined,
-      refreshTokenExpiresIn: result.data.refreshTokenExpiresIn ?? undefined,
-    };
-  }
+  return toOAuthTokenResponse(
+    "callback",
+    await api.methods.oauthCallback({ query: { code } }),
+  );
 }
 
 /**
@@ -68,15 +55,26 @@ export async function exchangeOAuthCode(
  */
 export async function refreshOAuthToken(
   refreshToken: string,
-): Promise<RefreshTokenResponse> {
-  const result = await api.methods.oauthRefresh({
-    query: { refreshToken },
-  });
+): Promise<OAuthTokenResponse> {
+  return toOAuthTokenResponse(
+    "refresh",
+    await api.methods.oauthRefresh({
+      query: { refreshToken },
+    }),
+  );
+}
 
+/**
+ * Check for errors and convert API response type to our response type.
+ */
+function toOAuthTokenResponse(
+  context: string,
+  result: ApiResult<ApiOAuthTokenResponse>,
+): OAuthTokenResponse {
   if (result.type === "error") {
-    throw new Error(`OAuth refresh API error: ${result.data.message}`);
+    throw new Error(`OAuth ${context} API error: ${result.data.message}`);
   } else if (result.type === "client_error") {
-    throw new Error(`OAuth refresh client error: ${result.error.message}`);
+    throw new Error(`OAuth ${context} client error: ${result.error.message}`);
   } else {
     return {
       accessToken: result.data.accessToken,

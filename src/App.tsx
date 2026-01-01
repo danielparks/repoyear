@@ -2,7 +2,6 @@ import "./App.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as github from "./github/api.ts";
-import { exchangeOAuthCode } from "./api/client.ts";
 import {
   CONTRIBUTIONS_QUERY_TEMPLATE,
   type GithubError,
@@ -14,11 +13,11 @@ import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
 import {
-  clearTokenData as clearStoredTokenData,
-  getTokenData as getStoredTokenData,
+  clearStoredTokenData,
+  exchangeAccessToken,
+  getStoredTokenData,
   type GitHubTokenData,
   refreshAccessToken,
-  setTokenData as saveTokenData,
 } from "./auth/tokenManager.ts";
 
 function getAuthCode() {
@@ -67,7 +66,7 @@ function githubLoginUrl() {
 
 export default function App({ username }: { username: string | null }) {
   const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
-    getStoredTokenData(),
+    getStoredTokenData,
   );
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
@@ -77,7 +76,7 @@ export default function App({ username }: { username: string | null }) {
   const queryClient = useQueryClient();
 
   // loading and loadingPercent are separate because when we calculate the
-  // loading percentage we don't know if the query has finished. We might
+  // loading percentage we don’t know if the query has finished. We might
   // calculate it to be 97% done, but if the query is finished then we know it
   // is actually 100%.
   const [loading, setLoading] = useState<boolean>(false);
@@ -87,26 +86,9 @@ export default function App({ username }: { username: string | null }) {
   useEffect(() => {
     if (!tokenData && authCode && !authCodeHandled.current) {
       authCodeHandled.current = true;
-      exchangeOAuthCode(authCode).then((response) => {
-        if (response.accessToken) {
-          setAuthError(null);
-          const now = Date.now();
-          const newTokenData: GitHubTokenData = {
-            accessToken: response.accessToken,
-            refreshToken: response.refreshToken,
-            expiresAt: response.expiresIn
-              ? now + response.expiresIn * 1000
-              : undefined,
-            refreshTokenExpiresAt: response.refreshTokenExpiresIn
-              ? now + response.refreshTokenExpiresIn * 1000
-              : undefined,
-          };
-          saveTokenData(newTokenData); // Save to localStorage
-          setTokenData(newTokenData); // Update React state
-        } else {
-          setAuthError("Error during authentication");
-          console.error("No token in GitHub response");
-        }
+      exchangeAccessToken(authCode).then((newData) => {
+        setAuthError(null);
+        setTokenData(newData);
       }).catch((error: unknown) => {
         setAuthError("Error during authentication");
         console.error("Error getting oauth token:", error);
@@ -134,7 +116,7 @@ export default function App({ username }: { username: string | null }) {
       startedFetch.current = true;
       setLoading(true);
       setLoadingPercent(0);
-      setAuthError(null); // The ability to query implies we're authenticated.
+      setAuthError(null); // The ability to query implies we’re authenticated.
 
       const gh = new github.GitHub(tokenData.accessToken);
       gh.installRateLimitReport();
@@ -162,7 +144,7 @@ export default function App({ username }: { username: string | null }) {
             e.message?.includes("401")
           )
         ) {
-          console.log("Token expired, attempting refresh...");
+          console.log("Token expired, attempting refresh...", error);
           const newTokenData = await refreshAccessToken();
           if (newTokenData) {
             setTokenData(newTokenData);

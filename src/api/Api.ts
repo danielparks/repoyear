@@ -17,7 +17,9 @@ This indicates that the API server is up and nothing more. */
 "status": string,};
 
 /**
-* Response from OAuth token endpoints (`/api/oauth/callback` and `/api/oauth/refresh`).
+* Response from OAuth endpoints
+* 
+* * `/api/oauth/callback` * `/api/oauth/refresh`
  */
 export type OAuthTokenResponse =
 {
@@ -25,7 +27,7 @@ export type OAuthTokenResponse =
 "accessToken": string,
 /** Number of seconds until the access token expires. */
 "expiresIn"?: number | null,
-/** The refresh token from GitHub (for GitHub Apps with token expiration). */
+/** The refresh token from GitHub (if tokens are set to expire). */
 "refreshToken"?: string | null,
 /** Number of seconds until the refresh token expires. */
 "refreshTokenExpiresIn"?: number | null,};
