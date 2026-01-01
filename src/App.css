@@ -50,11 +50,10 @@ button, a.button, .pressed-button {
   color: white;
   border: none;
   margin: 0;
-  padding: 0 calc(1rlh);
-  box-sizing: box-content;
-  line-height: calc(2rlh);
+  padding: 0 1rlh;
+  line-height: 2rlh;
+  border-radius: 0.5lh;
   font-size: 16px;
-  border-radius: 0.5rlh;
   font-weight: normal;
   text-decoration: none;
   transition: background 0.2s, transform 0.1s;
@@ -93,7 +92,8 @@ button:focus, a.button:focus {
 
 button.refresh-button {
   /* Don't resize when the label changes */
-  width: 95px;
+  box-sizing: content-box;
+  width: 50px;
 }
 
 button.refresh-button.loading,
@@ -180,6 +180,13 @@ button.logout-button:hover {
 .app-header .button-group {
   display: flex;
   gap: 10px;
+}
+
+.app-header .button-group > button {
+  margin: 0.2rlh 0;
+  padding: 0 0.8rlh;
+  line-height: 1.6rlh;
+  font-size: 14px;
 }
 
 .error-message {
