@@ -83,51 +83,6 @@ button:focus, a.button:focus {
   outline: 2px solid hsl(270deg 100% 40%);
 }
 
-@property --progress {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
-}
-
-button.refresh-button {
-  /* Don't resize when the label changes */
-  box-sizing: content-box;
-  width: 50px;
-}
-
-button.refresh-button.loading,
-button.refresh-button.loading:hover {
-  background: linear-gradient(
-    to right,
-    hsl(210deg 100% 50%) 0%,
-    hsl(210deg 100% 50%) var(--progress),
-    hsl(210deg 60% 65%) var(--progress),
-    hsl(210deg 50% 70%) 100%
-  );
-  transition: --progress 0.5s ease;
-  animation: pulse 1.5s ease-in-out infinite;
-  transform: translateY(1px);
-  box-shadow: none;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-button.logout-button {
-  background: hsl(0deg 0% 70%);
-  border-color: hsl(0deg 0% 70%);
-}
-
-button.logout-button:hover {
-  background: hsl(0deg 0% 60%);
-}
-
 .login-container {
   display: flex;
   flex-direction: column;
@@ -186,6 +141,51 @@ button.logout-button:hover {
   padding: 0 0.8rlh;
   line-height: 1.6rlh;
   font-size: 14px;
+}
+
+@property --progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+button.refresh-button {
+  /* Don't resize when the label changes */
+  box-sizing: content-box;
+  width: 50px;
+}
+
+button.refresh-button.loading,
+button.refresh-button.loading:hover {
+  background: linear-gradient(
+    to right,
+    hsl(210deg 100% 50%) 0%,
+    hsl(210deg 100% 50%) var(--progress),
+    hsl(210deg 60% 65%) var(--progress),
+    hsl(210deg 50% 70%) 100%
+  );
+  transition: --progress 0.5s ease;
+  animation: pulse 1.5s ease-in-out infinite;
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+button.logout-button {
+  background: hsl(0deg 0% 70%);
+  border-color: hsl(0deg 0% 70%);
+}
+
+button.logout-button:hover {
+  background: hsl(0deg 0% 60%);
 }
 
 .error-message {
