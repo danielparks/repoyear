@@ -14,7 +14,7 @@ body.compact {
 }
 
 h1 {
-  font-size: 1.5rlh;
+  font-size: 24px;
   line-height: 2rlh;
 }
 
@@ -232,13 +232,15 @@ a > svg {
 }
 
 @media (max-width: 650px) {
-  body {
-    margin: 1rlh;
-  }
-
   /* Collapse to 1 column */
   .info-container {
     display: block;
+  }
+}
+
+@media (max-width: 550px) {
+  body {
+    margin: 1rlh;
   }
 
   h1 > span {
