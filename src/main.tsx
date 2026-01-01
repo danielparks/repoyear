@@ -5,6 +5,22 @@ import QueryCacheProvider from "./components/QueryCache.tsx";
 import App from "./App.tsx";
 
 export function Router() {
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
+  if (!frontendUrl) {
+    throw new Error(
+      "Frontend URL not found; make sure VITE_FRONTEND_URL is set in your " +
+        " .env file.",
+    );
+  }
+
+  const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  if (!githubClientId) {
+    throw new Error(
+      "GitHub Client ID not found; make sure VITE_GITHUB_CLIENT_ID is set in " +
+        " your .env file.",
+    );
+  }
+
   function getUsernameParameter() {
     const match = location.pathname.match(/^\/([^/]+)$/);
     return match ? match[1] : null;
@@ -23,7 +39,13 @@ export function Router() {
     };
   }, []);
 
-  return <App username={username} />;
+  return (
+    <App
+      username={username}
+      frontendUrl={frontendUrl}
+      githubClientId={githubClientId}
+    />
+  );
 }
 
 createRoot(document.getElementById("root")!).render(

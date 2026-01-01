@@ -40,31 +40,13 @@ function getAuthError() {
   return null;
 }
 
-function githubLoginUrl() {
-  const redirectUrl = import.meta.env.VITE_FRONTEND_URL;
-  if (!redirectUrl) {
-    throw new Error(
-      "Frontend URL not found; make sure VITE_FRONTEND_URL is set in your " +
-        " .env file.",
-    );
-  }
-
-  const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-  if (!clientId) {
-    throw new Error(
-      "GitHub Client ID not found; make sure VITE_GITHUB_CLIENT_ID is set in " +
-        " your .env file.",
-    );
-  }
-
-  const url = new URL("https://github.com/login/oauth/authorize");
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", redirectUrl);
-  url.searchParams.set("scope", "");
-  return url;
-}
-
-export default function App({ username }: { username: string | null }) {
+export default function App(
+  { username, frontendUrl, githubClientId }: {
+    username: string | null;
+    frontendUrl: string;
+    githubClientId: string;
+  },
+) {
   const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
     getStoredTokenData,
   );
@@ -233,12 +215,11 @@ export default function App({ username }: { username: string | null }) {
 
     if (!authCode) {
       // No tokenData, no authCode: user is logged out.
-      try {
-        loginUrl = githubLoginUrl().href;
-      } catch (error: unknown) {
-        console.error("Error getting GitHub login URL:", error);
-        errorMessage = "Configuration error. Couldn’t get GitHub login URL.";
-      }
+      const url = new URL("https://github.com/login/oauth/authorize");
+      url.searchParams.set("client_id", githubClientId);
+      url.searchParams.set("redirect_uri", frontendUrl);
+      url.searchParams.set("scope", "");
+      loginUrl = url.href;
     }
 
     return (

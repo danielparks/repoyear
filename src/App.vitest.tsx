@@ -8,9 +8,6 @@ import fixtureData from "./__fixtures__/github-contributions.json" with {
   type: "json",
 };
 
-vi.stubEnv("VITE_FRONTEND_URL", "/");
-vi.stubEnv("VITE_GITHUB_CLIENT_ID", "CLIENT_ID");
-
 vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 vi.mock("./github/api.ts", async (importOriginal) => {
@@ -60,7 +57,7 @@ function renderApp() {
 
   render(
     <QueryClientProvider client={queryClient}>
-      <App username={null} />
+      <App username={null} frontendUrl="/" githubClientId="CLIENT_ID" />
     </QueryClientProvider>,
   );
 }
