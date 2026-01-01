@@ -96,53 +96,49 @@ export default function App(
         throw new Error("Access token is required");
       }
       startedFetch.current = true;
-      setLoading(true);
-      setLoadingPercent(0);
-      setAuthError(null); // The ability to query implies we’re authenticated.
+      while (true) {
+        setLoading(true);
+        setLoadingPercent(0);
+        setAuthError(null); // The ability to query implies we’re authenticated.
 
-      const gh = new github.GitHub(tokenData.accessToken);
-      gh.installRateLimitReport();
+        const gh = new github.GitHub(tokenData.accessToken);
+        gh.installRateLimitReport();
 
-      const contributions: github.Contributions[] = [];
-      try {
-        for await (
-          const contribution of gh.queryBase(username || undefined)
-        ) {
-          contributions.push(contribution);
-          // Incrementally update cache, triggering a re-render.
-          queryClient.setQueryData(queryKey, {
-            complete: false,
-            contributions: [...contributions],
-          });
-        }
-      } catch (error: unknown) {
-        // Check if this is a 401 error and try to refresh
-        if (
-          error &&
-          typeof error === "object" &&
-          "errors" in error &&
-          Array.isArray((error as { errors: unknown[] }).errors) &&
-          (error as { errors: { message?: string }[] }).errors.some((e) =>
-            e.message?.includes("401")
-          )
-        ) {
-          console.log("Token expired, attempting refresh...", error);
-          const newTokenData = await refreshAccessToken();
-          if (newTokenData) {
-            setTokenData(newTokenData);
-            // Retry the query by throwing an error that will be caught by React Query
-            throw new Error("Token refreshed, please retry");
-          } else {
-            // Refresh failed
-            setAuthError("Session expired. Please log in again.");
-            throw error;
+        const contributions: github.Contributions[] = [];
+        try {
+          for await (
+            const contribution of gh.queryBase(username || undefined)
+          ) {
+            contributions.push(contribution);
+            // Incrementally update cache, triggering a re-render.
+            queryClient.setQueryData(queryKey, {
+              complete: false,
+              contributions: [...contributions],
+            });
           }
+        } catch (error: unknown) {
+          // Check if this is a 401 error and try to refresh
+          const e = error as { name?: string; status?: number } | null;
+          if (e && e.name == "HttpError" && e.status == 401) {
+            console.log("Token expired, attempting refresh...");
+            const newTokenData = await refreshAccessToken();
+            if (newTokenData) {
+              setTokenData(newTokenData);
+              // Retry the query
+              continue;
+            } else {
+              // Refresh failed
+              setAuthError("Session expired. Please log in again.");
+              setTokenData(null);
+              clearStoredTokenData();
+            }
+          }
+          throw error;
         }
-        throw error;
-      }
 
-      setLoading(false);
-      return { complete: true, contributions };
+        setLoading(false);
+        return { complete: true, contributions };
+      }
     },
   });
 
