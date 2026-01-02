@@ -6,10 +6,8 @@
  */
 
 import Api from "./Api.ts";
-import type {
-  ApiResult,
-  OAuthTokenResponse as ApiOAuthTokenResponse,
-} from "./Api.ts";
+import type { ApiResult, OAuthTokenResponse } from "./Api.ts";
+export type { OAuthTokenResponse } from "./Api.ts";
 
 /**
  * API client instance configured for the backend.
@@ -24,13 +22,6 @@ export const api = new Api({
     import.meta.env.VITE_FRONTEND_URL ||
     "").replace(/\/+$/, ""),
 });
-
-export interface OAuthTokenResponse {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn?: number;
-  refreshTokenExpiresIn?: number;
-}
 
 /**
  * Exchange GitHub OAuth code for access token.
@@ -58,9 +49,7 @@ export async function refreshOAuthToken(
 ): Promise<OAuthTokenResponse> {
   return toOAuthTokenResponse(
     "refresh",
-    await api.methods.oauthRefresh({
-      query: { refreshToken },
-    }),
+    await api.methods.oauthRefresh({ query: { refreshToken } }),
   );
 }
 
@@ -69,18 +58,13 @@ export async function refreshOAuthToken(
  */
 function toOAuthTokenResponse(
   context: string,
-  result: ApiResult<ApiOAuthTokenResponse>,
+  result: ApiResult<OAuthTokenResponse>,
 ): OAuthTokenResponse {
   if (result.type === "error") {
     throw new Error(`OAuth ${context} API error: ${result.data.message}`);
   } else if (result.type === "client_error") {
     throw new Error(`OAuth ${context} client error: ${result.error.message}`);
   } else {
-    return {
-      accessToken: result.data.accessToken,
-      refreshToken: result.data.refreshToken ?? undefined,
-      expiresIn: result.data.expiresIn ?? undefined,
-      refreshTokenExpiresIn: result.data.refreshTokenExpiresIn ?? undefined,
-    };
+    return result.data;
   }
 }

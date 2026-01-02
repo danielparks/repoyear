@@ -75,7 +75,7 @@ function toGitHubTokenData(response: OAuthTokenResponse): GitHubTokenData {
   const now = Date.now();
   return {
     accessToken: response.accessToken,
-    refreshToken: response.refreshToken,
+    refreshToken: response.refreshToken ?? undefined,
     expiresAt: response.expiresIn ? now + response.expiresIn * 1000 : undefined,
     refreshTokenExpiresAt: response.refreshTokenExpiresIn
       ? now + response.refreshTokenExpiresIn * 1000
