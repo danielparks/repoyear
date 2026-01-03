@@ -88,47 +88,45 @@ export default function App(
         throw new Error("Access token is required");
       }
       startedFetch.current = true;
-      while (true) {
-        setLoading(true);
-        setLoadingPercent(0);
-        setAuthError(null); // The ability to query implies we’re authenticated.
+      setLoading(true);
+      setLoadingPercent(0);
+      setAuthError(null); // The ability to query implies we’re authenticated.
 
-        const gh = new github.GitHub(tokenData.accessToken);
-        gh.installRateLimitReport();
+      const gh = new github.GitHub(tokenData.accessToken);
+      gh.installRateLimitReport();
 
-        const contributions: github.Contributions[] = [];
-        try {
-          for await (
-            const contribution of gh.queryBase(username || undefined)
-          ) {
-            contributions.push(contribution);
-            // Incrementally update cache, triggering a re-render.
-            queryClient.setQueryData(queryKey, {
-              complete: false,
-              contributions: [...contributions],
-            });
+      const contributions: github.Contributions[] = [];
+      try {
+        for await (const contribution of gh.queryBase(username || undefined)) {
+          contributions.push(contribution);
+          // Incrementally update cache, triggering a re-render.
+          queryClient.setQueryData(queryKey, {
+            complete: false,
+            contributions: [...contributions],
+          });
+        }
+      } catch (error: unknown) {
+        // Check if this is a 401 error and try to refresh
+        const e = error as { name?: string; status?: number } | null;
+        if (e && e.name == "HttpError" && e.status == 401) {
+          console.log("Token expired, attempting refresh...");
+          try {
+            await refreshAccessToken();
+          } catch (error: unknown) {
+            // Refresh failed
+            console.error("Error refreshing oauth token:", error);
+            setAuthError("Session expired. Please log in again.");
+            throw error;
           }
-        } catch (error: unknown) {
-          // Check if this is a 401 error and try to refresh
-          const e = error as { name?: string; status?: number } | null;
-          if (e && e.name == "HttpError" && e.status == 401) {
-            console.log("Token expired, attempting refresh...");
-            try {
-              await refreshAccessToken();
-              // Retry the query
-              continue;
-            } catch (error: unknown) {
-              // Refresh failed
-              console.log("Error refreshing oauth token:", error);
-              setAuthError("Session expired. Please log in again.");
-            }
-          }
+          // The accessToken changed, so next tick this will reload.
+          return { complete: false, contributions: [] };
+        } else {
           throw error;
         }
-
-        setLoading(false);
-        return { complete: true, contributions };
       }
+
+      setLoading(false);
+      return { complete: true, contributions };
     },
   });
 
