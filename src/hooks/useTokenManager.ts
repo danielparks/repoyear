@@ -16,10 +16,49 @@ export function useTokenManager() {
   const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
     getStoredTokenData,
   );
-  return [tokenData, setTokenData];
+
+  function clearTokenData() {
+    localStorage.removeItem(STORAGE_KEY);
+    setTokenData(null);
+    clearOldToken();
+  }
+
+  async function exchangeAccessToken(code: string) {
+    try {
+      const newData = toGitHubTokenData(await client.exchangeOAuthCode(code));
+
+      setTokenData(newData);
+      setStoredTokenData(newData);
+    } catch (error) {
+      clearTokenData();
+      throw error;
+    }
+  }
+
+  async function refreshAccessToken() {
+    if (!tokenData) {
+      throw new Error("No token data");
+    } else if (!tokenData.refreshToken) {
+      throw new Error("No refresh token");
+    }
+
+    try {
+      const newData = toGitHubTokenData(
+        await client.refreshOAuthToken(tokenData.refreshToken),
+      );
+
+      setTokenData(newData);
+      setStoredTokenData(newData);
+    } catch (error) {
+      clearTokenData();
+      throw error;
+    }
+  }
+
+  return { tokenData, clearTokenData, exchangeAccessToken, refreshAccessToken };
 }
 
-export function getStoredTokenData(): GitHubTokenData | null {
+function getStoredTokenData(): GitHubTokenData | null {
   clearOldToken();
 
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -30,43 +69,6 @@ export function getStoredTokenData(): GitHubTokenData | null {
   try {
     return JSON.parse(stored) as GitHubTokenData;
   } catch {
-    return null;
-  }
-}
-
-export function clearStoredTokenData(): void {
-  localStorage.removeItem(STORAGE_KEY);
-  clearOldToken();
-}
-
-export async function exchangeAccessToken(code: string) {
-  try {
-    const newData = toGitHubTokenData(await client.exchangeOAuthCode(code));
-
-    setStoredTokenData(newData);
-    return newData;
-  } catch (error) {
-    clearStoredTokenData();
-    throw error;
-  }
-}
-
-export async function refreshAccessToken(): Promise<GitHubTokenData | null> {
-  const currentData = getStoredTokenData();
-  if (!currentData || !currentData.refreshToken) {
-    return null;
-  }
-
-  try {
-    const newData = toGitHubTokenData(
-      await client.refreshOAuthToken(currentData.refreshToken),
-    );
-
-    setStoredTokenData(newData);
-    return newData;
-  } catch (error) {
-    console.error("Failed to refresh token:", error);
-    clearStoredTokenData();
     return null;
   }
 }

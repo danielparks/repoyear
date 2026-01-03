@@ -12,13 +12,7 @@ import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
-import {
-  clearStoredTokenData,
-  exchangeAccessToken,
-  getStoredTokenData,
-  type GitHubTokenData,
-  refreshAccessToken,
-} from "./auth/tokenManager.ts";
+import { useTokenManager } from "./hooks/useTokenManager.ts";
 
 function getAuthCode() {
   const code = new URLSearchParams(location.search).get("code");
@@ -47,9 +41,8 @@ export default function App(
     githubClientId: string;
   },
 ) {
-  const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
-    getStoredTokenData,
-  );
+  const { tokenData, clearTokenData, exchangeAccessToken, refreshAccessToken } =
+    useTokenManager();
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const authCodeHandled = useRef<boolean>(false);
@@ -68,9 +61,8 @@ export default function App(
   useEffect(() => {
     if (!tokenData && authCode && !authCodeHandled.current) {
       authCodeHandled.current = true;
-      exchangeAccessToken(authCode).then((newData) => {
+      exchangeAccessToken(authCode).then(() => {
         setAuthError(null);
-        setTokenData(newData);
       }).catch((error: unknown) => {
         setAuthError("Error during authentication");
         console.error("Error getting oauth token:", error);
@@ -121,16 +113,14 @@ export default function App(
           const e = error as { name?: string; status?: number } | null;
           if (e && e.name == "HttpError" && e.status == 401) {
             console.log("Token expired, attempting refresh...");
-            const newTokenData = await refreshAccessToken();
-            if (newTokenData) {
-              setTokenData(newTokenData);
+            try {
+              await refreshAccessToken();
               // Retry the query
               continue;
-            } else {
+            } catch (error: unknown) {
               // Refresh failed
+              console.log("Error refreshing oauth token:", error);
               setAuthError("Session expired. Please log in again.");
-              setTokenData(null);
-              clearStoredTokenData();
             }
           }
           throw error;
@@ -191,8 +181,7 @@ export default function App(
   }
 
   function logout(): void {
-    setTokenData(null);
-    clearStoredTokenData();
+    clearTokenData();
   }
 
   function reload() {
