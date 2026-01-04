@@ -3,10 +3,11 @@
 //! This module contains the concrete implementation of the API traits,
 //! including the GitHub OAuth integration.
 
-use super::definition::{ApiBase, OAuthTokenResponse, RepoYearApi};
+use super::definition::{
+    ApiBase, LocalContributions, OAuthTokenResponse, RepoYearApi,
+};
 use crate::repos;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// State data for the API (GitHub credentials and HTTP client).
 #[derive(Clone)]
@@ -127,9 +128,9 @@ impl ApiBase for AppState {
     async fn get_contributions(
         &self,
         log: &slog::Logger,
-    ) -> HashMap<String, Vec<i64>> {
+    ) -> LocalContributions {
         let Some(config) = &self.scan_config else {
-            return HashMap::new();
+            return LocalContributions::new();
         };
 
         config

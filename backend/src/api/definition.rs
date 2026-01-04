@@ -29,8 +29,11 @@ pub struct VersionResponse {
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ContributionsResponse {
     /// Repository commit times (seconds since epoch) by repository name.
-    pub repos: HashMap<String, Vec<i64>>,
+    pub repos: LocalContributions,
 }
+
+/// Local contributions (map repo name to commit times as seconds since epoch)
+pub type LocalContributions = HashMap<String, Vec<i64>>;
 
 /// Parameters for `/api/oauth/callback`
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -87,7 +90,7 @@ pub trait ApiBase: Send + Sync {
     fn get_contributions(
         &self,
         log: &slog::Logger,
-    ) -> impl Future<Output = HashMap<String, Vec<i64>>> + Send;
+    ) -> impl Future<Output = LocalContributions> + Send;
 
     /// Exchange a GitHub OAuth code for an access token.
     ///
