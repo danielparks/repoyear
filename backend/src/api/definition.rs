@@ -6,6 +6,7 @@
 use dropshot::{HttpError, HttpResponseOk, Query, RequestContext};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::future::Future;
 
 /// Response from `/api/health`
@@ -22,6 +23,13 @@ pub struct HealthResponse {
 pub struct VersionResponse {
     /// Version string from git describe.
     pub version: String,
+}
+
+/// Response from `/api/contributions`
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct ContributionsResponse {
+    /// Repository commit times (seconds since epoch) by repository name.
+    pub repos: HashMap<String, Vec<i64>>,
 }
 
 /// Parameters for `/api/oauth/callback`
@@ -74,6 +82,12 @@ pub trait ApiBase: Send + Sync {
 
     /// Get the application version.
     fn get_version(&self) -> impl Future<Output = String> + Send;
+
+    /// Get contributions for local repositories.
+    fn get_contributions(
+        &self,
+        log: &slog::Logger,
+    ) -> impl Future<Output = HashMap<String, Vec<i64>>> + Send;
 
     /// Exchange a GitHub OAuth code for an access token.
     ///
@@ -130,6 +144,18 @@ pub trait RepoYearApi {
     ) -> Result<HttpResponseOk<VersionResponse>, HttpError> {
         let version = rqctx.context().get_version().await;
         Ok(HttpResponseOk(VersionResponse { version }))
+    }
+
+    /// Handle `/api/contributions`
+    #[endpoint {
+        method = GET,
+        path = "/api/contributions",
+    }]
+    async fn contributions(
+        rqctx: RequestContext<Self::Context>,
+    ) -> Result<HttpResponseOk<ContributionsResponse>, HttpError> {
+        let repos = rqctx.context().get_contributions(&rqctx.log).await;
+        Ok(HttpResponseOk(ContributionsResponse { repos }))
     }
 
     /// Handle `/api/oauth/callback`

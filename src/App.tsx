@@ -6,6 +6,7 @@ import {
   CONTRIBUTIONS_QUERY_TEMPLATE,
   type GithubError,
 } from "./github/api.ts";
+import * as client from "./api/client.ts";
 import { Calendar } from "./model/index.ts";
 import { RepoYearView } from "./components/RepoYearView.tsx";
 import { Footer } from "./components/Footer.tsx";
@@ -45,6 +46,9 @@ export default function App(
     useTokenManager();
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
+  const [localContributions, setLocalContributions] = useState<
+    Record<string, Date[]> | null
+  >(null);
   const authCodeHandled = useRef<boolean>(false);
   const startedFetch = useRef<boolean>(false);
   const shiftPressed = useKeyMonitor("Shift");
@@ -141,6 +145,16 @@ export default function App(
 
   const contributions = query.data?.contributions;
 
+  useEffect(() => {
+    if (localContributions === null) {
+      client.getContributions().then((data) => {
+        setLocalContributions(data);
+      }).catch((error: unknown) => {
+        console.error("Error getting local contributions:", error);
+      });
+    }
+  }, [localContributions]);
+
   // Progressively transform contributions into `Calendar`.
   const calendarRef = useRef<Calendar | null>(null);
   const calendar = useMemo(() => {
@@ -158,8 +172,13 @@ export default function App(
       }
     }
 
+    if ((contributions || query.data?.complete) && localContributions) {
+      calendarRef.current ??= new Calendar(""); // FIXME?
+      calendarRef.current.updateFromLocal(localContributions);
+    }
+
     return calendarRef.current;
-  }, [contributions]);
+  }, [query.data, contributions, localContributions]);
 
   let errorMessage = authError;
   if (query.error) {

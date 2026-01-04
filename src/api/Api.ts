@@ -7,6 +7,14 @@
     export type { ApiResult, ErrorBody, ErrorResult } from './http-client.ts'
     
 /**
+* Response from `/api/contributions`
+ */
+export type ContributionsResponse =
+{
+/** Repository commit times (seconds since epoch) by repository name. */
+"repos": Record<string,(number)[]>,};
+
+/**
 * Response from `/api/health`
  */
 export type HealthResponse =
@@ -99,6 +107,17 @@ export interface ApiConfig {
       }
        
       methods = {
+/**
+* Handle `/api/contributions`
+ */
+contributions: (_: EmptyObj,
+params: FetchParams = {}) => {
+         return this.request<ContributionsResponse>({
+           path: `/api/contributions`,
+           method: "GET",
+  ...params,
+         })
+      },
 /**
 * Handle `/api/health`
  */

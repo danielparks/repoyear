@@ -4,7 +4,9 @@
 //! including the GitHub OAuth integration.
 
 use super::definition::{ApiBase, OAuthTokenResponse, RepoYearApi};
+use crate::repos;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// State data for the API (GitHub credentials and HTTP client).
 #[derive(Clone)]
@@ -15,6 +17,8 @@ pub struct AppState {
     pub github_client_secret: String,
     /// HTTP client for making requests to GitHub.
     pub http_client: reqwest::Client,
+    /// Configuration for repository scanning.
+    pub scan_config: Option<repos::Config>,
 }
 
 /// A request to <https://github.com/login/oauth/access_token>
@@ -118,6 +122,30 @@ impl ApiBase for AppState {
 
     async fn get_version(&self) -> String {
         env!("GIT_VERSION").to_owned()
+    }
+
+    async fn get_contributions(
+        &self,
+        log: &slog::Logger,
+    ) -> HashMap<String, Vec<i64>> {
+        let Some(config) = &self.scan_config else {
+            return HashMap::new();
+        };
+
+        config
+            .repo_iter()
+            .filter_map(|result| {
+                result
+                    .map_err(anyhow::Error::from) // FIXME?
+                    .and_then(|(name, repo)| {
+                        Ok((name, repos::scan_repo(&repo)?))
+                    })
+                    .inspect_err(|error| {
+                        slog::warn!(log, "{error}");
+                    })
+                    .ok()
+            })
+            .collect()
     }
 
     async fn exchange_oauth_token(

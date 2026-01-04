@@ -42,10 +42,17 @@ fn cli(params: &Params) -> anyhow::Result<ExitCode> {
 
     match &params.command {
         Command::Serve(serve_params) => {
+            let scan_config = if let Some(path) = &serve_params.scan_config {
+                Some(repos::Config::parse(&fs::read_to_string(path)?)?)
+            } else {
+                None
+            };
+
             server::serve(
                 &serve_params.bind,
                 &serve_params.github_client_id,
                 &serve_params.github_client_secret,
+                scan_config,
                 &log,
             )?;
         }

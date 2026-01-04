@@ -1,6 +1,7 @@
 //! Mock implementation of the API for testing.
 
 use super::definition::{ApiBase, OAuthTokenResponse, RepoYearApi};
+use std::collections::HashMap;
 
 /// Mock state for testing that returns predefined responses.
 #[derive(Clone, Debug)]
@@ -52,6 +53,14 @@ impl ApiBase for MockAppState {
 
     async fn get_version(&self) -> String {
         env!("GIT_VERSION").to_owned()
+    }
+
+    async fn get_contributions(
+        &self,
+        _log: &slog::Logger,
+    ) -> HashMap<String, Vec<i64>> {
+        // FIXME: better mock data?
+        HashMap::new()
     }
 
     async fn exchange_oauth_token(

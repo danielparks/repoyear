@@ -7,7 +7,7 @@
 
 import Api from "./Api.ts";
 import type { ApiResult, OAuthTokenResponse } from "./Api.ts";
-export type { OAuthTokenResponse } from "./Api.ts";
+export type { ContributionsResponse, OAuthTokenResponse } from "./Api.ts";
 
 /**
  * API client instance configured for the backend.
@@ -22,6 +22,24 @@ export const api = new Api({
     import.meta.env.VITE_FRONTEND_URL ||
     "").replace(/\/+$/, ""),
 });
+
+/**
+ * Get local contributions from backend.
+ */
+export async function getContributions(): Promise<Record<string, Date[]>> {
+  const result = await api.methods.contributions({});
+  if (result.type === "error") {
+    throw new Error(`Contributions API error: ${result.data.message}`);
+  } else if (result.type === "client_error") {
+    throw new Error(`Contributions client error: ${result.error.message}`);
+  } else {
+    const data: Record<string, Date[]> = {};
+    for (const name in result.data.repos) {
+      data[name] = result.data.repos[name].map((time) => new Date(time * 1000));
+    }
+    return data;
+  }
+}
 
 /**
  * Exchange GitHub OAuth code for access token.

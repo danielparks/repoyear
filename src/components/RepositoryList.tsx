@@ -60,12 +60,20 @@ export function RepositoryList(
  * An easy to read, clickable repository name.
  */
 export function RepositoryName({ repo }: { repo: Repository }) {
-  const names = repo.url.replace("https://github.com/", "").split("/");
-  return (
-    <a style={{ color: repo.color() }} href={repo.url}>
-      <GitHubMark />
-      {names[0]}/<wbr />
-      {names[1]}
-    </a>
-  );
+  if (repo.url.startsWith("https://github.com/")) {
+    const names = repo.url.slice("https://github.com/".length).split("/");
+    return (
+      <a style={{ color: repo.color() }} href={repo.url}>
+        <GitHubMark />
+        {names[0]}/<wbr />
+        {names[1]}
+      </a>
+    );
+  } else if (repo.url.startsWith("local:")) {
+    const name = repo.url.slice("local:".length);
+    return <span style={{ color: repo.color() }}>{name}</span>;
+  } else {
+    // I don’t think there’s any way to get here.
+    return <a style={{ color: repo.color() }} href={repo.url}>{repo.url}</a>;
+  }
 }

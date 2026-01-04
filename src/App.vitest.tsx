@@ -58,6 +58,8 @@ function mockTokenData(
 }
 
 vi.mock("./api/client.ts", () => ({
+  // deno-lint-ignore require-await
+  getContributions: async () => ({}),
   exchangeOAuthCode: (code: string) => {
     if (code.startsWith("good")) {
       return mockTokenData(code);

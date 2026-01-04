@@ -95,6 +95,18 @@ export class Day {
   hasRepo(url: string) {
     return this.repositories.has(url);
   }
+
+  /**
+   * Set the commit count for a particularly repository.
+   */
+  setRepoCommits(repository: Repository, count: number) {
+    let repoDay = this.repositories.get(repository.url);
+    if (!repoDay) {
+      repoDay = new RepositoryDay(repository);
+      this.repositories.set(repository.url, repoDay);
+    }
+    repoDay.commitCount = count;
+  }
 }
 
 /**

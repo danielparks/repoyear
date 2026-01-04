@@ -1,5 +1,6 @@
 //! Server startup and configuration.
 
+use crate::repos;
 use anyhow::anyhow;
 use dropshot::{ConfigDropshot, HttpServerStarter};
 use repoyear_backend::api::{AppState, RepoYearApiImpl, repo_year_api_mod};
@@ -22,6 +23,7 @@ pub async fn serve(
     address: &str,
     github_client_id: &str,
     github_client_secret: &str,
+    scan_config: Option<repos::Config>,
     log: &slog::Logger,
 ) -> anyhow::Result<()> {
     let config_dropshot = ConfigDropshot {
@@ -41,6 +43,7 @@ pub async fn serve(
         github_client_id: github_client_id.to_owned(),
         github_client_secret: github_client_secret.to_owned(),
         http_client: reqwest::Client::new(),
+        scan_config,
     };
 
     let server = HttpServerStarter::new(&config_dropshot, api, state, log)

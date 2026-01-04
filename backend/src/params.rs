@@ -56,6 +56,10 @@ pub struct ServeParams {
     /// GitHub client secret for OAuth
     #[arg(long, env, hide_env_values = true)]
     pub github_client_secret: String,
+
+    /// Configuration file for repositories to scan for contributions
+    #[arg(long, env)]
+    pub scan_config: Option<PathBuf>,
 }
 
 /// Parameters for the `scan` subcommand

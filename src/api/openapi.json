@@ -13,6 +13,26 @@
       }
     },
     "schemas": {
+      "ContributionsResponse": {
+        "description": "Response from `/api/contributions`",
+        "properties": {
+          "repos": {
+            "additionalProperties": {
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "description": "Repository commit times (seconds since epoch) by repository name.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "repos"
+        ],
+        "type": "object"
+      },
       "Error": {
         "description": "Error information from a response.",
         "properties": {
@@ -98,6 +118,30 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/api/contributions": {
+      "get": {
+        "operationId": "contributions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionsResponse"
+                }
+              }
+            },
+            "description": "successful operation"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "summary": "Handle `/api/contributions`"
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "health_check",

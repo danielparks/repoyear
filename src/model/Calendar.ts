@@ -4,6 +4,10 @@ import { Repository, RepositorySource } from "./Repository.ts";
 import { Day, RepositoryDay } from "./Day.ts";
 import { ALL_ON, Filter } from "./Filter.ts";
 
+// 1000 years before and after 1970.
+const EPOCH_DAY_MIN = -365000;
+const EPOCH_DAY_MAX = 365000;
+
 /**
  * Represents a user’s contribution calendar over a date range.
  *
@@ -100,6 +104,59 @@ export class Calendar {
     this.updateRepoCounts();
     this.updateRepoColors();
     return count;
+  }
+
+  /**
+   * Update calendar with local contributions.
+   */
+  updateFromLocal(contributions: Record<string, Date[]>) {
+    let firstEpochDay = EPOCH_DAY_MIN, lastEpochDay = EPOCH_DAY_MAX;
+    if (this.days[0]) {
+      firstEpochDay = toEpochDays(this.days[0].date);
+      lastEpochDay = firstEpochDay + this.days.length - 1;
+    }
+
+    for (const name in contributions) {
+      const repository = this.internRepository({ url: `local:${name}` });
+      let previousEpochDay = EPOCH_DAY_MIN, commits = 0;
+      for (const date of contributions[name]) {
+        const epochDay = toEpochDays(date);
+        if (epochDay < firstEpochDay || epochDay > lastEpochDay) {
+          continue;
+        }
+        if (epochDay == previousEpochDay) {
+          commits++;
+        } else {
+          if (commits > 0) {
+            // We've collected data on a day.
+            if (firstEpochDay == EPOCH_DAY_MIN) {
+              // No existing days.
+              firstEpochDay = previousEpochDay;
+            }
+            this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
+              repository,
+              commits,
+            );
+          }
+          previousEpochDay = epochDay;
+          commits = 1;
+        }
+      }
+
+      if (commits > 0) {
+        if (firstEpochDay == EPOCH_DAY_MIN) {
+          // No existing days.
+          firstEpochDay = previousEpochDay;
+        }
+        this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
+          repository,
+          commits,
+        );
+      }
+    }
+
+    this.updateRepoCounts();
+    this.updateRepoColors();
   }
 
   /**
