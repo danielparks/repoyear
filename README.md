@@ -22,23 +22,21 @@ URL, it will show the contributions for that GitHub user.
 
 ## Configuration
 
+### Authenticated mode
+
 Configuration of the frontend is via environment variables when running
 `deno run dev` or `deno run build`:
 
 - `VITE_GITHUB_CLIENT_ID`: The GitHub client ID for this app (from
-  [GitHub OAuth app settings]).
+  [GitHub app settings]).
 - `VITE_FRONTEND_URL`: The app’s homepage (needs to match
-  [GitHub OAuth app settings]).
+  [GitHub app settings]).
 - `VITE_BACKEND_URL`: Defaults to `$VITE_FRONTEND_URL`. This is the URL prefix
   for API calls, e.g. `$VITE_BACKEND_URL/api/health`. Note that the default
   backend (in [`backend/`]) does not support
   [Cross-Origin Resource Sharing][CORS], so usually this cannot reference a
   different host than `$VITE_FRONTEND_URL`. It doesn’t have to have a scheme and
   host specified, e.g. `/` is acceptable.
-- `VITE_CONTRIBUTIONS_URL`: Defaults to `assets/contributions.json`. Compact and
-  static modes load contributions data from this URL.
-- `VITE_CLICK_URL`: If this is set, clicking the graph in compact mode will
-  navigate to this URL.
 
 For development, create a `.env` file (see [.env.example]) for convenience.
 
@@ -47,13 +45,46 @@ variables:
 
 - `--bind IP:PORT` or `BIND`: the address and port to bind to.
 - `--github-client-id STRING` or `GITHUB_CLIENT_ID`: The GitHub client ID for
-  this app (from [GitHub OAuth app settings]).
+  this app (from [GitHub app settings]).
 - `--github-client-secret` or `GITHUB_CLIENT_SECRET`: The GitHub client secret
-  for this app (from [GitHub OAuth app settings]).
+  for this app (from [GitHub app settings]).
 
 The backend should be proxied through the frontend URL at `/api`, e.g. a request
 to `http://frontend/api/health` should be proxied to
 `http://backend/api/health`.
+
+### Static mode
+
+Static mode doesn’t use a backend server, but the data file does need to be
+updated periodically. `scripts/generate-static.ts` takes care of that:
+
+- `--token-file PATH`: A file containing only a [GitHub personal access token]
+  (either classic of fine-grained) configured to allow read-only access to the
+  repositories you care about. Defaults to `.github_token`.
+- `--output PATH`: Where to save the data. Defaults to
+  `dist/assets/contributions.json`.
+
+The frontend takes one optional environment variable:
+
+- `VITE_CONTRIBUTIONS_URL`: The URL to the data file. Defaults to
+  `assets/contributions.json`.
+
+### Compact mode
+
+Compact mode is configured just like static mode, except the frontend takes an
+additional, optional environment variable:
+
+- `VITE_CLICK_URL`: If this is set, clicking the graph in compact mode will
+  navigate to this URL.
+
+### GitHub token access
+
+When creating a GitHub app or a personal access token, the following repository
+permissions are needed:
+
+- Contents (read only)
+- Issues (read only)
+- Pull requests (read only)
 
 ## Stack
 
@@ -107,10 +138,11 @@ terms or conditions.
 [static demo]: https://demon.horse/portfolio/repoyear/static.html
 [`compact.html`]: compact.html
 [compact demo]: https://demon.horse/portfolio/repoyear/compact.html
-[GitHub OAuth app settings]: https://github.com/settings/developers
+[GitHub app settings]: https://github.com/settings/apps
 [`backend/`]: backend
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
 [.env.example]: .env.example
+[GitHub personal access token]: https://github.com/settings/personal-access-tokens
 [Dropshot]: https://docs.rs/dropshot/latest/dropshot/
 [systemd socket activation]: https://www.freedesktop.org/software/systemd/man/latest/sd_listen_fds.html
 [systemd_socket]: https://docs.rs/systemd_socket/latest/systemd_socket/
