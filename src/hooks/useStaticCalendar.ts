@@ -26,7 +26,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   const [fetchedAt, setFetchedAt] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadJson<T>(url: string) {
+  async function loadJson(url: string) {
     try {
       const response = await fetch(url);
       if (!response.ok) {
