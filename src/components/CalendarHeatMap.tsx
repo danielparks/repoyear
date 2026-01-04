@@ -82,11 +82,6 @@ export interface GraphDayProps {
 export function GraphDay(
   { day, filter, max, highlight, selected = false, onClick }: GraphDayProps,
 ) {
-  interface Subdivision {
-    key: string;
-    style: React.CSSProperties;
-  }
-
   const unknownCount = day.unknownCount(); // Not filtered.
   if (day.contributionCount === null) {
     // Day wasn't in calendar summary data.
