@@ -84,13 +84,12 @@ export function GraphDay(
 ) {
   const unknownCount = day.unknownCount(); // Not filtered.
   if (day.contributionCount === null) {
-    // Day wasn't in calendar summary data.
-    if (unknownCount <= 0) {
+    // Day wasn't in calendar summary data. On Sunday morning GitHub returns
+    // an extra week of specific contributions.
+    if (unknownCount >= 0) {
       // No specific contributions, either.
       return <div></div>;
     }
-
-    console.warn(`Day not in summary data: ${day.date.toLocaleDateString()}`);
   }
 
   const className: string[] = [];
