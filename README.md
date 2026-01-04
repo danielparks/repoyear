@@ -64,10 +64,12 @@ updated periodically. `scripts/generate-static.ts` takes care of that:
 - `--output PATH`: Where to save the data. Defaults to
   `dist/assets/contributions.json`.
 
-The frontend takes one optional environment variable:
+The frontend takes two optional environment variables:
 
-- `VITE_CONTRIBUTIONS_URL`: The URL to the data file. Defaults to
+- `VITE_CONTRIBUTIONS_URL`: The URL to the GitHub format data file. Defaults to
   `assets/contributions.json`.
+- `VITE_LOCAL_CONTRIBUTIONS_URL`: The URL to the local contributions data file.
+  Defaults to `assets/local.json`.
 
 ### Compact mode
 
