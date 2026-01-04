@@ -348,6 +348,20 @@ export class Calendar {
   }
 
   /**
+   * Get the first day in the calendar with data.
+   */
+  firstDay(): Day | undefined {
+    return this.days.find((day) => day.hasData());
+  }
+
+  /**
+   * Get the last day in the calendar with data.
+   */
+  lastDay(): Day | undefined {
+    return this.days.findLast((day) => day.hasData());
+  }
+
+  /**
    * Yields weeks (7-day arrays) of Days, starting on Sunday.
    */
   *weeks() {

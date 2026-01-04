@@ -40,11 +40,10 @@ function YearSummary(
   const filtered = calendar.repositories.size -
     calendar.filteredRepos(filter).length;
 
-  // Get the date range (FIXME handle partial weeks)
-  const firstDay = calendar.days[0]?.date;
-  const lastDay = calendar.days[calendar.days.length - 1]?.date;
-  const dateRange = firstDay && lastDay
-    ? `${DATE_FORMATTER.format(firstDay)} – ${DATE_FORMATTER.format(lastDay)}`
+  const firstDate = calendar.firstDay()?.date;
+  const lastDate = calendar.lastDay()?.date;
+  const dateRange = firstDate && lastDate
+    ? `${DATE_FORMATTER.format(firstDate)} – ${DATE_FORMATTER.format(lastDate)}`
     : "";
 
   // Segment contributions for each repo for sparklines.

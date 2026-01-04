@@ -22,6 +22,18 @@ export class Day {
   }
 
   /**
+   * Do we have data about this day?
+   *
+   * The day doesn’t necessarily need to have any contributions; it just needs
+   * to have been included in query results.
+   */
+  hasData() {
+    // FIXME knownContributionCount is inefficient
+    return this.contributionCount !== null ||
+      this.knownContributionCount() > 0;
+  }
+
+  /**
    * Sums up the contributions we know about from specific repositories.
    */
   knownContributionCount() {
