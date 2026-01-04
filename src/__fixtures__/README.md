@@ -31,4 +31,9 @@ The fixture file is checked into the repository so tests can run offline.
 3. No scopes are required (read-only access to public data)
 4. Copy the token and use it in the command above
 
+Alternatively, you may use a fine-grained personal access token if you want to
+grant access to private repositories. See the [RepoYear README.md] for
+information about what permissions to grant.
+
 [`App.vitest.tsx`]: ../App.vitest.tsx
+[RepoYear README.md]: ../../README.md#github-token-access
