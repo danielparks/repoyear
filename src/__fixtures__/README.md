@@ -2,7 +2,7 @@
 
 This directory contains fixture data for testing.
 
-## github-contributions.json
+## `github.json`
 
 This file contains sample GitHub contributions data used by the smoke test in
 [`App.vitest.tsx`].

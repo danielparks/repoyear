@@ -19,7 +19,7 @@ The app has three modes, each with its own HTML file and TypeScript entry point:
 1. **Dynamic mode** (`index.html` → `src/main.tsx`): Interactive mode that
    fetches data from GitHub via OAuth
 2. **Static mode** (`static.html` → `src/static.tsx`): Displays pre-generated
-   contribution data from `dist/assets/contributions.json`
+   contribution data from `dist/assets/github.json` and `dist/assets/local.json`
 3. **Compact mode** (`compact.html` → `src/compact.tsx`): Minimal static view
    without UI chrome
 

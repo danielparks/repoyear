@@ -16,7 +16,7 @@ Options:
   -t, --token-file <file>  Path to file containing GitHub token
                            (default: .github-token)
   -o, --output <file>      Path to JSON file to generate
-                           (default: dist/assets/contributions.json)
+                           (default: dist/assets/github.json)
   -v, --verbose            Enable verbose output
   --help                   Show this output.`;
 
@@ -28,7 +28,7 @@ function parseArgs(): Args {
   let username = "";
   let tokenFile = ".github-token";
   let verbose = false;
-  let outputFile = "dist/assets/contributions.json";
+  let outputFile = "dist/assets/github.json";
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];

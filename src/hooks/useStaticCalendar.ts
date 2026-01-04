@@ -40,10 +40,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   }
 
   useEffect(() => {
-    loadJson(
-      import.meta.env.VITE_CONTRIBUTIONS_URL ||
-        "assets/contributions.json",
-    )
+    loadJson(import.meta.env.VITE_CONTRIBUTIONS_URL || "assets/github.json")
       .then((data: StaticDataFile) => {
         if (!data.contributions) {
           throw new Error("Invalid contributions data format");
@@ -58,8 +55,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
 
   useEffect(() => {
     loadJson(
-      import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL ||
-        "assets/local.json",
+      import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL || "assets/local.json",
     )
       .then(setLocalContributions)
       .catch((_: unknown) => {

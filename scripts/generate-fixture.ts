@@ -56,7 +56,7 @@ async function main() {
 
   const fixturePath = path.join(
     import.meta.dirname || "scripts",
-    "../src/__fixtures__/github-contributions.json",
+    "../src/__fixtures__/github.json",
   );
 
   const directory = path.dirname(fixturePath);

@@ -62,12 +62,12 @@ updated periodically. `scripts/generate-static.ts` takes care of that:
   (either classic of fine-grained) configured to allow read-only access to the
   repositories you care about. Defaults to `.github-token`.
 - `--output PATH`: Where to save the data. Defaults to
-  `dist/assets/contributions.json`.
+  `dist/assets/github.json`.
 
 The frontend takes two optional environment variables:
 
 - `VITE_CONTRIBUTIONS_URL`: The URL to the GitHub format data file. Defaults to
-  `assets/contributions.json`.
+  `assets/github.json`.
 - `VITE_LOCAL_CONTRIBUTIONS_URL`: The URL to the local contributions data file.
   Defaults to `assets/local.json`.
 

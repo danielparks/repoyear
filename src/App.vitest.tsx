@@ -4,7 +4,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App.tsx";
 import type { Contributions } from "./github/api.ts";
-import fixtureData from "./__fixtures__/github-contributions.json" with {
+import fixtureData from "./__fixtures__/github.json" with {
   type: "json",
 };
 
