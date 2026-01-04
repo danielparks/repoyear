@@ -119,40 +119,39 @@ export class Calendar {
     for (const name in contributions) {
       const repository = this.internRepository({ url: `local:${name}` });
       let previousEpochDay = EPOCH_DAY_MIN, commits = 0;
+
+      // If we recorded data for a day, update it in the calendar.
+      const updateDay = () => {
+        if (commits > 0) {
+          // We've collected data on a day.
+          if (firstEpochDay == EPOCH_DAY_MIN) {
+            // No existing days.
+            firstEpochDay = previousEpochDay;
+          }
+
+          this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
+            repository,
+            commits,
+          );
+        }
+      };
+
       for (const date of contributions[name]) {
         const epochDay = toEpochDays(date);
         if (epochDay < firstEpochDay || epochDay > lastEpochDay) {
           continue;
         }
+
         if (epochDay == previousEpochDay) {
           commits++;
         } else {
-          if (commits > 0) {
-            // We've collected data on a day.
-            if (firstEpochDay == EPOCH_DAY_MIN) {
-              // No existing days.
-              firstEpochDay = previousEpochDay;
-            }
-            this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
-              repository,
-              commits,
-            );
-          }
+          updateDay();
           previousEpochDay = epochDay;
           commits = 1;
         }
       }
 
-      if (commits > 0) {
-        if (firstEpochDay == EPOCH_DAY_MIN) {
-          // No existing days.
-          firstEpochDay = previousEpochDay;
-        }
-        this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
-          repository,
-          commits,
-        );
-      }
+      updateDay();
     }
 
     this.updateRepoCounts();
