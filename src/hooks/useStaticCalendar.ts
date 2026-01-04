@@ -26,16 +26,24 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   const [fetchedAt, setFetchedAt] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
+  async function loadJson<T>(url: string) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error: unknown) {
+      console.error(`Error loading ${url}`, error);
+      throw error;
+    }
+  }
+
   useEffect(() => {
-    const url = import.meta.env.VITE_CONTRIBUTIONS_URL ||
-      "assets/contributions.json";
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
+    loadJson(
+      import.meta.env.VITE_CONTRIBUTIONS_URL ||
+        "assets/contributions.json",
+    )
       .then((data: StaticDataFile) => {
         if (!data.contributions) {
           throw new Error("Invalid contributions data format");
@@ -43,36 +51,24 @@ export function useStaticCalendar(): UseStaticCalendarResult {
         setContributions(data.contributions);
         setFetchedAt(data.generatedAt);
       })
-      .catch((error: unknown) => {
-        console.error(`Error loading ${url}`, error);
+      .catch((_: unknown) => {
         setError("Could not load contributions.");
       });
   }, []);
 
   useEffect(() => {
-    const url = import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL ||
-      "assets/local.json";
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          if (response.status === 404) {
-            setLocalContributions({});
-            return;
-          }
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((data: Record<string, number[]> | void) => {
-        if (!data) return;
+    loadJson(
+      import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL ||
+        "assets/local.json",
+    )
+      .then((data: Record<string, number[]>) => {
         const converted: Record<string, Date[]> = {};
         for (const name in data) {
           converted[name] = data[name].map((time) => new Date(time * 1000));
         }
         setLocalContributions(converted);
       })
-      .catch((error: unknown) => {
-        console.error(`Error loading ${url}`, error);
+      .catch((_: unknown) => {
         setLocalContributions({});
       });
   }, []);
