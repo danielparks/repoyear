@@ -64,11 +64,10 @@ Before committing frontend changes, you will want to run something like:
 
     deno check --quiet && deno lint --fix && deno fmt
 
-Before committing frontend changes, you will want to `cd backend` and run
-something like:
+Before committing frontend changes, you will want to run something like:
 
     cargo clippy --quiet --all-features --all-targets --fix --allow-dirty
-    cargo fmt
+    cargo +nightly fmt
 
 ## Code comments
 
