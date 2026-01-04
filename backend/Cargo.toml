@@ -1,6 +1,6 @@
 [package]
 name = "repoyear-backend"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Daniel Parks <oss-repoyear@demonhorse.org>"]
 description = ""
 homepage = "https://github.com/danielparks/repoyear"

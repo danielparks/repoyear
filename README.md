@@ -94,10 +94,6 @@ This is a TypeScript and React app with a simple Rust backend built on
 [Dropshot]. Dropshot provides automatic OpenAPI support, which enables
 compile-time type checking of calls across the API boundary.
 
-## To do
-
-- [ ] Load information about local repositories in backend.
-
 ### Likely incompatible
 
 - **Systemd socket activation.** Dropshot takes a `SocketAddr` as configuration
