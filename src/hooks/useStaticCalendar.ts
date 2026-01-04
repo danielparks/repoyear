@@ -20,6 +20,9 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   const [contributions, setContributions] = useState<Contributions[] | null>(
     null,
   );
+  const [localContributions, setLocalContributions] = useState<
+    Record<string, Date[]> | null
+  >(null);
   const [fetchedAt, setFetchedAt] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,10 +49,41 @@ export function useStaticCalendar(): UseStaticCalendarResult {
       });
   }, []);
 
-  const calendar = useMemo(
-    () => Calendar.fromContributions(...contributions || []),
-    [contributions],
-  );
+  useEffect(() => {
+    const url = import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL ||
+      "assets/local.json";
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          if (response.status === 404) {
+            setLocalContributions({});
+            return;
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((data: Record<string, number[]> | void) => {
+        if (!data) return;
+        const converted: Record<string, Date[]> = {};
+        for (const name in data) {
+          converted[name] = data[name].map((time) => new Date(time * 1000));
+        }
+        setLocalContributions(converted);
+      })
+      .catch((error: unknown) => {
+        console.error(`Error loading ${url}`, error);
+        setLocalContributions({});
+      });
+  }, []);
+
+  const calendar = useMemo(() => {
+    const cal = Calendar.fromContributions(...contributions || []);
+    if (cal && localContributions) {
+      cal.updateFromLocal(localContributions);
+    }
+    return cal;
+  }, [contributions, localContributions]);
 
   return {
     calendar,
