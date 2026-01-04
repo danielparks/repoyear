@@ -25,8 +25,9 @@ export default defineConfig({
       name: "serve-static-data",
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url === "/assets/contributions.json") {
-            const path = resolve(__dirname, "dist/assets/contributions.json");
+          if (req.url?.startsWith("/assets/") && req.url?.endsWith(".json")) {
+            // This does not protect against /../ since it’s only for dev mode.
+            const path = resolve(__dirname, `dist${req.url}`);
             if (fs.existsSync(path)) {
               res.setHeader("Content-Type", "application/json");
               fs.createReadStream(path).pipe(res);
