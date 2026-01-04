@@ -109,7 +109,7 @@ export class Calendar {
   /**
    * Update calendar with local contributions.
    */
-  updateFromLocal(contributions: Record<string, Date[]>) {
+  updateFromLocal(contributions: Record<string, number[]>) {
     let firstEpochDay = EPOCH_DAY_MIN, lastEpochDay = EPOCH_DAY_MAX;
     if (this.days[0]) {
       firstEpochDay = toEpochDays(this.days[0].date);
@@ -136,8 +136,8 @@ export class Calendar {
         }
       };
 
-      for (const date of contributions[name]) {
-        const epochDay = toEpochDays(date);
+      for (const seconds of contributions[name]) {
+        const epochDay = toEpochDays(new Date(seconds * 1000));
         if (epochDay < firstEpochDay || epochDay > lastEpochDay) {
           continue;
         }

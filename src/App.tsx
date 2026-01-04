@@ -47,7 +47,7 @@ export default function App(
   const [authError, setAuthError] = useState<string | null>(getAuthError);
   const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
   const [localContributions, setLocalContributions] = useState<
-    Record<string, Date[]> | null
+    Record<string, number[]> | null
   >(null);
   const authCodeHandled = useRef<boolean>(false);
   const startedFetch = useRef<boolean>(false);
@@ -147,11 +147,11 @@ export default function App(
 
   useEffect(() => {
     if (localContributions === null) {
-      client.getContributions().then((data) => {
-        setLocalContributions(data);
-      }).catch((error: unknown) => {
-        console.error("Error getting local contributions:", error);
-      });
+      client.getContributions()
+        .then(setLocalContributions)
+        .catch((error: unknown) => {
+          console.error("Error getting local contributions:", error);
+        });
     }
   }, [localContributions]);
 

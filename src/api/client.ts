@@ -15,7 +15,7 @@ export type { ContributionsResponse, OAuthTokenResponse } from "./Api.ts";
  * The baseURL defaults to the current origin, which works with the Vite dev
  * proxy that forwards `/api` to the backend on port 3000.
  */
-export const api = new Api({
+const api = new Api({
   // Remove trailing slash since Api client just appends the path, which always
   // starts with a /.
   host: (import.meta.env.VITE_BACKEND_URL ||
@@ -26,18 +26,14 @@ export const api = new Api({
 /**
  * Get local contributions from backend.
  */
-export async function getContributions(): Promise<Record<string, Date[]>> {
+export async function getContributions(): Promise<Record<string, number[]>> {
   const result = await api.methods.contributions({});
   if (result.type === "error") {
     throw new Error(`Contributions API error: ${result.data.message}`);
   } else if (result.type === "client_error") {
     throw new Error(`Contributions client error: ${result.error.message}`);
   } else {
-    const data: Record<string, Date[]> = {};
-    for (const name in result.data.repos) {
-      data[name] = result.data.repos[name].map((time) => new Date(time * 1000));
-    }
-    return data;
+    return result.data.repos;
   }
 }
 

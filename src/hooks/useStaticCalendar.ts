@@ -21,7 +21,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
     null,
   );
   const [localContributions, setLocalContributions] = useState<
-    Record<string, Date[]> | null
+    Record<string, number[]> | null
   >(null);
   const [fetchedAt, setFetchedAt] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
@@ -61,13 +61,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
       import.meta.env.VITE_LOCAL_CONTRIBUTIONS_URL ||
         "assets/local.json",
     )
-      .then((data: Record<string, number[]>) => {
-        const converted: Record<string, Date[]> = {};
-        for (const name in data) {
-          converted[name] = data[name].map((time) => new Date(time * 1000));
-        }
-        setLocalContributions(converted);
-      })
+      .then(setLocalContributions)
       .catch((_: unknown) => {
         setLocalContributions({});
       });
