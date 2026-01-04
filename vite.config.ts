@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
+import process from "node:process";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,7 +15,7 @@ export default defineConfig({
       transformIndexHtml(html) {
         return html.replace(
           /@APP-VERSION@/g,
-          execSync("scripts/get-version.sh")
+          process.env["APP_VERSION"] || execSync("scripts/get-version.sh")
             .toString()
             .trim(),
         );
