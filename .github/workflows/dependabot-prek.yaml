@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
+          token: ${{ secrets.PUSH_TOKEN }}
       - uses: taiki-e/install-action@v2
         with:
           tool: prek
