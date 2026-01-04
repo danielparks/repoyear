@@ -68,11 +68,11 @@ export function useStaticCalendar(): UseStaticCalendarResult {
   }, []);
 
   const calendar = useMemo(() => {
-    const cal = Calendar.fromContributions(...contributions || []);
-    if (cal && localContributions) {
-      cal.updateFromLocal(localContributions);
+    const calendar = Calendar.fromContributions(...contributions || []);
+    if (calendar && localContributions) {
+      calendar.updateFromLocal(localContributions);
     }
-    return cal;
+    return calendar;
   }, [contributions, localContributions]);
 
   return {
