@@ -60,7 +60,7 @@ updated periodically. `scripts/generate-static.ts` takes care of that:
 
 - `--token-file PATH`: A file containing only a [GitHub personal access token]
   (either classic of fine-grained) configured to allow read-only access to the
-  repositories you care about. Defaults to `.github_token`.
+  repositories you care about. Defaults to `.github-token`.
 - `--output PATH`: Where to save the data. Defaults to
   `dist/assets/contributions.json`.
 
