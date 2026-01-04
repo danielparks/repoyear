@@ -3,7 +3,6 @@ import type { OAuthTokenResponse } from "../api/client.ts";
 import * as client from "../api/client.ts";
 
 const STORAGE_KEY = "repoyear_github_token_data";
-const OLD_STORAGE_KEY = "github_token";
 
 export interface GitHubTokenData {
   accessToken: string;
@@ -20,7 +19,6 @@ export function useTokenManager() {
   function clearTokenData() {
     localStorage.removeItem(STORAGE_KEY);
     setTokenData(null);
-    clearOldToken();
   }
 
   async function exchangeAccessToken(code: string) {
@@ -90,7 +88,5 @@ function setStoredTokenData(data: GitHubTokenData): void {
 }
 
 function clearOldToken(): void {
-  if (localStorage.getItem(OLD_STORAGE_KEY)) {
-    localStorage.removeItem(OLD_STORAGE_KEY);
-  }
+  localStorage.removeItem("github_token");
 }
