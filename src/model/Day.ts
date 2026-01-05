@@ -22,6 +22,13 @@ export class Day {
   }
 
   /**
+   * Get the date as days since the epoch.
+   */
+  epochDay() {
+    return toEpochDays(this.date);
+  }
+
+  /**
    * Do we have data about this day?
    *
    * The day doesn’t necessarily need to have any contributions; it just needs
@@ -119,6 +126,19 @@ export class Day {
     }
     repoDay.commitCount = count;
   }
+}
+
+// 1000 years before and after 1970.
+export const EPOCH_DAY_MIN = -365000;
+export const EPOCH_DAY_MAX = 365000;
+
+/**
+ * Converts a local time `Date` to days since the epoch.
+ */
+export function toEpochDays(input: Date) {
+  return Math.round(
+    Date.UTC(input.getFullYear(), input.getMonth(), input.getDate()) / 86400000,
+  );
 }
 
 /**

@@ -1,12 +1,14 @@
 import * as github from "../github/api.ts";
 import * as gql from "../github/gql.ts";
 import { Repository, RepositorySource } from "./Repository.ts";
-import { Day, RepositoryDay } from "./Day.ts";
+import {
+  Day,
+  EPOCH_DAY_MAX,
+  EPOCH_DAY_MIN,
+  RepositoryDay,
+  toEpochDays,
+} from "./Day.ts";
 import { ALL_ON, Filter } from "./Filter.ts";
-
-// 1000 years before and after 1970.
-const EPOCH_DAY_MIN = -365000;
-const EPOCH_DAY_MAX = 365000;
 
 /**
  * Represents a user’s contribution calendar over a date range.
@@ -112,7 +114,7 @@ export class Calendar {
   updateFromLocal(contributions: Record<string, number[]>) {
     let firstEpochDay = EPOCH_DAY_MIN, lastEpochDay = EPOCH_DAY_MAX;
     if (this.days[0]) {
-      firstEpochDay = toEpochDays(this.days[0].date);
+      firstEpochDay = this.days[0].epochDay();
       lastEpochDay = firstEpochDay + this.days.length - 1;
     }
 
@@ -237,7 +239,7 @@ export class Calendar {
 
     let firstEpochDay = requestedEpochDay;
     if (this.days.length != 0) {
-      firstEpochDay = toEpochDays(this.days[0].date);
+      firstEpochDay = this.days[0].epochDay();
     }
 
     // If this.days is empty the following block will handle it.
@@ -288,10 +290,10 @@ export class Calendar {
 
     const daysByEpochDay = new Map<number, Day>();
     for (const day of this.days) {
-      daysByEpochDay.set(toEpochDays(day.date), day);
+      daysByEpochDay.set(day.epochDay(), day);
     }
     for (const day of newDays) {
-      const i = toEpochDays(day.date);
+      const i = day.epochDay();
       const oldDay = daysByEpochDay.get(i);
       if (oldDay) {
         oldDay.contributionCount = day.contributionCount;
@@ -379,15 +381,6 @@ function parseDateTime(input: string) {
     .split(/\D+/)
     .map((n) => Number.parseInt(n, 10));
   return new Date(year, month - 1, ...rest);
-}
-
-/**
- * Converts a local time `Date` to days since the epoch.
- */
-function toEpochDays(input: Date) {
-  return Math.round(
-    Date.UTC(input.getFullYear(), input.getMonth(), input.getDate()) / 86400000,
-  );
 }
 
 /**
