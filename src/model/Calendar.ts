@@ -364,6 +364,29 @@ export class Calendar {
   }
 
   /**
+   * Convert `Day` to `this.days` index.
+   */
+  dayToIndex(day: Day): number {
+    const index = this.epochDayToIndex(day.epochDay());
+    if (index === undefined) {
+      throw new Error("Day object not in calendar");
+    }
+    return index;
+  }
+
+  /**
+   * Convert epoch day to `this.days` index.
+   */
+  epochDayToIndex(epochDay: number): number | undefined {
+    const reference = this.days[0]?.epochDay();
+    if (reference === undefined) {
+      return undefined;
+    } else {
+      return epochDay - reference;
+    }
+  }
+
+  /**
    * Yields weeks (7-day arrays) of Days, starting on Sunday.
    */
   *weeks() {

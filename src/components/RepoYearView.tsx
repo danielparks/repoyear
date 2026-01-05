@@ -26,27 +26,29 @@ export function RepoYearView({
   function handleDayClick(day: Day, event: React.MouseEvent) {
     if (event.shiftKey && anchorDay) {
       // Shift-click: extend selection from anchor to clicked day
-      const dayIndex = calendar.days.indexOf(day);
-      const anchorIndex = calendar.days.indexOf(anchorDay);
+      const dayIndex = calendar.dayToIndex(day);
+      const anchorIndex = calendar.dayToIndex(anchorDay);
       const start = Math.min(dayIndex, anchorIndex);
       const end = Math.max(dayIndex, anchorIndex);
+
       const newSelection = new Set(selectedDays);
       for (let i = start; i <= end; i++) {
         newSelection.add(calendar.days[i]);
       }
+
       setSelectedDays(newSelection);
     } else if (event.metaKey || event.ctrlKey) {
-      // Cmd/Ctrl-click: toggle the clicked day
+      // Command/Control-click: toggle the clicked day
       const newSelection = new Set(selectedDays);
-      if (newSelection.has(day)) {
-        newSelection.delete(day);
-      } else {
+      if (!newSelection.delete(day)) {
         newSelection.add(day);
       }
+
       setSelectedDays(newSelection);
       setAnchorDay(day);
     } else {
-      // Regular click: select only this day (or deselect if it's the only one selected)
+      // Regular click: select only this day (or deselect it if it's the only
+      // one selected).
       if (selectedDays.size === 1 && selectedDays.has(day)) {
         setSelectedDays(new Set());
         setAnchorDay(null);
