@@ -12,7 +12,7 @@ export interface Props {
  * Displays a calendar heat map, summary box, and repository list.
  *
  * This component manages the interactive state (highlight, filter, and selected
- * day) and can use data loaded by the client (via React Query) or data loaded
+ * days) and can use data loaded by the client (via React Query) or data loaded
  * server side and transmitted to the client as JSON.
  */
 export function RepoYearView({
@@ -20,10 +20,41 @@ export function RepoYearView({
 }: Props) {
   const [highlight, setHighlight] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>(() => new Filter());
-  const [selectedDay, setSelectedDay] = useState<Day | null>(null);
+  const [selectedDays, setSelectedDays] = useState<Set<Day>>(() => new Set());
+  const [anchorDay, setAnchorDay] = useState<Day | null>(null);
 
-  function handleDayClick(day: Day) {
-    setSelectedDay((current) => current === day ? null : day);
+  function handleDayClick(day: Day, event: React.MouseEvent) {
+    if (event.shiftKey && anchorDay) {
+      // Shift-click: extend selection from anchor to clicked day
+      const dayIndex = calendar.days.indexOf(day);
+      const anchorIndex = calendar.days.indexOf(anchorDay);
+      const start = Math.min(dayIndex, anchorIndex);
+      const end = Math.max(dayIndex, anchorIndex);
+      const newSelection = new Set(selectedDays);
+      for (let i = start; i <= end; i++) {
+        newSelection.add(calendar.days[i]);
+      }
+      setSelectedDays(newSelection);
+    } else if (event.metaKey || event.ctrlKey) {
+      // Cmd/Ctrl-click: toggle the clicked day
+      const newSelection = new Set(selectedDays);
+      if (newSelection.has(day)) {
+        newSelection.delete(day);
+      } else {
+        newSelection.add(day);
+      }
+      setSelectedDays(newSelection);
+      setAnchorDay(day);
+    } else {
+      // Regular click: select only this day (or deselect if it's the only one selected)
+      if (selectedDays.size === 1 && selectedDays.has(day)) {
+        setSelectedDays(new Set());
+        setAnchorDay(null);
+      } else {
+        setSelectedDays(new Set([day]));
+        setAnchorDay(day);
+      }
+    }
   }
 
   return (
@@ -32,14 +63,14 @@ export function RepoYearView({
         calendar={calendar}
         filter={filter}
         highlight={highlight}
-        selectedDay={selectedDay}
+        selectedDays={selectedDays}
         onDayClick={handleDayClick}
       />
       <div className="info-container">
         <SummaryBox
           calendar={calendar}
           filter={filter}
-          selectedDay={selectedDay}
+          selectedDays={selectedDays}
         />
         <RepositoryList
           calendar={calendar}

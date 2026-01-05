@@ -6,8 +6,8 @@ export interface CalendarHeatMapProps {
   filter?: Filter;
   highlight?: string | null;
   clickUrl?: string;
-  selectedDay?: Day | null;
-  onDayClick?: (day: Day) => void;
+  selectedDays?: Set<Day>;
+  onDayClick?: (day: Day, event: React.MouseEvent) => void;
 }
 
 /**
@@ -22,7 +22,7 @@ export function CalendarHeatMap(
     filter = new Filter(),
     highlight = null,
     clickUrl,
-    selectedDay = null,
+    selectedDays = new Set(),
     onDayClick,
   }: CalendarHeatMapProps,
 ) {
@@ -50,7 +50,7 @@ export function CalendarHeatMap(
                 filter={filter}
                 max={dayMax}
                 highlight={highlight}
-                selected={selectedDay === day}
+                selected={selectedDays.has(day)}
                 onClick={onDayClick}
               />
             ))}
@@ -67,7 +67,7 @@ export interface GraphDayProps {
   max: number;
   highlight?: string | null;
   selected?: boolean;
-  onClick?: (day: Day) => void;
+  onClick?: (day: Day, event: React.MouseEvent) => void;
 }
 
 /**
@@ -131,7 +131,7 @@ export function GraphDay(
   function handleClick(event: React.MouseEvent) {
     if (onClick) {
       event.stopPropagation();
-      onClick(day);
+      onClick(day, event);
     }
   }
 

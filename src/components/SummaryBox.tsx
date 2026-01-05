@@ -7,18 +7,24 @@ import { chunk, countNoun, pluralize, sum } from "../util.ts";
 export interface SummaryBoxProps {
   calendar: Calendar;
   filter: Filter;
-  selectedDay: Day | null;
+  selectedDays: Set<Day>;
 }
 
 /**
  * Displays either year summary or day details.
  *
- * When no day is selected, shows top 5 repositories with sparklines.
- * When a day is selected, shows details for that specific day.
+ * When no days are selected, shows top 5 repositories with sparklines.
+ * When one day is selected, shows details for that specific day.
+ * When multiple days are selected, shows summary across all selected days.
  */
-export function SummaryBox({ calendar, filter, selectedDay }: SummaryBoxProps) {
-  if (selectedDay) {
-    return <DaySummary day={selectedDay} filter={filter} />;
+export function SummaryBox(
+  { calendar, filter, selectedDays }: SummaryBoxProps,
+) {
+  if (selectedDays.size === 1) {
+    const day = [...selectedDays][0];
+    return <DaySummary day={day} filter={filter} />;
+  } else if (selectedDays.size > 1) {
+    return <MultiDaySummary days={selectedDays} filter={filter} />;
   } else {
     return <YearSummary calendar={calendar} filter={filter} />;
   }
@@ -29,6 +35,38 @@ const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
 });
+
+/**
+ * Shows summary statistics for multiple selected days.
+ */
+function MultiDaySummary({ days, filter }: { days: Set<Day>; filter: Filter }) {
+  const daysArray = [...days].sort((a, b) =>
+    a.date.getTime() - b.date.getTime()
+  );
+  const firstDate = daysArray[0].date;
+  const lastDate = daysArray[daysArray.length - 1].date;
+  const dateRange = `${DATE_FORMATTER.format(firstDate)} – ${
+    DATE_FORMATTER.format(lastDate)
+  }`;
+
+  const totalContributions = sum(daysArray, (day) => day.filteredCount(filter));
+  const totalIssues = sum(daysArray, (day) => day.issueCount(filter));
+  const totalPrs = sum(daysArray, (day) => day.prCount(filter));
+  const totalReviews = sum(daysArray, (day) => day.reviewCount(filter));
+
+  return (
+    <div className="summary-box">
+      <h2>{dateRange}</h2>
+      <p className="message">{countNoun(daysArray.length, "day")} selected</p>
+      <SummaryStats
+        contributions={totalContributions}
+        issues={totalIssues}
+        prs={totalPrs}
+        reviews={totalReviews}
+      />
+    </div>
+  );
+}
 
 /**
  * Shows year-level statistics and top repositories.
