@@ -191,7 +191,7 @@ export class Calendar {
   /**
    * Returns all repositories sorted by contribution count (highest first).
    */
-  mostUsedRepos(filter = ALL_ON) {
+  mostUsedRepos(filter = ALL_ON): Repository[] {
     const repos = this.filteredRepos(filter);
     repos.sort((a, b) => b.contributions - a.contributions);
     return repos;
@@ -200,7 +200,7 @@ export class Calendar {
   /**
    * Get `Repository`s that are enabled by `filter`.
    */
-  filteredRepos(filter: Filter) {
+  filteredRepos(filter: Filter): Repository[] {
     return [...this.repositories.values()].filter((repo) =>
       filter.isOn(repo.url)
     );

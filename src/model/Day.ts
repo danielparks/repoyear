@@ -1,5 +1,6 @@
 import { Repository } from "./Repository.ts";
 import { ALL_ON, Filter } from "./Filter.ts";
+import { sum } from "../util.ts";
 
 /**
  * Represents a single day in the contribution calendar.
@@ -44,10 +45,7 @@ export class Day {
    * Sums up the contributions we know about from specific repositories.
    */
   knownContributionCount() {
-    return [...this.repositories.values()].reduce(
-      (total, repoDay) => total + repoDay.count(),
-      0,
-    );
+    return sum(this.repositories.values(), (repoDay) => repoDay.count());
   }
 
   /**
@@ -60,7 +58,7 @@ export class Day {
   /**
    * Get `RepositoryDay`s that are enabled by `filter`.
    */
-  filteredRepos(filter: Filter) {
+  filteredRepos(filter: Filter): RepositoryDay[] {
     return [...this.repositories.values()].filter((repoDay) =>
       filter.isOn(repoDay.url())
     );
@@ -71,41 +69,30 @@ export class Day {
    *
    * This includes unknown contributions unconditionally.
    */
-  filteredCount(filter: Filter) {
-    return this.filteredRepos(filter).reduce(
-      (total, repoDay) => total + repoDay.count(),
-      0,
-    ) + Math.max(this.unknownCount(), 0);
+  filteredCount(filter: Filter): number {
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.count()) +
+      Math.max(this.unknownCount(), 0);
   }
 
   /**
    * Get number of issues opened on this repository on this day.
    */
-  issueCount(filter: Filter = ALL_ON) {
-    return this.filteredRepos(filter).reduce(
-      (total, repoDay) => total + repoDay.issues.size,
-      0,
-    );
+  issueCount(filter: Filter = ALL_ON): number {
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.issues.size);
   }
 
   /**
    * Get number of PRs opened on this repository on this day.
    */
   prCount(filter: Filter = ALL_ON) {
-    return this.filteredRepos(filter).reduce(
-      (total, repoDay) => total + repoDay.prs.size,
-      0,
-    );
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.prs.size);
   }
 
   /**
    * Get number of PR reviews opened on this repository on this day.
    */
   reviewCount(filter: Filter = ALL_ON) {
-    return this.filteredRepos(filter).reduce(
-      (total, repoDay) => total + repoDay.reviews.size,
-      0,
-    );
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.reviews.size);
   }
 
   /**
