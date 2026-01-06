@@ -16,7 +16,7 @@ export function chunk<T>(
   chunkCount: number,
 ): T[][] {
   const input = Array.from(items);
-  const chunkLength = input.length / chunkCount;
+  const chunkLength = Math.max(1, input.length / chunkCount);
   const chunks = new Array<T[]>();
   for (let i = 0; Math.round(i) < input.length; i += chunkLength) {
     chunks.push(input.slice(Math.round(i), Math.round(i + chunkLength)));

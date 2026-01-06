@@ -39,6 +39,10 @@ Deno.test("chunk(sequence(5), 5) returns even chunk sizes", () => {
   assertEquals(strify(chunk(sequence(5), 5)), ["1", "2", "3", "4", "5"]);
 });
 
+Deno.test("chunk(sequence(5), 10) returns only 5 chunks", () => {
+  assertEquals(strify(chunk(sequence(5), 10)), ["1", "2", "3", "4", "5"]);
+});
+
 Deno.test("chunk(sequence(1009), n) returns even chunk sizes", () => {
   const max = 1009;
   const input = sequence(max);

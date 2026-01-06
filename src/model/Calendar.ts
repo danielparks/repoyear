@@ -350,17 +350,17 @@ export class Calendar {
   }
 
   /**
-   * Get the first day in the calendar with data.
+   * Get the days array with days with no data trimmed from both ends.
    */
-  firstDay(): Day | undefined {
-    return this.days.find((day) => day.hasData());
-  }
-
-  /**
-   * Get the last day in the calendar with data.
-   */
-  lastDay(): Day | undefined {
-    return this.days.findLast((day) => day.hasData());
+  trimmedDays(): Day[] {
+    const first = this.days.findIndex((day) => day.hasData());
+    if (first == -1) {
+      return [];
+    }
+    return this.days.slice(
+      first,
+      this.days.findLastIndex((day) => day.hasData()),
+    );
   }
 
   /**
