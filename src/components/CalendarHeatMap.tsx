@@ -8,6 +8,8 @@ export interface CalendarHeatMapProps {
   clickUrl?: string;
   selectedDays?: Set<Day>;
   onDayClick?: (day: Day, event: React.MouseEvent) => void;
+  onDayMouseDown?: (day: Day, event: React.MouseEvent) => void;
+  onDayMouseEnter?: (day: Day, event: React.MouseEvent) => void;
 }
 
 /**
@@ -24,6 +26,8 @@ export function CalendarHeatMap(
     clickUrl,
     selectedDays = new Set(),
     onDayClick,
+    onDayMouseDown,
+    onDayMouseEnter,
   }: CalendarHeatMapProps,
 ) {
   const dayMax = calendar.maxContributions();
@@ -52,6 +56,8 @@ export function CalendarHeatMap(
                 highlight={highlight}
                 selected={selectedDays.has(day)}
                 onClick={onDayClick}
+                onMouseDown={onDayMouseDown}
+                onMouseEnter={onDayMouseEnter}
               />
             ))}
           </div>
@@ -68,6 +74,8 @@ export interface GraphDayProps {
   highlight?: string | null;
   selected?: boolean;
   onClick?: (day: Day, event: React.MouseEvent) => void;
+  onMouseDown?: (day: Day, event: React.MouseEvent) => void;
+  onMouseEnter?: (day: Day, event: React.MouseEvent) => void;
 }
 
 /**
@@ -80,7 +88,16 @@ export interface GraphDayProps {
  * Can be selected via click.
  */
 export function GraphDay(
-  { day, filter, max, highlight, selected = false, onClick }: GraphDayProps,
+  {
+    day,
+    filter,
+    max,
+    highlight,
+    selected = false,
+    onClick,
+    onMouseDown,
+    onMouseEnter,
+  }: GraphDayProps,
 ) {
   const unknownCount = day.unknownCount(); // Not filtered.
   if (day.contributionCount === null) {
@@ -135,10 +152,27 @@ export function GraphDay(
     }
   }
 
+  function handleMouseDown(event: React.MouseEvent) {
+    if (onMouseDown) {
+      event.stopPropagation();
+      event.preventDefault();
+      onMouseDown(day, event);
+    }
+  }
+
+  function handleMouseEnter(event: React.MouseEvent) {
+    if (onMouseEnter) {
+      event.stopPropagation();
+      onMouseEnter(day, event);
+    }
+  }
+
   return (
     <div
       className={className.join(" ")}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Day, Filter } from "../model/index.ts";
 import { CalendarHeatMap } from "./CalendarHeatMap.tsx";
 import { RepositoryList } from "./RepositoryList.tsx";
@@ -22,8 +22,20 @@ export function RepoYearView({
   const [filter, setFilter] = useState<Filter>(() => new Filter());
   const [selectedDays, setSelectedDays] = useState<Set<Day>>(() => new Set());
   const [anchorDay, setAnchorDay] = useState<Day | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartDay, setDragStartDay] = useState<Day | null>(null);
+  const [dragModifiers, setDragModifiers] = useState({
+    ctrl: false,
+    shift: false,
+  });
+  const [hasDragged, setHasDragged] = useState(false);
 
   function handleDayClick(day: Day, event: React.MouseEvent) {
+    // Don't handle click if we just completed a drag
+    if (hasDragged) {
+      setHasDragged(false);
+      return;
+    }
     if (event.shiftKey && anchorDay) {
       // Shift-click: extend selection from anchor to clicked day
       const dayIndex = calendar.dayToIndex(day);
@@ -59,6 +71,74 @@ export function RepoYearView({
     }
   }
 
+  function handleDayMouseDown(day: Day, event: React.MouseEvent) {
+    setIsDragging(true);
+    setDragStartDay(day);
+    setDragModifiers({
+      ctrl: event.metaKey || event.ctrlKey,
+      shift: event.shiftKey,
+    });
+  }
+
+  function handleDayMouseEnter(day: Day) {
+    if (!isDragging || !dragStartDay) return;
+
+    // Mark that we've dragged to a different day
+    if (day !== dragStartDay) {
+      setHasDragged(true);
+    }
+
+    const startIndex = calendar.dayToIndex(dragStartDay);
+    const currentIndex = calendar.dayToIndex(day);
+    const start = Math.min(startIndex, currentIndex);
+    const end = Math.max(startIndex, currentIndex);
+
+    const rangeSelection = new Set<Day>();
+    for (let i = start; i <= end; i++) {
+      rangeSelection.add(calendar.days[i]);
+    }
+
+    if (dragModifiers.shift && anchorDay) {
+      // Shift-drag: extend from anchor to include drag range
+      const anchorIndex = calendar.dayToIndex(anchorDay);
+      const rangeStart = Math.min(anchorIndex, start);
+      const rangeEnd = Math.max(anchorIndex, end);
+
+      const newSelection = new Set(selectedDays);
+      for (let i = rangeStart; i <= rangeEnd; i++) {
+        newSelection.add(calendar.days[i]);
+      }
+      setSelectedDays(newSelection);
+    } else if (dragModifiers.ctrl) {
+      // Ctrl-drag: add range to existing selection
+      const newSelection = new Set(selectedDays);
+      for (const rangeDay of rangeSelection) {
+        newSelection.add(rangeDay);
+      }
+      setSelectedDays(newSelection);
+    } else {
+      // Regular drag: select only the range
+      setSelectedDays(rangeSelection);
+    }
+  }
+
+  function handleMouseUp() {
+    if (isDragging && dragStartDay && hasDragged) {
+      setAnchorDay(dragStartDay);
+    }
+    setIsDragging(false);
+    setDragStartDay(null);
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      globalThis.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        globalThis.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   return (
     <>
       <CalendarHeatMap
@@ -67,6 +147,8 @@ export function RepoYearView({
         highlight={highlight}
         selectedDays={selectedDays}
         onDayClick={handleDayClick}
+        onDayMouseDown={handleDayMouseDown}
+        onDayMouseEnter={handleDayMouseEnter}
       />
       <div className="info-container">
         <SummaryBox
