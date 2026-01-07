@@ -8,6 +8,13 @@ export interface Props {
   calendar: Calendar;
 }
 
+interface DragInfo {
+  originalSelection: Set<Day>;
+  startDay: Day;
+  ctrl: boolean;
+  shift: boolean;
+}
+
 /**
  * Displays a calendar heat map, summary box, and repository list.
  *
@@ -22,13 +29,20 @@ export function RepoYearView({
   const [filter, setFilter] = useState<Filter>(() => new Filter());
   const [selectedDays, setSelectedDays] = useState<Set<Day>>(() => new Set());
   const [anchorDay, setAnchorDay] = useState<Day | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartDay, setDragStartDay] = useState<Day | null>(null);
-  const [dragModifiers, setDragModifiers] = useState({
-    ctrl: false,
-    shift: false,
-  });
+  const [currentDrag, setCurrentDrag] = useState<DragInfo | null>(null);
   const [hasDragged, setHasDragged] = useState(false);
+
+  function makeDaySet(...days: Day[]): Set<Day> {
+    const indices = days.map((day) => calendar.dayToIndex(day));
+    const start = Math.min(...indices);
+    const end = Math.max(...indices);
+
+    const newSet = new Set<Day>();
+    for (let i = start; i <= end; i++) {
+      newSet.add(calendar.days[i]);
+    }
+    return newSet;
+  }
 
   function handleDayClick(day: Day, event: React.MouseEvent) {
     // Don't handle click if we just completed a drag
@@ -36,19 +50,10 @@ export function RepoYearView({
       setHasDragged(false);
       return;
     }
+
     if (event.shiftKey && anchorDay) {
       // Shift-click: extend selection from anchor to clicked day
-      const dayIndex = calendar.dayToIndex(day);
-      const anchorIndex = calendar.dayToIndex(anchorDay);
-      const start = Math.min(dayIndex, anchorIndex);
-      const end = Math.max(dayIndex, anchorIndex);
-
-      const newSelection = new Set(selectedDays);
-      for (let i = start; i <= end; i++) {
-        newSelection.add(calendar.days[i]);
-      }
-
-      setSelectedDays(newSelection);
+      setSelectedDays(makeDaySet(day, anchorDay).union(selectedDays));
     } else if (event.metaKey || event.ctrlKey) {
       // Command/Control-click: toggle the clicked day
       const newSelection = new Set(selectedDays);
@@ -72,72 +77,58 @@ export function RepoYearView({
   }
 
   function handleDayMouseDown(day: Day, event: React.MouseEvent) {
-    setIsDragging(true);
-    setDragStartDay(day);
-    setDragModifiers({
+    setCurrentDrag({
+      originalSelection: selectedDays,
+      startDay: day,
       ctrl: event.metaKey || event.ctrlKey,
       shift: event.shiftKey,
     });
+    setHasDragged(false);
   }
 
   function handleDayMouseEnter(day: Day) {
-    if (!isDragging || !dragStartDay) return;
+    if (!currentDrag) {
+      return;
+    }
 
     // Mark that we've dragged to a different day
-    if (day !== dragStartDay) {
+    if (day !== currentDrag.startDay) {
       setHasDragged(true);
     }
 
-    const startIndex = calendar.dayToIndex(dragStartDay);
-    const currentIndex = calendar.dayToIndex(day);
-    const start = Math.min(startIndex, currentIndex);
-    const end = Math.max(startIndex, currentIndex);
-
-    const rangeSelection = new Set<Day>();
-    for (let i = start; i <= end; i++) {
-      rangeSelection.add(calendar.days[i]);
-    }
-
-    if (dragModifiers.shift && anchorDay) {
+    if (currentDrag.shift && anchorDay) {
       // Shift-drag: extend from anchor to include drag range
-      const anchorIndex = calendar.dayToIndex(anchorDay);
-      const rangeStart = Math.min(anchorIndex, start);
-      const rangeEnd = Math.max(anchorIndex, end);
-
-      const newSelection = new Set(selectedDays);
-      for (let i = rangeStart; i <= rangeEnd; i++) {
-        newSelection.add(calendar.days[i]);
-      }
-      setSelectedDays(newSelection);
-    } else if (dragModifiers.ctrl) {
+      setSelectedDays(
+        makeDaySet(day, currentDrag.startDay, anchorDay).union(
+          currentDrag.originalSelection,
+        ),
+      );
+    } else if (currentDrag.ctrl) {
       // Ctrl-drag: add range to existing selection
-      const newSelection = new Set(selectedDays);
-      for (const rangeDay of rangeSelection) {
-        newSelection.add(rangeDay);
-      }
-      setSelectedDays(newSelection);
+      setSelectedDays(
+        makeDaySet(day, currentDrag.startDay).union(
+          currentDrag.originalSelection,
+        ),
+      );
     } else {
       // Regular drag: select only the range
-      setSelectedDays(rangeSelection);
+      setSelectedDays(makeDaySet(day, currentDrag.startDay));
     }
   }
 
   function handleMouseUp() {
-    if (isDragging && dragStartDay && hasDragged) {
-      setAnchorDay(dragStartDay);
+    if (currentDrag && hasDragged) {
+      setAnchorDay(currentDrag.startDay);
     }
-    setIsDragging(false);
-    setDragStartDay(null);
+    setCurrentDrag(null);
   }
 
   useEffect(() => {
-    if (isDragging) {
-      globalThis.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        globalThis.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging]);
+    globalThis.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      globalThis.removeEventListener("mouseup", handleMouseUp);
+    };
+  });
 
   return (
     <>
