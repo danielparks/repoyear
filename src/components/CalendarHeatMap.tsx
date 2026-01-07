@@ -120,7 +120,7 @@ export function GraphDay(
   const count = day.filteredCount(filter);
   let lightness = 100;
   if (count) {
-    lightness = 59 * (1 - count / max) + 40;
+    lightness = 39 * (1 - Math.log(count) / Math.log(max)) ** 0.6 + 60;
   }
 
   const subdivisions = day.filteredRepos(filter).map((repoDay) => ({
