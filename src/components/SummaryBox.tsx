@@ -408,8 +408,9 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
       viewBox={`0 0 ${width} ${height + 1}`}
       preserveAspectRatio="none"
     >
-      {lines.map((line) => (
+      {lines.map((line, i) => (
         <polyline
+          key={i.toString()}
           points={lineToPoints(line)}
           fill="none"
           stroke={color}
