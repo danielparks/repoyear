@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - You can now select multiple days to get a summary of those days.
 - Lightness function is now logarithmic.
+- Other users’ contributions can now be displayed with `?user=username`.
 
 ## 0.7.0 (2026-01-04)
 

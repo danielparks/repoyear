@@ -4,9 +4,8 @@ Displays a calendar heat map of GitHub contributions ([demo], [static demo]).
 
 [![](images/screenshot.png)][demo]
 
-If the request is made to the frontend base URL, it will show the contributions
-for the user currently logged into GitHub. If there is a username after the base
-URL, it will show the contributions for that GitHub user.
+By default, RepoYear shows the contributions for the user currently logged into
+GitHub. Another user’s contributions can be shown by passing `?user=username`.
 
 ## Modes
 

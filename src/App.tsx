@@ -17,15 +17,15 @@ import { useTokenManager } from "./hooks/useTokenManager.ts";
 
 export default function App(
   {
-    username,
-    authCode: initialAuthCode,
-    authError: initialAuthError,
+    username = null,
+    authCode: initialAuthCode = null,
+    authError: initialAuthError = null,
     frontendUrl,
     githubClientId,
   }: {
-    username: string | null;
-    authCode: string | null;
-    authError: string | null;
+    username?: string | null;
+    authCode?: string | null;
+    authError?: string | null;
     frontendUrl: string;
     githubClientId: string;
   },

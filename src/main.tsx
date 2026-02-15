@@ -8,28 +8,28 @@ import App from "./App.tsx";
 function parseUrlParams() {
   const params = new URLSearchParams(location.search);
 
-  const code = params.get("code");
+  // Example error URL from GitHub: http://localhost:5173/?error=access_denied&error_description=The+user+has+denied+your+application+access.&error_uri=https%3A%2F%2Fdocs.github.com%2Fapps%2Fmanaging-oauth-apps%2Ftroubleshooting-authorization-request-errors%2F%23access-denied
+  const authCode = params.get("code");
   const authError = params.get("error_description");
-  const state = params.get("state");
-  let user = params.get("user");
 
   // Restore username from OAuth state parameter if not already in the URL.
-  if (!user && state) {
-    user = state;
-  }
+  const username = params.get("state") ?? params.get("user");
 
   // Clean the URL: keep only ?user=... if present.
   if (params.has("code") || params.has("error") || params.has("state")) {
     const cleanParams = new URLSearchParams();
-    if (user) {
-      cleanParams.set("user", user);
+    if (username) {
+      cleanParams.set("user", username);
     }
     const clean = cleanParams.toString();
-    const cleanUrl = location.pathname + (clean ? `?${clean}` : "");
-    history.replaceState({}, document.title, cleanUrl);
+    history.replaceState(
+      {},
+      document.title,
+      location.pathname + (clean ? `?${clean}` : ""),
+    );
   }
 
-  return { username: user, authCode: code, authError: authError };
+  return { username, authCode, authError };
 }
 
 function Router() {
