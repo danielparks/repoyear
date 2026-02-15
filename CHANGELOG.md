@@ -2,9 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## main branch
-
-### Features and improvements
+## 0.8.0 (2026-02-14)
 
 - You can now select multiple days to get a summary of those days.
 - Lightness function is now logarithmic.

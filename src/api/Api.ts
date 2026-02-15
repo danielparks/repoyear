@@ -75,7 +75,7 @@ export interface ApiConfig {
        * Pulled from info.version in the OpenAPI schema. Sent in the
        * `api-version` header on all requests.
        */
-      apiVersion = "0.7.0";
+      apiVersion = "0.8.0";
 
       constructor({ host = "", baseParams = {}, token }: ApiConfig = {}) {
         this.host = host;
