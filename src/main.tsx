@@ -1,10 +1,38 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import QueryCacheProvider from "./components/QueryCache.tsx";
 import App from "./App.tsx";
 
-export function Router() {
+/** Parse all URL parameters and clean the URL. */
+function parseUrlParams() {
+  const params = new URLSearchParams(location.search);
+
+  const code = params.get("code");
+  const authError = params.get("error_description");
+  const state = params.get("state");
+  let user = params.get("user");
+
+  // Restore username from OAuth state parameter if not already in the URL.
+  if (!user && state) {
+    user = state;
+  }
+
+  // Clean the URL: keep only ?user=... if present.
+  if (params.has("code") || params.has("error") || params.has("state")) {
+    const cleanParams = new URLSearchParams();
+    if (user) {
+      cleanParams.set("user", user);
+    }
+    const clean = cleanParams.toString();
+    const cleanUrl = location.pathname + (clean ? `?${clean}` : "");
+    history.replaceState({}, document.title, cleanUrl);
+  }
+
+  return { username: user, authCode: code, authError: authError };
+}
+
+function Router() {
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
   if (!frontendUrl) {
     throw new Error(
@@ -21,27 +49,13 @@ export function Router() {
     );
   }
 
-  function getUsernameParameter() {
-    const match = location.pathname.match(/^\/([^/]+)$/);
-    return match ? match[1] : null;
-  }
-  const [username, setUsername] = useState<string | null>(getUsernameParameter);
-
-  useEffect(() => {
-    // Listen for navigation events (back/forward buttons)
-    const handlePopState = () => {
-      setUsername(getUsernameParameter());
-    };
-
-    addEventListener("popstate", handlePopState);
-    return () => {
-      removeEventListener("popstate", handlePopState);
-    };
-  }, []);
+  const { username, authCode, authError } = parseUrlParams();
 
   return (
     <App
       username={username}
+      authCode={authCode}
+      authError={authError}
       frontendUrl={frontendUrl}
       githubClientId={githubClientId}
     />

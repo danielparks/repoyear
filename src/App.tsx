@@ -15,37 +15,25 @@ import { getAppVersion } from "./version.ts";
 import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
 
-function getAuthCode() {
-  const code = new URLSearchParams(location.search).get("code");
-  if (code) {
-    // Remove code parameter.
-    history.replaceState({}, document.title, location.pathname);
-  }
-  return code;
-}
-
-function getAuthError() {
-  // Example error URL from GitHub: http://localhost:5173/?error=access_denied&error_description=The+user+has+denied+your+application+access.&error_uri=https%3A%2F%2Fdocs.github.com%2Fapps%2Fmanaging-oauth-apps%2Ftroubleshooting-authorization-request-errors%2F%23access-denied
-  const message = new URLSearchParams(location.search).get("error_description");
-  if (message) {
-    // Remove error parameters.
-    history.replaceState({}, document.title, location.pathname);
-    return message;
-  }
-  return null;
-}
-
 export default function App(
-  { username, frontendUrl, githubClientId }: {
+  {
+    username,
+    authCode: initialAuthCode,
+    authError: initialAuthError,
+    frontendUrl,
+    githubClientId,
+  }: {
     username: string | null;
+    authCode: string | null;
+    authError: string | null;
     frontendUrl: string;
     githubClientId: string;
   },
 ) {
   const { tokenData, clearTokenData, exchangeAccessToken, refreshAccessToken } =
     useTokenManager();
-  const [authError, setAuthError] = useState<string | null>(getAuthError);
-  const [authCode, setAuthCode] = useState<string | null>(getAuthCode);
+  const [authError, setAuthError] = useState<string | null>(initialAuthError);
+  const [authCode, setAuthCode] = useState<string | null>(initialAuthCode);
   const [localContributions, setLocalContributions] = useState<
     Record<string, number[]> | null
   >(null);
@@ -221,6 +209,9 @@ export default function App(
       url.searchParams.set("client_id", githubClientId);
       url.searchParams.set("redirect_uri", frontendUrl);
       url.searchParams.set("scope", "");
+      if (username) {
+        url.searchParams.set("state", username);
+      }
       loginUrl = url.href;
     }
 

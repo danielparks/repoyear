@@ -85,7 +85,13 @@ function renderApp() {
 
   render(
     <QueryClientProvider client={queryClient}>
-      <App username={null} frontendUrl="/" githubClientId="CLIENT_ID" />
+      <App
+        username={null}
+        authCode={null}
+        authError={null}
+        frontendUrl="/"
+        githubClientId="CLIENT_ID"
+      />
     </QueryClientProvider>,
   );
 }
