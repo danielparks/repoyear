@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.8.1 (2026-03-07)
+
 - Bugfix: if local contributions were displayed with GitHub contributions some
   high activity days would appear blank.
 
