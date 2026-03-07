@@ -342,11 +342,7 @@ export class Calendar {
    * Get the maximum number of contributions on one day.
    */
   maxContributions() {
-    return Math.max(
-      ...this.days
-        .filter((day) => day.contributionCount !== null)
-        .map((day) => day.contributionCount as number),
-    );
+    return Math.max(...this.days.map((day) => day.filteredCount(ALL_ON)));
   }
 
   /**

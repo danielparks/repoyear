@@ -120,7 +120,13 @@ export function GraphDay(
   const count = day.filteredCount(filter);
   let lightness = 100;
   if (count) {
-    lightness = 39 * (1 - Math.log(count) / Math.log(max)) ** 0.6 + 60;
+    // If count > max, then log(count)/log(max) returns NaN. Avoid that just in
+    // case we calculated the max incorrectly.
+    lightness = 39 * Math.max(1 - Math.log(count) / Math.log(max), 0) ** 0.6 +
+      60;
+    if (count > max) {
+      console.warn(`${day.date}: count (${count}) > max (${max})`);
+    }
   }
 
   const subdivisions = day.filteredRepos(filter).map((repoDay) => ({
