@@ -1,5 +1,9 @@
 import type { PropsWithChildren } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import {
+  ErrorBoundary,
+  type FallbackProps,
+  getErrorMessage,
+} from "react-error-boundary";
 
 export default function MyErrorBoundary({ children }: PropsWithChildren) {
   return (
@@ -9,11 +13,11 @@ export default function MyErrorBoundary({ children }: PropsWithChildren) {
   );
 }
 
-function Fallback({ error }: { error: { message: string } }) {
+function Fallback({ error }: FallbackProps) {
   return (
     <main role="alert">
       <h2>Something went wrong</h2>
-      <pre>{error.message}</pre>
+      <pre>{getErrorMessage(error)}</pre>
     </main>
   );
 }
