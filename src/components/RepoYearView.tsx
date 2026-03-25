@@ -6,6 +6,7 @@ import { SummaryBox } from "./SummaryBox.tsx";
 
 export interface Props {
   calendar: Calendar;
+  loading?: boolean;
 }
 
 interface DragInfo {
@@ -24,6 +25,7 @@ interface DragInfo {
  */
 export function RepoYearView({
   calendar,
+  loading = false,
 }: Props) {
   const [highlight, setHighlight] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>(() => new Filter());
@@ -136,6 +138,7 @@ export function RepoYearView({
         calendar={calendar}
         filter={filter}
         highlight={highlight}
+        loading={loading}
         selectedDays={selectedDays}
         onDayClick={handleDayClick}
         onDayMouseDown={handleDayMouseDown}

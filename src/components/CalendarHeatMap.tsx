@@ -5,6 +5,7 @@ export interface CalendarHeatMapProps {
   calendar: Calendar;
   filter?: Filter;
   highlight?: string | null;
+  loading?: boolean;
   clickUrl?: string;
   selectedDays?: Set<Day>;
   onDayClick?: (day: Day, event: React.MouseEvent) => void;
@@ -23,6 +24,7 @@ export function CalendarHeatMap(
     calendar,
     filter = new Filter(),
     highlight = null,
+    loading = false,
     clickUrl,
     selectedDays = new Set(),
     onDayClick,
@@ -40,7 +42,7 @@ export function CalendarHeatMap(
 
   return (
     <div
-      className="calendar-heat-map"
+      className={`calendar-heat-map ${loading ? "loading" : ""}`}
       onClick={handleClick}
       style={clickUrl ? { cursor: "pointer" } : undefined}
     >

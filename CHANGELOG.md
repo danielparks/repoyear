@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## main branch
+
+- No longer blurs days with contributions from unknown sources after data is
+  fully loaded. This makes days with contributions to private repositories
+  easier to understand.
+
 ## 0.8.1 (2026-03-07)
 
 - Bugfix: if local contributions were displayed with GitHub contributions some

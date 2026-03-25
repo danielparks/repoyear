@@ -274,7 +274,14 @@ export default function App(
       </header>
       {errorMessage && <div className="error-message">{errorMessage}</div>}
       {calendar
-        ? <RepoYearView calendar={calendar} />
+        ? (
+          <RepoYearView
+            calendar={calendar}
+            // If loadingPercent == 0, then we might be displaying complete
+            // data (the display doesn’t update until new data is loaded).
+            loading={loading && loadingPercent > 0}
+          />
+        )
         : <div className="info-message">No contributions data</div>}
       <Footer
         version={getAppVersion()}

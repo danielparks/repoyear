@@ -27,11 +27,11 @@ body.compact .calendar-heat-map {
   min-height: 15px;
 }
 
-.calendar-heat-map > .weeks > .week > div.unknown > ol {
+.calendar-heat-map.loading > .weeks > .week > div.unknown > ol {
   filter: blur(1px);
 }
 
-.calendar-heat-map > .weeks > .week > div.unknown > ol {
+.calendar-heat-map.loading > .weeks > .week > div.unknown > ol {
   border: 1px solid #fff;
 }
 
