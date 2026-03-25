@@ -32,6 +32,8 @@ function parseUrlParams() {
   return { username, authCode, authError };
 }
 
+const { username, authCode, authError } = parseUrlParams();
+
 function Router() {
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
   if (!frontendUrl) {
@@ -48,8 +50,6 @@ function Router() {
         " your .env file.",
     );
   }
-
-  const { username, authCode, authError } = parseUrlParams();
 
   return (
     <App
