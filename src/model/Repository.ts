@@ -46,6 +46,9 @@ export class Repository {
    * string for this repository.
    */
   color(lightness = 55, chroma = 0.2) {
+    if (this.url === "unknown") {
+      return `oklch(${lightness}% 0 0deg)`;
+    }
     return `oklch(${lightness}% ${chroma} ${this.hue}deg)`;
   }
 }

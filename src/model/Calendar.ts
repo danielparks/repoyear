@@ -164,15 +164,33 @@ export class Calendar {
    * Calculate the total number of contributions for each repository.
    */
   updateRepoCounts() {
+    let unknownTotal = 0;
+
     for (const repo of this.repositories.values()) {
       repo.contributions = 0;
     }
 
     this.days.forEach((day) => {
+      let dayTotal = 0;
       day.repositories.forEach((repoDay) => {
-        repoDay.repository.contributions += repoDay.count();
+        if (repoDay.repository.url != "unknown") {
+          const count = repoDay.count();
+          dayTotal += count;
+          repoDay.repository.contributions += count;
+        }
       });
+
+      const unknownCount = (day.contributionCount || 0) - dayTotal;
+      if (unknownCount > 0) {
+        unknownTotal += unknownCount;
+        day.setRepoCommits(this.internRepository("unknown"), unknownCount);
+      }
     });
+
+    const unknownRepo = this.repositories.get("unknown");
+    if (unknownRepo) {
+      unknownRepo.contributions = unknownTotal;
+    }
   }
 
   /**

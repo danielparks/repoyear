@@ -261,11 +261,6 @@ function DaySummary({ day, filter }: { day: Day; filter: Filter }) {
           </ol>
         </>
       )}
-      {day.unknownCount() > 0 && (
-        <p className="message unknown-contributions">
-          {countNoun(day.unknownCount(), "contribution")} from unknown sources
-        </p>
-      )}
     </div>
   );
 }

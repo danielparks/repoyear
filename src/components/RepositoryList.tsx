@@ -72,8 +72,11 @@ export function RepositoryName({ repo }: { repo: Repository }) {
   } else if (repo.url.startsWith("local:")) {
     const name = repo.url.slice("local:".length);
     return <span style={{ color: repo.color() }}>{name}</span>;
-  } else {
+  } else if (repo.url.startsWith("http:") || repo.url.startsWith("https:")) {
     // I don’t think there’s any way to get here.
     return <a style={{ color: repo.color() }} href={repo.url}>{repo.url}</a>;
+  } else {
+    // could be "unknown"
+    return <span style={{ color: repo.color() }}>{repo.url}</span>;
   }
 }
