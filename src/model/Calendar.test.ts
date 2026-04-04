@@ -28,47 +28,45 @@ Deno.test("Calendar should calculate max contributions", () => {
     new Day(new Date(2025, 0, 3), 3),
   ];
   const calendar = new Calendar("testuser", days);
+  calendar.updateRepoCounts();
   assertEquals(calendar.maxContributions(), 10);
 });
 
 Deno.test("Calendar should sort repos by contribution count", () => {
   const calendar = new Calendar("testuser");
+  const date = new Date(2025, 0, 1);
+  calendar.repoDay(date, "repo1").setCommits(5);
+  calendar.repoDay(date, "repo2").setCommits(10);
+  calendar.repoDay(date, "repo3").setCommits(3);
+  calendar.updateRepoCounts();
 
-  const repo1 = new Repository("https://github.com/test/repo1");
-  repo1.contributions = 5;
-  calendar.repositories.set(repo1.url, repo1);
-
-  const repo2 = new Repository("https://github.com/test/repo2");
-  repo2.contributions = 10;
-  calendar.repositories.set(repo2.url, repo2);
-
-  const repo3 = new Repository("https://github.com/test/repo3");
-  repo3.contributions = 3;
-  calendar.repositories.set(repo3.url, repo3);
-
-  const sorted = calendar.mostUsedRepos().map((repo) => repo.url);
+  const sorted = calendar.mostUsedRepos().map((repo) =>
+    `${repo.url} ${repo.contributions}`
+  );
   assertEquals(sorted, [
-    "https://github.com/test/repo2",
-    "https://github.com/test/repo1",
-    "https://github.com/test/repo3",
+    "repo2 10",
+    "repo1 5",
+    "repo3 3",
   ]);
 });
 
 Deno.test("Calendar should assign distinct hues to repos by usage", () => {
   const calendar = new Calendar("testuser");
+  const date = new Date(2025, 0, 1);
 
   const repo1 = new Repository("https://github.com/test/repo1");
-  repo1.contributions = 10;
   calendar.repositories.set(repo1.url, repo1);
+  calendar.repoDay(date, repo1.url).setCommits(10);
 
   const repo2 = new Repository("https://github.com/test/repo2");
-  repo2.contributions = 5;
   calendar.repositories.set(repo2.url, repo2);
+  calendar.repoDay(date, repo2.url).setCommits(5);
 
   const repo3 = new Repository("https://github.com/test/repo3");
-  repo3.contributions = 3;
   calendar.repositories.set(repo3.url, repo3);
+  calendar.repoDay(date, repo3.url).setCommits(3);
 
+  calendar.updateRepoCounts();
   calendar.updateRepoColors();
 
   assertEquals(repo1.hue, 285);
