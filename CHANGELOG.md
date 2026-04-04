@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - No longer blurs days with contributions from unknown sources after data is
   fully loaded. This makes days with contributions to private repositories
   easier to understand.
+- Reduced max lightness from 99% to 96%, since 99% looked white.
 
 ## 0.8.1 (2026-03-07)
 
