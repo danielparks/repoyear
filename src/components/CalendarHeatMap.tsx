@@ -101,14 +101,11 @@ export function GraphDay(
     onMouseEnter,
   }: GraphDayProps,
 ) {
-  const unknownCount = day.unknownCount(); // Not filtered.
   if (day.contributionCount === null) {
-    // Day wasn't in calendar summary data. On Sunday morning GitHub returns
-    // an extra week of specific contributions.
-    if (unknownCount >= 0) {
-      // No specific contributions, either.
-      return <div></div>;
-    }
+    // Day wasn't in calendar summary data. The day might have specific
+    // contributions, but that’s generally an error — on Sunday morning GitHub
+    // returns an extra week of specific contributions.
+    return <div></div>;
   }
 
   const className: string[] = [];
@@ -139,16 +136,10 @@ export function GraphDay(
     },
   }));
 
+  const unknownCount = day.unknownCount();
   if (unknownCount > 0) {
+    // This ignores the filter.
     className.push("unknown");
-
-    subdivisions.push({
-      key: "unknown",
-      style: {
-        flex: unknownCount,
-        background: `hsl(0deg 0% ${lightness}%)`,
-      },
-    });
   } else if (subdivisions.length == 0) {
     className.push("empty");
   }

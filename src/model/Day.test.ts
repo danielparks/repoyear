@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { Day, Filter, Repository, RepositoryDay } from "./index.ts";
+import { Calendar, Day, Filter, Repository, RepositoryDay } from "./index.ts";
 
 function testRepoDay() {
   return new RepositoryDay(new Repository("https://github.com/test/repo"));
@@ -72,17 +72,23 @@ Deno.test("Day.unknownCount() is correct when 0", () => {
   repoDay.addCommits(5);
   day.repositories.set(repoDay.url(), repoDay);
 
+  const calendar = new Calendar("testuser", [day]);
+  calendar.updateRepoCounts();
+
   assertEquals(day.unknownCount(), 0);
 });
 
-Deno.test("Day.unknownCount() is correct when less than 0", () => {
+Deno.test("Day.unknownCount() is correct extra specific commits", () => {
   // Sometimes there is no summary data, but there is specific data.
   const day = new Day(new Date(2025, 0, 15), null);
   const repoDay = testRepoDay();
   repoDay.addCommits(5);
   day.repositories.set(repoDay.url(), repoDay);
 
-  assertEquals(day.unknownCount(), -5);
+  const calendar = new Calendar("testuser", [day]);
+  calendar.updateRepoCounts();
+
+  assertEquals(day.unknownCount(), 0);
 });
 
 Deno.test("Day.unknownCount() is correct when greater than 0", () => {
@@ -90,6 +96,9 @@ Deno.test("Day.unknownCount() is correct when greater than 0", () => {
   const repoDay = testRepoDay();
   repoDay.addCommits(5);
   day.repositories.set(repoDay.url(), repoDay);
+
+  const calendar = new Calendar("testuser", [day]);
+  calendar.updateRepoCounts();
 
   assertEquals(day.unknownCount(), 5);
 });
@@ -126,7 +135,7 @@ Deno.test("Day.filteredCount() should only include filtered repos", () => {
   assertEquals(day.filteredCount(filter), 3);
 });
 
-Deno.test("Day.filteredCount() should include unknowns", () => {
+Deno.test("Day.filteredCount() should filter unknowns", () => {
   const day = new Day(new Date(2025, 0, 15), 9);
   const repo1 = new Repository("https://github.com/test/repo1");
   const repo2 = new Repository("https://github.com/test/repo2");
@@ -140,7 +149,7 @@ Deno.test("Day.filteredCount() should include unknowns", () => {
   day.repositories.set(repo2.url, repoDay2);
 
   const filter = Filter.withOnlyRepos(repo1.url);
-  assertEquals(day.filteredCount(filter), 4);
+  assertEquals(day.filteredCount(filter), 3);
 });
 
 Deno.test("Day should check if day has specific repo", () => {

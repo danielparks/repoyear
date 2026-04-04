@@ -50,9 +50,12 @@ export class Day {
 
   /**
    * Get number of contributions that we don’t specifically know about.
+   *
+   * This relies on `Calendar.updateRepoCounts()` having been called; it checks
+   * commits to the "unknown" repository.
    */
   unknownCount() {
-    return (this.contributionCount || 0) - this.knownContributionCount();
+    return this.repositories.get("unknown")?.commitCount ?? 0;
   }
 
   /**
@@ -66,12 +69,9 @@ export class Day {
 
   /**
    * Calculate the contribution count for repositories enabled in `filter`.
-   *
-   * This includes unknown contributions unconditionally.
    */
   filteredCount(filter: Filter): number {
-    return sum(this.filteredRepos(filter), (repoDay) => repoDay.count()) +
-      Math.max(this.unknownCount(), 0);
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.count());
   }
 
   /**
