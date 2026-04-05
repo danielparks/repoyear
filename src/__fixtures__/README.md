@@ -7,6 +7,12 @@ This directory contains fixture data for testing.
 This file contains sample GitHub contributions data used by the smoke test in
 [`App.vitest.tsx`].
 
+## `github-extra-week.json`
+
+This is similar to `github.json`, but it was made on Sunday afternoon when
+GitHub returns an extra week of specific contribution data at the beginning of
+the year, but no summary data for that week.
+
 ### Generating fixture data
 
 To update the fixture with real data from GitHub:
