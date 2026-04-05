@@ -184,6 +184,8 @@ export class Calendar {
       if (unknownCount > 0) {
         unknownTotal += unknownCount;
         day.setRepoCommits(this.internRepository("unknown"), unknownCount);
+      } else {
+        day.repositories.delete("unknown");
       }
     });
 

@@ -32,6 +32,27 @@ Deno.test("Calendar should calculate max contributions", () => {
   assertEquals(calendar.maxContributions(), 10);
 });
 
+Deno.test("Calendar.updateRepoCounts() should clear stale unknown repo", () => {
+  // Simulates progressive loading: summary arrives first (all contributions
+  // appear unknown), then specific events arrive that account for everything.
+  const calendar = new Calendar("testuser");
+  const date = new Date(2025, 0, 1);
+  calendar.day(date).contributionCount = 5;
+
+  // First call: summary only, no specific repos yet.
+  calendar.updateRepoCounts();
+
+  // Add specific events that account for all contributions.
+  calendar.repoDay(date, "repo1").setCommits(5);
+
+  // Second call: should clear the stale "unknown" RepositoryDay.
+  calendar.updateRepoCounts();
+
+  const day = calendar.day(date);
+  assertEquals(day.unknownCount(), 0);
+  assertEquals(day.repositories.has("unknown"), false);
+});
+
 Deno.test("Calendar should sort repos by contribution count", () => {
   const calendar = new Calendar("testuser");
   const date = new Date(2025, 0, 1);
