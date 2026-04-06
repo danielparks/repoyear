@@ -13,7 +13,7 @@ import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
-import { sum } from "./util.ts";
+import { arrayStartsWith, sum } from "./util.ts";
 
 export default function App(
   {
@@ -142,52 +142,77 @@ export default function App(
     }
   }, [localContributions]);
 
+  // Persists the partially-folded Calendar across renders so each new
+  // contributions chunk is processed only once (O(chunks) total vs O(chunks²)).
+  const prevContribRef = useRef<
+    {
+      gitHub: github.Contributions[];
+      local: Record<string, number[]>[];
+      calendar: Calendar;
+    } | null
+  >(null);
+
   // Progressively transform contributions into `Calendar`.
   const calendar = useMemo(() => {
     const years = 1;
     const gitHub = contributions || [];
-    let calendar: Calendar | null = null;
-    let local: Record<string, number[]>[] = [];
-    if ((contributions || query.data?.complete) && localContributions) {
-      local = [localContributions];
-    }
+    const local: Record<string, number[]>[] = localContributions
+      ? [localContributions]
+      : [];
+    const prev = prevContribRef.current;
 
-    if (contributions || local.length > 0) {
-      calendar = Calendar.fromContributions({
-        gitHub,
-        local,
-        years,
+    let calendar: Calendar;
+    if (
+      gitHub.length &&
+      prev &&
+      prev.local === local &&
+      arrayStartsWith(gitHub, prev.gitHub)
+    ) {
+      // Possible updates from GitHub and local contributions haven’t changed.
+      // FIXME move into Calendar.
+      calendar = prev.calendar;
+      gitHub.slice(prev.gitHub.length).forEach((contrib) => {
+        calendar!.updateFromGitHub(contrib);
       });
-
-      // Calculate progress bar.
-      //
-      // We divide this up by years. If there are are three years, then during
-      // the first year we fill up the first third of the bar based on the
-      // specific contributions from that year.
-      const summaryTotals = gitHub.flatMap((chunk) =>
-        chunk.calendar?.totalContributions ?? []
-      );
-      const specificTotal = calendar.gitHubSpecificCount || 0;
-
-      // specificTotal counts all of the GitHub specific contributions, not just
-      // the year-in-progress. Sum up the summary totals from completed years
-      // and subtract them from specificTotal to get the number of specific
-      // contributions for the in-progress year.
-      const lastSummaryTotal = summaryTotals.pop();
-      // summaryTotals is now only completed years.
-      const lastSpecificTotal = specificTotal - sum(summaryTotals, (n) => n);
-
-      let progress = 0; // if lastSummaryTotal === undefined
-      if (lastSummaryTotal) {
-        progress = summaryTotals.length / years +
-          lastSpecificTotal / lastSummaryTotal;
-      } else if (lastSummaryTotal === 0) {
-        // The last year had no summary contributions, so it’s complete.
-        progress = (summaryTotals.length + 1) / years;
-      }
-
-      setLoadingPercent(Math.round(100 * progress));
+      calendar.updateRepoCounts();
+      calendar.updateRepoColors();
+    } else {
+      // Something changed that requires full regeneration.
+      calendar = Calendar.fromContributions({ gitHub, local, years });
     }
+
+    // Calculate progress bar.
+    //
+    // We divide this up by years. If there are are three years, then during
+    // the first year we fill up the first third of the bar based on the
+    // specific contributions from that year.
+
+    // Get just the chunks with summary data (they start each year).
+    const summaryTotals = gitHub.flatMap((chunk) =>
+      chunk.calendar?.totalContributions ?? []
+    );
+    const specificTotal = calendar.gitHubSpecificCount || 0;
+
+    // specificTotal counts all of the GitHub specific contributions, not just
+    // the year-in-progress. Sum up the summary totals from completed years and
+    // subtract them from specificTotal to get the number of specific
+    // contributions for the in-progress year.
+    const lastSummaryTotal = summaryTotals.pop();
+    // summaryTotals is now only completed years.
+    const lastSpecificTotal = specificTotal - sum(summaryTotals, (n) => n);
+
+    let progress = 0; // if lastSummaryTotal === undefined
+    if (lastSummaryTotal) {
+      progress = summaryTotals.length / years +
+        lastSpecificTotal / lastSummaryTotal;
+    } else if (lastSummaryTotal === 0) {
+      // The last year had no summary contributions, so it’s complete.
+      progress = (summaryTotals.length + 1) / years;
+    }
+
+    setLoadingPercent(Math.round(100 * progress));
+    prevContribRef.current = { gitHub, local, calendar };
+
     return calendar;
   }, [query.data, contributions, localContributions]);
 
@@ -265,7 +290,7 @@ export default function App(
     } as React.CSSProperties;
   }
 
-  const name = calendar?.name ?? username;
+  const name = calendar.name ?? username;
   return (
     <>
       <header className="app-header">
@@ -293,16 +318,12 @@ export default function App(
         </div>
       </header>
       {errorMessage && <div className="error-message">{errorMessage}</div>}
-      {calendar
-        ? (
-          <RepoYearView
-            calendar={calendar}
-            // If loadingPercent == 0, then we might be displaying complete
-            // data (the display doesn’t update until new data is loaded).
-            loading={loading && loadingPercent > 0}
-          />
-        )
-        : <div className="info-message">No contributions data</div>}
+      <RepoYearView
+        calendar={calendar}
+        // If loadingPercent == 0, then we might be displaying complete data
+        // (the display doesn’t update until new data is loaded).
+        loading={loading && loadingPercent > 0}
+      />
       <Footer
         version={getAppVersion()}
         lastFetched={query.dataUpdatedAt}

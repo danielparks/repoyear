@@ -113,7 +113,7 @@ describe("App smoke test", () => {
 
     expect(screen.queryAllByText(/RepoYear/i)).not.toHaveLength(0);
     expect(document.querySelector(".calendar-heat-map"))
-      .not.toBeInTheDocument();
+      .toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.queryByText(/Session expired/i))
