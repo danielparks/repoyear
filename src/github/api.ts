@@ -28,11 +28,11 @@ export type GithubError = GraphqlResponseError<GraphQlQueryResponseData>;
  *        deleting a repo) that affect the past?
  */
 export const CONTRIBUTIONS_QUERY_TEMPLATE =
-  `query ( $wantSummary:Boolean!, {{PARAMETERS}} ) {
+  `query ( $wantSummary:Boolean!, $from:DateTime, $to:DateTime, {{PARAMETERS}} ) {
   user: {{ROOT_FIELD}} {
     login
     name
-    contributionsCollection {
+    contributionsCollection(from: $from, to: $to) {
       contributionCalendar @include(if: $wantSummary) {
         totalContributions
         weeks {
@@ -170,7 +170,10 @@ export class GitHub {
     });
   }
 
-  async *queryBase(username?: string): AsyncGenerator<Contributions> {
+  async *queryBase(
+    username?: string,
+    { from, to }: { from?: string; to?: string } = {},
+  ): AsyncGenerator<Contributions> {
     const cursors = [
       "commitCursor",
       "issueCursor",
@@ -204,6 +207,8 @@ export class GitHub {
           .replace("{{ROOT_FIELD}}", rootField)
           .replace("{{PARAMETERS}}", parameters.join(", ")),
         wantSummary,
+        from: from ?? null,
+        to: to ?? null,
         ...parameterObject,
       });
 
