@@ -53,7 +53,7 @@ export class Calendar {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
-      this.repoDay(new Date(timestamp), repository);
+      this.existingRepoDay(new Date(timestamp), repository);
     let count = 0;
 
     if (contributions.calendar) {
@@ -234,12 +234,37 @@ export class Calendar {
   }
 
   /**
-   * Gets the `RepositoryDay` for a given time and repository.
+   * Gets the `RepositoryDay` for a given time and repository, creating the day
+   * if it doesn't exist.
    */
-  repoDay(time: Date, repositorySource: RepositorySource) {
-    const day = this.day(time);
-    const repository = this.internRepository(repositorySource);
+  repoDay(time: Date, repositorySource: RepositorySource): RepositoryDay {
+    return this.repoDayForDay(this.day(time), repositorySource);
+  }
 
+  /**
+   * Gets the `RepositoryDay` for a given time and repository, or `null` if
+   * the date falls outside the calendar's current range.
+   *
+   * Unlike `repoDay()`, this never creates new days. Use this for specific
+   * event data (commits, issues, etc.) so that events outside the summary
+   * date range are silently dropped rather than extending the calendar.
+   */
+  existingRepoDay(
+    time: Date,
+    repositorySource: RepositorySource,
+  ): RepositoryDay | null {
+    const day = this.days[this.epochDayToIndex(toEpochDays(time)) ?? -1];
+    if (!day) {
+      return null;
+    }
+    return this.repoDayForDay(day, repositorySource);
+  }
+
+  /**
+   * Get the `RepositoryDay` for a given `Day` and repo.
+   */
+  repoDayForDay(day: Day, repositorySource: RepositorySource): RepositoryDay {
+    const repository = this.internRepository(repositorySource);
     let repoDay = day.repositories.get(repository.url);
     if (!repoDay) {
       repoDay = new RepositoryDay(repository);

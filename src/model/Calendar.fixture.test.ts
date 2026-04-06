@@ -35,17 +35,13 @@ function totalIssueCount(calendar: Calendar): number {
 // Extra-week handling
 // ----------------------------------------------------------------------------
 
-// RED: The extra-week fixture has commits for 2025-03-30 through 2025-04-05 in
-// chunk 1, which has no summary calendar. Those dates are before the summary
+// GREEN: The extra-week fixture has commits for 2025-03-30 through 2025-04-05
+// in chunk 1, which has no summary calendar. Those dates are before the summary
 // start of 2025-04-06 and should be silently dropped.
 //
 // Currently fails because `repoDay()` creates new days for those dates,
 // extending the calendar backward.
-Deno.test({
-  name:
-    "Calendar should not create days from specific events outside summary range",
-  ignore: true,
-}, () => {
+Deno.test("Calendar should not create days from specific events outside summary range", () => {
   const calendar = Calendar.fromContributions(...extraWeekContributions)!;
 
   // Summary calendar starts 2025-04-06. Any day before that with
@@ -155,8 +151,8 @@ Deno.test("Calendar should have summary data for year-boundary days", () => {
   }
 });
 
-// GREEN: Loading the same year twice (simulating re-fetch) should not double the
-// contribution counts at year boundaries where summaries overlap.
+// GREEN: Loading the same year twice (simulating re-fetch) should not double
+// the contribution counts at year boundaries where summaries overlap.
 Deno.test("Calendar should not double-count contributions at year boundaries", () => {
   const calendar = Calendar.fromContributions(...threeYearContributions)!;
 
