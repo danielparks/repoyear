@@ -1,9 +1,5 @@
 /**
  * Integration tests using real GitHub API fixture data.
- *
- * Tests marked "RED" describe desired behavior that the current implementation
- * does not satisfy — they are intended to fail until the data model is
- * refactored.
  */
 import { assert, assertEquals } from "@std/assert";
 import { ALL_ON } from "./Filter.ts";
@@ -35,9 +31,9 @@ function totalIssueCount(calendar: Calendar): number {
 // Extra-week handling
 // ----------------------------------------------------------------------------
 
-// GREEN: The extra-week fixture has commits for 2025-03-30 through 2025-04-05
-// in chunk 1, which has no summary calendar. Those dates are before the summary
-// start of 2025-04-06 and should be silently dropped.
+// The extra-week fixture has commits for 2025-03-30 through 2025-04-05 in chunk
+// 1, which has no summary calendar. Those dates are before the summary start of
+// 2025-04-06 and should be silently dropped.
 //
 // Currently fails because `repoDay()` creates new days for those dates,
 // extending the calendar backward.
@@ -64,8 +60,8 @@ Deno.test("Calendar should not create days from specific events outside summary 
 // Deletion / reprocessing
 // ----------------------------------------------------------------------------
 
-// GREEN: When an existing Calendar is reprocessed with contributions that have
-// fewer issues, the removed issues should disappear.
+// When an existing Calendar is reprocessed with contributions that have fewer
+// issues, the removed issues should disappear.
 //
 // Currently fails because `RepositoryDay.issues` is a Set that only ever
 // grows — `updateFromContributions` calls `issues.add()` but never clears the
@@ -96,8 +92,8 @@ Deno.test("Calendar should remove issues that are absent on reprocess", () => {
 // Multi-year loading
 // ----------------------------------------------------------------------------
 
-// GREEN: Three years of data loaded in sequence should produce a calendar that
-// spans the full date range of all three year summaries.
+// Three years of data loaded in sequence should produce a calendar that spans
+// the full date range of all three year summaries.
 Deno.test("Calendar should span all years when loading multi-year data", () => {
   const calendar = Calendar.fromContributions(...threeYearContributions)!;
 
@@ -124,8 +120,8 @@ Deno.test("Calendar should span all years when loading multi-year data", () => {
   );
 });
 
-// GREEN: Days at year boundaries should have summary data from both adjacent
-// year queries — specifically the day before and after each boundary.
+// Days at year boundaries should have summary data from both adjacent year
+// queries — specifically the day before and after each boundary.
 Deno.test("Calendar should have summary data for year-boundary days", () => {
   const calendar = Calendar.fromContributions(...threeYearContributions)!;
 
@@ -148,8 +144,8 @@ Deno.test("Calendar should have summary data for year-boundary days", () => {
   }
 });
 
-// GREEN: Loading the same year twice (simulating re-fetch) should not double
-// the contribution counts at year boundaries where summaries overlap.
+// Loading the same year twice (simulating re-fetch) should not double the
+// contribution counts at year boundaries where summaries overlap.
 Deno.test("Calendar should not double-count contributions at year boundaries", () => {
   const calendar = Calendar.fromContributions(...threeYearContributions)!;
 

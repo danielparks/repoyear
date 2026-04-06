@@ -42,10 +42,10 @@ export class Calendar {
   /**
    * Merges additional contributions data into this calendar.
    *
-   * This is idempotent to handle progressive updates to the calendar. It is run
-   * on the entirety of the contributions data each time the query returns
-   * another incremental chunk. The work could be de-duplicated at the cost of
-   * increased complexity.
+   * If there is summary data in a chunk, then that chunk is assumed to be the
+   * first chunk in a sequence, and all specific contributions are reset.
+   *
+   * Chunks without summary data will only update already existing days.
    *
    * Returns the number of specific contributions found.
    */
@@ -57,11 +57,9 @@ export class Calendar {
     let count = 0;
 
     if (contributions.calendar) {
-      // Clear Set-based specific events (issues, PRs, reviews) for all days
-      // in this year's summary range before re-adding them. This ensures that
-      // events deleted between reloads are removed when reprocessing.
-      // Commits and repo-creation counts don't need this because they use
-      // setCommits()/setCreate(), which replace rather than accumulate.
+      // Clear specific contributions for all days in this year's summary range
+      // before re-adding them. This ensures that contributions deleted between
+      // reloads are removed when reprocessing.
       const { weeks } = contributions.calendar;
       const firstDate = weeks[0]?.contributionDays[0]?.date;
       const lastDate = weeks.at(-1)?.contributionDays.at(-1)?.date;
@@ -72,6 +70,8 @@ export class Calendar {
           const epochDay = day.epochDay();
           if (epochDay >= fromEpochDay && epochDay <= toEpochDay) {
             for (const repoDay of day.repositories.values()) {
+              repoDay.setCommits(0);
+              repoDay.setCreate(0);
               repoDay.issues.clear();
               repoDay.prs.clear();
               repoDay.reviews.clear();
@@ -92,11 +92,9 @@ export class Calendar {
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
-        // If GitHub ever returns separate nodes for the same repo/date pair,
-        // this will miss some commits. It will show up in the UI as a day not
-        // adding up and thus being marked with the “unknown” CSS class. See doc
-        // comment about idempotency above.
-        findRepoDay(node.occurredAt, repository)?.setCommits(node.commitCount);
+        // GitHub never seems to return separate nodes for the same repo/date
+        // pair, so this could probably use `setCommits`.
+        findRepoDay(node.occurredAt, repository)?.addCommits(node.commitCount);
         count += node.commitCount;
       }
     }
@@ -112,10 +110,7 @@ export class Calendar {
     }
 
     for (const { occurredAt, repository } of contributions.repositories) {
-      // If a repo is created twice in one day (I’m not sure that is possible)
-      // this code will only record one creation. See doc comment about
-      // idempotency above.
-      findRepoDay(occurredAt, repository)?.setCreate(1);
+      findRepoDay(occurredAt, repository)?.addCreate();
       count++;
     }
 
