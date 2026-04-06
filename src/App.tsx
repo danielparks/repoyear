@@ -165,6 +165,8 @@ export default function App(
       calendarRef.current.updateFromLocal(localContributions);
     }
 
+    calendarRef.current?.updateRepoCounts();
+    calendarRef.current?.updateRepoColors();
     return calendarRef.current;
   }, [query.data, contributions, localContributions]);
 

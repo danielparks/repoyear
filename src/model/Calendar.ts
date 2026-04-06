@@ -36,6 +36,8 @@ export class Calendar {
     for (const contrib of contributions) {
       calendar.updateFromContributions(contrib);
     }
+    calendar.updateRepoCounts();
+    calendar.updateRepoColors();
     return calendar;
   }
 
@@ -121,8 +123,6 @@ export class Calendar {
       count++;
     }
 
-    this.updateRepoCounts();
-    this.updateRepoColors();
     return count;
   }
 
@@ -173,9 +173,6 @@ export class Calendar {
 
       updateDay();
     }
-
-    this.updateRepoCounts();
-    this.updateRepoColors();
   }
 
   /**

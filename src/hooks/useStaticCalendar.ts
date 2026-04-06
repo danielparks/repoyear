@@ -67,6 +67,8 @@ export function useStaticCalendar(): UseStaticCalendarResult {
     const calendar = Calendar.fromContributions(...contributions || []);
     if (calendar && localContributions) {
       calendar.updateFromLocal(localContributions);
+      calendar.updateRepoCounts();
+      calendar.updateRepoColors();
     }
     return calendar;
   }, [contributions, localContributions]);
