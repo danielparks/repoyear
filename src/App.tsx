@@ -145,17 +145,17 @@ export default function App(
   }, [localContributions]);
 
   // Progressively transform contributions into `Calendar`.
-  const calendarRef = useRef<Calendar | null>(null);
   const calendar = useMemo(() => {
     const years = 1;
     const gitHub = contributions || [];
+    let calendar: Calendar | null = null;
     let local: Record<string, number[]>[] = [];
     if ((contributions || query.data?.complete) && localContributions) {
       local = [localContributions];
     }
 
     if (contributions || local.length > 0) {
-      calendarRef.current ??= Calendar.fromContributions({
+      calendar = Calendar.fromContributions({
         gitHub,
         local,
         years,
@@ -169,7 +169,7 @@ export default function App(
       const summaryTotals = gitHub.flatMap((chunk) =>
         chunk.calendar?.totalContributions ?? []
       );
-      const specificTotal = calendarRef.current.gitHubSpecificCount || 0;
+      const specificTotal = calendar.gitHubSpecificCount || 0;
 
       // specificTotal counts all of the GitHub specific contributions, not just
       // the year-in-progress. Sum up the summary totals from completed years
@@ -190,7 +190,7 @@ export default function App(
 
       setLoadingPercent(Math.round(100 * progress));
     }
-    return calendarRef.current;
+    return calendar;
   }, [query.data, contributions, localContributions]);
 
   let errorMessage = authError;
@@ -215,9 +215,6 @@ export default function App(
   }
 
   function reload() {
-    if (shiftPressed) {
-      calendarRef.current = null;
-    }
     setLoading(true);
     setLoadingPercent(0);
     query.refetch().catch((error: unknown) => {
