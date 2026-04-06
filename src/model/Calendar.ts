@@ -57,8 +57,31 @@ export class Calendar {
     let count = 0;
 
     if (contributions.calendar) {
+      // Clear Set-based specific events (issues, PRs, reviews) for all days
+      // in this year's summary range before re-adding them. This ensures that
+      // events deleted between reloads are removed when reprocessing.
+      // Commits and repo-creation counts don't need this because they use
+      // setCommits()/setCreate(), which replace rather than accumulate.
+      const { weeks } = contributions.calendar;
+      const firstDate = weeks[0]?.contributionDays[0]?.date;
+      const lastDate = weeks.at(-1)?.contributionDays.at(-1)?.date;
+      if (firstDate && lastDate) {
+        const fromEpochDay = toEpochDays(parseDateTime(firstDate));
+        const toEpochDay = toEpochDays(parseDateTime(lastDate));
+        for (const day of this.days) {
+          const epochDay = day.epochDay();
+          if (epochDay >= fromEpochDay && epochDay <= toEpochDay) {
+            for (const repoDay of day.repositories.values()) {
+              repoDay.issues.clear();
+              repoDay.prs.clear();
+              repoDay.reviews.clear();
+            }
+          }
+        }
+      }
+
       this.normalizeDays(
-        contributions.calendar.weeks.map((week) =>
+        weeks.map((week) =>
           week.contributionDays.map((day) =>
             new Day(parseDateTime(day.date), day.contributionCount)
           )

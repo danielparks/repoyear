@@ -64,16 +64,13 @@ Deno.test("Calendar should not create days from specific events outside summary 
 // Deletion / reprocessing
 // ----------------------------------------------------------------------------
 
-// RED: When an existing Calendar is reprocessed with contributions that have
+// GREEN: When an existing Calendar is reprocessed with contributions that have
 // fewer issues, the removed issues should disappear.
 //
 // Currently fails because `RepositoryDay.issues` is a Set that only ever
 // grows — `updateFromContributions` calls `issues.add()` but never clears the
 // set, so deleted issues persist.
-Deno.test({
-  name: "Calendar should remove issues that are absent on reprocess",
-  ignore: true,
-}, () => {
+Deno.test("Calendar should remove issues that are absent on reprocess", () => {
   const calendar = new Calendar(oneYearContributions[0].name);
   for (const c of oneYearContributions) {
     calendar.updateFromContributions(c);
