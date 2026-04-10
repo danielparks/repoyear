@@ -12,7 +12,6 @@ import { RepoYearView } from "./components/RepoYearView.tsx";
 import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
-import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
 import { sum } from "./util.ts";
 
@@ -40,7 +39,6 @@ export default function App(
   >(null);
   const authCodeHandled = useRef<boolean>(false);
   const startedFetch = useRef<boolean>(false);
-  const shiftPressed = useKeyMonitor("Shift");
   const queryClient = useQueryClient();
 
   // loading and loadingPercent are separate because when we calculate the
@@ -287,7 +285,7 @@ export default function App(
             className={`refresh-button${loading ? " loading" : ""}`}
             style={refreshStyle}
           >
-            {loading ? "Loading" : shiftPressed ? "Reload" : "Refresh"}
+            {loading ? "Loading" : "Reload"}
           </button>
           <button type="button" onClick={logout} className="logout-button">
             Log out

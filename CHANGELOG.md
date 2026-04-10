@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
   fully loaded. This makes days with contributions to private repositories
   easier to understand.
 - Reduced max lightness from 99% to 96%, since 99% looked white.
+- Removed refresh/reload distinction because the new multi-year capable data
+  model does not support it.
 
 ## 0.8.1 (2026-03-07)
 
