@@ -146,27 +146,30 @@ export default function App(
   // Progressively transform contributions into `Calendar`.
   const calendarRef = useRef<Calendar | null>(null);
   const calendar = useMemo(() => {
-    if (contributions) {
-      calendarRef.current ??= new Calendar(contributions[0].name);
-
-      let specific = 0;
-      for (const contribution of contributions) {
-        specific += calendarRef.current.updateFromContributions(contribution);
-      }
-
-      const summary = contributions[0].calendar?.totalContributions;
-      if (summary) {
-        setLoadingPercent(Math.round(100 * specific / summary));
-      }
-    }
-
+    let local: Record<string, number[]>[] = [];
     if ((contributions || query.data?.complete) && localContributions) {
-      calendarRef.current ??= new Calendar(""); // FIXME?
-      calendarRef.current.updateFromLocal(localContributions);
+      local = [localContributions];
     }
 
-    calendarRef.current?.updateRepoCounts();
-    calendarRef.current?.updateRepoColors();
+    if (contributions || local.length > 0) {
+      calendarRef.current ??= Calendar.fromContributions(
+        contributions || [],
+        local,
+      );
+
+      const first = (contributions || [])[0];
+      if (first) {
+        const summary = first.calendar?.totalContributions;
+        const specific = calendarRef.current.gitHubSpecificCount || 0;
+        if (summary) {
+          setLoadingPercent(Math.round(100 * specific / summary));
+        } else {
+          setLoadingPercent(0);
+        }
+      } else {
+        setLoadingPercent(0);
+      }
+    }
     return calendarRef.current;
   }, [query.data, contributions, localContributions]);
 

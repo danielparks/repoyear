@@ -63,15 +63,14 @@ export function useStaticCalendar(): UseStaticCalendarResult {
       });
   }, []);
 
-  const calendar = useMemo(() => {
-    const calendar = Calendar.fromContributions(...contributions || []);
-    if (calendar && localContributions) {
-      calendar.updateFromLocal(localContributions);
-      calendar.updateRepoCounts();
-      calendar.updateRepoColors();
-    }
-    return calendar;
-  }, [contributions, localContributions]);
+  const calendar = useMemo(
+    () =>
+      Calendar.fromContributions(
+        contributions || [],
+        localContributions ? [localContributions] : [],
+      ),
+    [contributions, localContributions],
+  );
 
   return {
     calendar,

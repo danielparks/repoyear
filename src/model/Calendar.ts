@@ -19,6 +19,7 @@ export class Calendar {
   name: string;
   days: Day[] = [];
   repositories = new Map<string, Repository>();
+  gitHubSpecificCount: number | undefined;
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
@@ -26,15 +27,18 @@ export class Calendar {
   }
 
   /**
-   * Creates a Calendar from GitHub contributions data.
+   * Creates a Calendar from GitHub and/or local contributions data.
    */
-  static fromContributions(...contributions: github.Contributions[]) {
-    if (contributions.length == 0) {
-      return null;
-    }
-    const calendar = new Calendar(contributions[0].name);
-    for (const contrib of contributions) {
+  static fromContributions(
+    gh: github.Contributions[],
+    local: Record<string, number[]>[],
+  ): Calendar {
+    const calendar = new Calendar(gh[0]?.name || "");
+    for (const contrib of gh) {
       calendar.updateFromContributions(contrib);
+    }
+    for (const contrib of local) {
+      calendar.updateFromLocal(contrib);
     }
     calendar.updateRepoCounts();
     calendar.updateRepoColors();
@@ -48,15 +52,13 @@ export class Calendar {
    * first chunk in a sequence, and all specific contributions are reset.
    *
    * Chunks without summary data will only update already existing days.
-   *
-   * Returns the number of specific contributions found.
    */
   updateFromContributions(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
       this.existingRepoDay(new Date(timestamp), repository);
-    let count = 0;
+    this.gitHubSpecificCount ??= 0;
 
     if (contributions.calendar) {
       // Clear specific contributions for all days in this year's summary range
@@ -97,33 +99,31 @@ export class Calendar {
         // GitHub never seems to return separate nodes for the same repo/date
         // pair, so this could probably use `setCommits`.
         findRepoDay(node.occurredAt, repository)?.addCommits(node.commitCount);
-        count += node.commitCount;
+        this.gitHubSpecificCount += node.commitCount;
       }
     }
 
     for (const { occurredAt, issue } of contributions.issues) {
       findRepoDay(occurredAt, issue.repository)?.issues.add(issue.url);
-      count++;
+      this.gitHubSpecificCount++;
     }
 
     for (const { occurredAt, pullRequest } of contributions.prs) {
       findRepoDay(occurredAt, pullRequest.repository)?.prs.add(pullRequest.url);
-      count++;
+      this.gitHubSpecificCount++;
     }
 
     for (const { occurredAt, repository } of contributions.repositories) {
       findRepoDay(occurredAt, repository)?.addCreate();
-      count++;
+      this.gitHubSpecificCount++;
     }
 
     for (const { occurredAt, pullRequestReview } of contributions.reviews) {
       findRepoDay(occurredAt, pullRequestReview.repository)?.reviews.add(
         pullRequestReview.url,
       );
-      count++;
+      this.gitHubSpecificCount++;
     }
-
-    return count;
   }
 
   /**
