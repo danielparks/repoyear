@@ -22,7 +22,7 @@ export class Calendar {
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
-    this.updateSummary(days);
+    this.normalizeDays(days);
   }
 
   /**
@@ -57,7 +57,7 @@ export class Calendar {
     let count = 0;
 
     if (contributions.calendar) {
-      this.updateSummary(
+      this.normalizeDays(
         contributions.calendar.weeks.map((week) =>
           week.contributionDays.map((day) =>
             new Day(parseDateTime(day.date), day.contributionCount)
@@ -298,12 +298,12 @@ export class Calendar {
   }
 
   /**
-   * Update summary contribution counts or add `Day`s.
+   * Ensure `Day`s are contiguous and summary counts are up-to-date.
    *
    * For existing days, only `contributionCounts` will be changed. For new days,
    * the `Day` object is inserted into the `Calendar`.
    */
-  updateSummary(newDays: Day[]) {
+  normalizeDays(newDays: Day[]) {
     if (newDays.length === 0) {
       return;
     }
