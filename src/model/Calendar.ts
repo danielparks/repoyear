@@ -23,6 +23,7 @@ export class Calendar {
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
+    // FIXME this path is now only really used by tests:
     this.normalizeDays(days);
   }
 
@@ -45,20 +46,20 @@ export class Calendar {
     );
     firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
 
-    return new Calendar(
-      name,
-      Array.from(
-        { length: 1 + toEpochDays(lastSaturday) - toEpochDays(firstSunday) },
-        (_, i) =>
-          new Day(
-            new Date(
-              firstSunday.getFullYear(),
-              firstSunday.getMonth(),
-              firstSunday.getDate() + i,
-            ),
+    // No need to run normalizeDays():
+    const calendar = new Calendar(name);
+    calendar.days = Array.from(
+      { length: 1 + toEpochDays(lastSaturday) - toEpochDays(firstSunday) },
+      (_, i) =>
+        new Day(
+          new Date(
+            firstSunday.getFullYear(),
+            firstSunday.getMonth(),
+            firstSunday.getDate() + i,
           ),
-      ),
+        ),
     );
+    return calendar;
   }
 
   /**
