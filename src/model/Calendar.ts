@@ -27,18 +27,57 @@ export class Calendar {
   }
 
   /**
+   * Create a new calendar object with days set to include `endDate` and `years`
+   * years previous to that.
+   */
+  static fromYears(name: string, endDate: Date, years: number = 1) {
+    // This should always generate 53 weeks for 1 year and 105 for 2. This needs
+    // to calculate with dates rather than just days to account for leap years.
+    const lastSaturday = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 6 - endDate.getDay(),
+    );
+    const firstSunday = new Date(
+      lastSaturday.getFullYear() - years,
+      lastSaturday.getMonth(),
+      lastSaturday.getDate(),
+    );
+    firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
+
+    return new Calendar(
+      name,
+      Array.from(
+        { length: 1 + toEpochDays(lastSaturday) - toEpochDays(firstSunday) },
+        (_, i) =>
+          new Day(
+            new Date(
+              firstSunday.getFullYear(),
+              firstSunday.getMonth(),
+              firstSunday.getDate() + i,
+            ),
+          ),
+      ),
+    );
+  }
+
+  /**
    * Creates a Calendar from GitHub and/or local contributions data.
    */
   static fromContributions(
-    gh: github.Contributions[],
-    local: Record<string, number[]>[],
+    { gitHub = [], local = [], endDate = new Date(), years = 1 }: {
+      gitHub?: github.Contributions[];
+      local?: Record<string, number[]>[];
+      endDate?: Date;
+      years?: number;
+    },
   ): Calendar {
-    const calendar = new Calendar(gh[0]?.name || "");
-    for (const contrib of gh) {
-      calendar.updateFromContributions(contrib);
-    }
+    const calendar = Calendar.fromYears(gitHub[0]?.name || "", endDate, years);
     for (const contrib of local) {
       calendar.updateFromLocal(contrib);
+    }
+    for (const contrib of gitHub) {
+      calendar.updateFromGitHub(contrib);
     }
     calendar.updateRepoCounts();
     calendar.updateRepoColors();
@@ -53,7 +92,7 @@ export class Calendar {
    *
    * Chunks without summary data will only update already existing days.
    */
-  updateFromContributions(contributions: github.Contributions) {
+  updateFromGitHub(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.

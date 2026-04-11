@@ -65,10 +65,10 @@ export function useStaticCalendar(): UseStaticCalendarResult {
 
   const calendar = useMemo(
     () =>
-      Calendar.fromContributions(
-        contributions || [],
-        localContributions ? [localContributions] : [],
-      ),
+      Calendar.fromContributions({
+        gitHub: contributions || [],
+        local: localContributions ? [localContributions] : [],
+      }),
     [contributions, localContributions],
   );
 

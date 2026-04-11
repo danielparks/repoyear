@@ -152,10 +152,10 @@ export default function App(
     }
 
     if (contributions || local.length > 0) {
-      calendarRef.current ??= Calendar.fromContributions(
-        contributions || [],
+      calendarRef.current ??= Calendar.fromContributions({
+        gitHub: contributions || [],
         local,
-      );
+      });
 
       const first = (contributions || [])[0];
       if (first) {

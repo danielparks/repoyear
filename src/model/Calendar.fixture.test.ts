@@ -38,7 +38,9 @@ function totalIssueCount(calendar: Calendar): number {
 // Currently fails because `repoDay()` creates new days for those dates,
 // extending the calendar backward.
 Deno.test("Calendar should not create days from specific events outside summary range", () => {
-  const calendar = Calendar.fromContributions(extraWeekContributions, []);
+  const calendar = Calendar.fromContributions({
+    gitHub: extraWeekContributions,
+  });
 
   // Summary calendar starts 2025-04-06. Any day before that with
   // knownContributionCount() > 0 came from the spurious extra-week events.
@@ -64,12 +66,12 @@ Deno.test("Calendar should not create days from specific events outside summary 
 // issues, the removed issues should disappear.
 //
 // Currently fails because `RepositoryDay.issues` is a Set that only ever
-// grows — `updateFromContributions` calls `issues.add()` but never clears the
+// grows — `updateFromGitHub` calls `issues.add()` but never clears the
 // set, so deleted issues persist.
 Deno.test("Calendar should remove issues that are absent on reprocess", () => {
   const calendar = new Calendar(oneYearContributions[0].name);
   for (const c of oneYearContributions) {
-    calendar.updateFromContributions(c);
+    calendar.updateFromGitHub(c);
   }
 
   const issuesBefore = totalIssueCount(calendar);
@@ -78,7 +80,7 @@ Deno.test("Calendar should remove issues that are absent on reprocess", () => {
   // Reprocess the same calendar with all issues stripped out.
   const stripped = oneYearContributions.map((c) => ({ ...c, issues: [] }));
   for (const c of stripped) {
-    calendar.updateFromContributions(c);
+    calendar.updateFromGitHub(c);
   }
 
   assertEquals(
@@ -95,7 +97,9 @@ Deno.test("Calendar should remove issues that are absent on reprocess", () => {
 // Three years of data loaded in sequence should produce a calendar that spans
 // the full date range of all three year summaries.
 Deno.test("Calendar should span all years when loading multi-year data", () => {
-  const calendar = Calendar.fromContributions(threeYearContributions, []);
+  const calendar = Calendar.fromContributions({
+    gitHub: threeYearContributions,
+  });
 
   // Year 3 summary starts 2023-04-09; year 1 summary ends 2026-04-05.
   // The calendar is padded to week boundaries (Sunday–Saturday), so we check
@@ -123,7 +127,9 @@ Deno.test("Calendar should span all years when loading multi-year data", () => {
 // Days at year boundaries should have summary data from both adjacent year
 // queries — specifically the day before and after each boundary.
 Deno.test("Calendar should have summary data for year-boundary days", () => {
-  const calendar = Calendar.fromContributions(threeYearContributions, []);
+  const calendar = Calendar.fromContributions({
+    gitHub: threeYearContributions,
+  });
 
   const daysByDate = new Map<string, (typeof calendar.days)[0]>();
   for (const day of calendar.days) {
@@ -147,7 +153,9 @@ Deno.test("Calendar should have summary data for year-boundary days", () => {
 // Loading the same year twice (simulating re-fetch) should not double the
 // contribution counts at year boundaries where summaries overlap.
 Deno.test("Calendar should not double-count contributions at year boundaries", () => {
-  const calendar = Calendar.fromContributions(threeYearContributions, []);
+  const calendar = Calendar.fromContributions({
+    gitHub: threeYearContributions,
+  });
 
   const daysByDate = new Map<string, (typeof calendar.days)[0]>();
   for (const day of calendar.days) {
