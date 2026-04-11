@@ -141,31 +141,44 @@ export class Calendar {
       for (const node of github.cleanNodes(nodes)) {
         // Using addCommits rather than setCommits in case GitHub ever returns
         // multiple nodes for the same repo/date pair in one response.
-        findRepoDay(node.occurredAt, repository)?.addCommits(node.commitCount);
-        this.gitHubSpecificCount += node.commitCount;
+        const repoDay = findRepoDay(node.occurredAt, repository);
+        if (repoDay) {
+          repoDay.addCommits(node.commitCount);
+          this.gitHubSpecificCount += node.commitCount;
+        }
       }
     }
 
     for (const { occurredAt, issue } of contributions.issues) {
-      findRepoDay(occurredAt, issue.repository)?.issues.add(issue.url);
-      this.gitHubSpecificCount++;
+      const repoDay = findRepoDay(occurredAt, issue.repository);
+      if (repoDay) {
+        repoDay.issues.add(issue.url);
+        this.gitHubSpecificCount++;
+      }
     }
 
     for (const { occurredAt, pullRequest } of contributions.prs) {
-      findRepoDay(occurredAt, pullRequest.repository)?.prs.add(pullRequest.url);
-      this.gitHubSpecificCount++;
+      const repoDay = findRepoDay(occurredAt, pullRequest.repository);
+      if (repoDay) {
+        repoDay.prs.add(pullRequest.url);
+        this.gitHubSpecificCount++;
+      }
     }
 
     for (const { occurredAt, repository } of contributions.repositories) {
-      findRepoDay(occurredAt, repository)?.addCreate();
-      this.gitHubSpecificCount++;
+      const repoDay = findRepoDay(occurredAt, repository);
+      if (repoDay) {
+        repoDay.addCreate();
+        this.gitHubSpecificCount++;
+      }
     }
 
     for (const { occurredAt, pullRequestReview } of contributions.reviews) {
-      findRepoDay(occurredAt, pullRequestReview.repository)?.reviews.add(
-        pullRequestReview.url,
-      );
-      this.gitHubSpecificCount++;
+      const repoDay = findRepoDay(occurredAt, pullRequestReview.repository);
+      if (repoDay) {
+        repoDay.reviews.add(pullRequestReview.url);
+        this.gitHubSpecificCount++;
+      }
     }
   }
 
