@@ -4,7 +4,7 @@ import type { Contributions } from "../github/api.ts";
 import type { StaticDataFile } from "../staticData.ts";
 
 export interface UseStaticCalendarResult {
-  calendar: Calendar | null;
+  calendar: Calendar;
   error: string | null;
   loading: boolean;
   fetchedAt: string | undefined;

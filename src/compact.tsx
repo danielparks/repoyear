@@ -14,10 +14,6 @@ export function CompactApp() {
     return <StatusMessage type="error" message={error} />;
   } else if (loading) {
     return <StatusMessage type="loading" message="Loading contributions…" />;
-  } else if (!calendar) {
-    return (
-      <StatusMessage type="error" message="No contribution data available." />
-    );
   }
 
   return (

@@ -18,14 +18,6 @@ export function StaticApp() {
     return (
       <StatusMessage type="loading" title message="Loading contributions…" />
     );
-  } else if (!calendar) {
-    return (
-      <StatusMessage
-        type="error"
-        message="No contribution data available."
-        title
-      />
-    );
   }
 
   return (
