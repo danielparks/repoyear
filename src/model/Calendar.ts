@@ -92,6 +92,9 @@ export class Calendar {
    * first chunk in a sequence, and all specific contributions are reset.
    *
    * Chunks without summary data will only update already existing days.
+   *
+   * This is not idempotent; it must not be run on the same chunk twice. It may
+   * be run after updateRepoCounts() and/or updateRepoColors().
    */
   updateFromGitHub(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
@@ -136,8 +139,8 @@ export class Calendar {
     for (const entry of contributions.commits) {
       const { repository, contributions: { nodes } } = entry;
       for (const node of github.cleanNodes(nodes)) {
-        // GitHub never seems to return separate nodes for the same repo/date
-        // pair, so this could probably use `setCommits`.
+        // Using addCommits rather than setCommits in case GitHub ever returns
+        // multiple nodes for the same repo/date pair in one response.
         findRepoDay(node.occurredAt, repository)?.addCommits(node.commitCount);
         this.gitHubSpecificCount += node.commitCount;
       }
