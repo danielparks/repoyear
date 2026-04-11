@@ -14,6 +14,7 @@ import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useKeyMonitor } from "./hooks/useKeyMonitor.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
+import { sum } from "./util.ts";
 
 export default function App(
   {
@@ -146,6 +147,8 @@ export default function App(
   // Progressively transform contributions into `Calendar`.
   const calendarRef = useRef<Calendar | null>(null);
   const calendar = useMemo(() => {
+    const years = 1;
+    const gitHub = contributions || [];
     let local: Record<string, number[]>[] = [];
     if ((contributions || query.data?.complete) && localContributions) {
       local = [localContributions];
@@ -153,22 +156,39 @@ export default function App(
 
     if (contributions || local.length > 0) {
       calendarRef.current ??= Calendar.fromContributions({
-        gitHub: contributions || [],
+        gitHub,
         local,
+        years,
       });
 
-      const first = (contributions || [])[0];
-      if (first) {
-        const summary = first.calendar?.totalContributions;
-        const specific = calendarRef.current.gitHubSpecificCount || 0;
-        if (summary) {
-          setLoadingPercent(Math.round(100 * specific / summary));
-        } else {
-          setLoadingPercent(0);
-        }
-      } else {
-        setLoadingPercent(0);
+      // Calculate progress bar.
+      //
+      // We divide this up by years. If there are are three years, then during
+      // the first year we fill up the first third of the bar based on the
+      // specific contributions from that year.
+      const summaryTotals = gitHub.flatMap((chunk) =>
+        chunk.calendar?.totalContributions ?? []
+      );
+      const specificTotal = calendarRef.current.gitHubSpecificCount || 0;
+
+      // specificTotal counts all of the GitHub specific contributions, not just
+      // the year-in-progress. Sum up the summary totals from completed years
+      // and subtract them from specificTotal to get the number of specific
+      // contributions for the in-progress year.
+      const lastSummaryTotal = summaryTotals.pop();
+      // summaryTotals is now only completed years.
+      const lastSpecificTotal = specificTotal - sum(summaryTotals, (n) => n);
+
+      let progress = 0; // if lastSummaryTotal === undefined
+      if (lastSummaryTotal) {
+        progress = summaryTotals.length / years +
+          lastSpecificTotal / lastSummaryTotal;
+      } else if (lastSummaryTotal === 0) {
+        // The last year had no summary contributions, so it’s complete.
+        progress = (summaryTotals.length + 1) / years;
       }
+
+      setLoadingPercent(Math.round(100 * progress));
     }
     return calendarRef.current;
   }, [query.data, contributions, localContributions]);
