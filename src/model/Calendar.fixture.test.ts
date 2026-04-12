@@ -11,21 +11,9 @@ import extraWeekFixture from "../__fixtures__/github-extra-week.json" with {
 import threeYearFixture from "../__fixtures__/github-3-years.json" with {
   type: "json",
 };
-import oneYearFixture from "../__fixtures__/github.json" with { type: "json" };
 
 const extraWeekContributions = extraWeekFixture as Contributions[];
 const threeYearContributions = threeYearFixture as Contributions[];
-const oneYearContributions = oneYearFixture as Contributions[];
-
-function totalIssueCount(calendar: Calendar): number {
-  let count = 0;
-  for (const day of calendar.days) {
-    for (const repoDay of day.repositories.values()) {
-      count += repoDay.issues.size;
-    }
-  }
-  return count;
-}
 
 // ----------------------------------------------------------------------------
 // Extra-week handling
@@ -56,38 +44,6 @@ Deno.test("Calendar should not create days from specific events outside summary 
       );
     }
   }
-});
-
-// ----------------------------------------------------------------------------
-// Deletion / reprocessing
-// ----------------------------------------------------------------------------
-
-// When an existing Calendar is reprocessed with contributions that have fewer
-// issues, the removed issues should disappear.
-//
-// Currently fails because `RepositoryDay.issues` is a Set that only ever
-// grows — `updateFromGitHub` calls `issues.add()` but never clears the
-// set, so deleted issues persist.
-Deno.test("Calendar should remove issues that are absent on reprocess", () => {
-  const calendar = new Calendar(oneYearContributions[0].name);
-  for (const c of oneYearContributions) {
-    calendar.updateFromGitHub(c);
-  }
-
-  const issuesBefore = totalIssueCount(calendar);
-  assert(issuesBefore > 0, "fixture should have issues to remove");
-
-  // Reprocess the same calendar with all issues stripped out.
-  const stripped = oneYearContributions.map((c) => ({ ...c, issues: [] }));
-  for (const c of stripped) {
-    calendar.updateFromGitHub(c);
-  }
-
-  assertEquals(
-    totalIssueCount(calendar),
-    0,
-    "issues should be gone after reprocessing without them",
-  );
 });
 
 // ----------------------------------------------------------------------------

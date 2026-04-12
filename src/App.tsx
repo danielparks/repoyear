@@ -169,13 +169,8 @@ export default function App(
       arrayStartsWith(gitHub, prev.gitHub)
     ) {
       // Possible updates from GitHub and local contributions haven’t changed.
-      // FIXME move into Calendar.
       calendar = prev.calendar;
-      gitHub.slice(prev.gitHub.length).forEach((contrib) => {
-        calendar!.updateFromGitHub(contrib);
-      });
-      calendar.updateRepoCounts();
-      calendar.updateRepoColors();
+      calendar.appendGitHubUpdates(gitHub.slice(prev.gitHub.length));
     } else {
       // Something changed that requires full regeneration.
       calendar = Calendar.fromContributions({ gitHub, local, years });

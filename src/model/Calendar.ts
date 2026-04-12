@@ -74,15 +74,18 @@ export class Calendar {
     },
   ): Calendar {
     const calendar = Calendar.fromYears(gitHub[0]?.name || "", endDate, years);
-    for (const contrib of local) {
-      calendar.updateFromLocal(contrib);
-    }
-    for (const contrib of gitHub) {
-      calendar.updateFromGitHub(contrib);
-    }
-    calendar.updateRepoCounts();
-    calendar.updateRepoColors();
+    local.forEach((contrib) => calendar.#updateFromLocal(contrib));
+    calendar.appendGitHubUpdates(gitHub);
     return calendar;
+  }
+
+  /**
+   * Update the calendar with additional chunk(s) of contributions from GitHub.
+   */
+  appendGitHubUpdates(updates: github.Contributions[]) {
+    updates.forEach((contrib) => this.#updateFromGitHub(contrib));
+    this.updateRepoCounts();
+    this.updateRepoColors();
   }
 
   /**
@@ -96,7 +99,7 @@ export class Calendar {
    * This is not idempotent; it must not be run on the same chunk twice. It may
    * be run after updateRepoCounts() and/or updateRepoColors().
    */
-  updateFromGitHub(contributions: github.Contributions) {
+  #updateFromGitHub(contributions: github.Contributions) {
     const findRepoDay = (timestamp: string, repository: gql.Repository) =>
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
@@ -185,7 +188,7 @@ export class Calendar {
   /**
    * Update calendar with local contributions.
    */
-  updateFromLocal(contributions: Record<string, number[]>) {
+  #updateFromLocal(contributions: Record<string, number[]>) {
     let firstEpochDay = EPOCH_DAY_MIN, lastEpochDay = EPOCH_DAY_MAX;
     if (this.days[0]) {
       firstEpochDay = this.days[0].epochDay();
