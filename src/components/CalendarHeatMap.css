@@ -1,10 +1,26 @@
 .calendar-heat-map {
   display: block;
+  position: relative;
   margin: 1rlh -1rlh;
 }
 
 body.compact .calendar-heat-map {
   margin: 0;
+}
+
+.calendar-heat-map > .no-data {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: hsl(200deg 20% 95%);
+  color: hsl(200deg 20% 40%);
+  padding: 15px;
+  border-radius: 6px;
 }
 
 .calendar-heat-map > .weeks {

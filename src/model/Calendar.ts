@@ -283,6 +283,13 @@ export class Calendar {
   }
 
   /**
+   * Does the calendar have any contribution data?
+   */
+  hasData() {
+    return this.days.some((day) => day.hasData());
+  }
+
+  /**
    * Returns all repositories sorted by contribution count (highest first).
    */
   mostUsedRepos(filter = ALL_ON): Repository[] {

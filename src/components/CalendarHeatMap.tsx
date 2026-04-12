@@ -40,7 +40,6 @@ export function CalendarHeatMap(
     }
     : undefined;
 
-  // FIXME add overlay <div className="info-message">No contributions data</div>
   return (
     <div
       className={`calendar-heat-map ${loading ? "loading" : ""}`}
@@ -66,6 +65,9 @@ export function CalendarHeatMap(
           </div>
         ))}
       </div>
+      {!calendar.hasData() && (
+        <div className="no-data">No contributions data</div>
+      )}
     </div>
   );
 }

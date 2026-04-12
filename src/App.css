@@ -197,14 +197,6 @@ button.logout-button:hover {
   margin: 10px 0;
 }
 
-.info-message {
-  background: hsl(200deg 20% 95%);
-  color: hsl(200deg 20% 40%);
-  padding: 15px;
-  border-radius: 6px;
-  margin: 10px 0;
-}
-
 .info-container {
   display: grid;
   grid-template-columns:
