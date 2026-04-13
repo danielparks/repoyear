@@ -122,7 +122,7 @@ export const EPOCH_DAY_MAX = 365000;
 /**
  * Converts a local time `Date` to days since the epoch.
  */
-export function toEpochDays(input: Date) {
+export function toEpochDays(input: Date): number {
   return Math.round(
     Date.UTC(input.getFullYear(), input.getMonth(), input.getDate()) / 86400000,
   );

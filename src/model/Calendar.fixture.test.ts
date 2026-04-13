@@ -15,6 +15,19 @@ import threeYearFixture from "../__fixtures__/github-3-years.json" with {
 const extraWeekContributions = extraWeekFixture as Contributions[];
 const threeYearContributions = threeYearFixture as Contributions[];
 
+function getFirstDate(contributions: Contributions[]): Date {
+  return new Date(
+    contributions.filter((c) => c.calendar).at(-1)!.calendar!.weeks.at(0)!
+      .contributionDays.at(0)!.date,
+  );
+}
+
+function getLastDate(contributions: Contributions[]): Date {
+  return new Date(
+    contributions[0]!.calendar!.weeks.at(-1)!.contributionDays.at(-1)!.date,
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Extra-week handling
 // ----------------------------------------------------------------------------
@@ -22,9 +35,6 @@ const threeYearContributions = threeYearFixture as Contributions[];
 // The extra-week fixture has commits for 2025-03-30 through 2025-04-05 in chunk
 // 1, which has no summary calendar. Those dates are before the summary start of
 // 2025-04-06 and should be silently dropped.
-//
-// Currently fails because `repoDay()` creates new days for those dates,
-// extending the calendar backward.
 Deno.test("Calendar should not create days from specific events outside summary range", () => {
   const calendar = Calendar.fromContributions({
     gitHub: extraWeekContributions,
@@ -53,38 +63,51 @@ Deno.test("Calendar should not create days from specific events outside summary 
 // Three years of data loaded in sequence should produce a calendar that spans
 // the full date range of all three year summaries.
 Deno.test("Calendar should span all years when loading multi-year data", () => {
+  const expectedStart = getFirstDate(threeYearContributions);
+  const expectedEnd = getLastDate(threeYearContributions);
   const calendar = Calendar.fromContributions({
     gitHub: threeYearContributions,
+    endDate: expectedEnd,
+    years: 3,
   });
 
-  // Year 3 summary starts 2023-04-09; year 1 summary ends 2026-04-05.
-  // The calendar is padded to week boundaries (Sunday–Saturday), so we check
-  // with a little slack.
-  const expectedStart = new Date(2023, 3, 9); // April 9, 2023
-  const expectedEnd = new Date(2026, 3, 5); // April 5, 2026
-
-  const firstDay = calendar.days[0];
-  const lastDay = calendar.days.at(-1)!;
+  const firstDate = calendar.days[0].date;
+  const lastDate = calendar.days.at(-1)!.date;
 
   assert(
-    firstDay.date <= expectedStart,
-    `Calendar should start on or before ${
-      expectedStart.toISOString().slice(0, 10)
-    }, got ${firstDay.date.toISOString().slice(0, 10)}`,
+    firstDate.getDay() == 0,
+    "Calendar should start on a Sunday",
   );
   assert(
-    lastDay.date >= expectedEnd,
-    `Calendar should end on or after ${
-      expectedEnd.toISOString().slice(0, 10)
-    }, got ${lastDay.date.toISOString().slice(0, 10)}`,
+    lastDate.getDay() == 6,
+    "Calendar should end on a Saturday",
+  );
+  assert(
+    Math.abs(
+      Math.round((firstDate.getTime() - expectedStart.getTime()) / 86400000),
+    ) <= 7,
+    "Calendar should start within a week of the expected date",
+  );
+  assert(
+    Math.abs(
+      Math.round((lastDate.getTime() - expectedEnd.getTime()) / 86400000),
+    ) <= 7,
+    "Calendar should start within a week of the expected date",
+  );
+  assert(
+    Math.round(lastDate.getFullYear() - firstDate.getFullYear()) == 3,
+    "Calendar should be roughly 3 years long",
   );
 });
 
 // Days at year boundaries should have summary data from both adjacent year
 // queries — specifically the day before and after each boundary.
 Deno.test("Calendar should have summary data for year-boundary days", () => {
+  const expectedEnd = getLastDate(threeYearContributions);
   const calendar = Calendar.fromContributions({
     gitHub: threeYearContributions,
+    endDate: expectedEnd,
+    years: 3,
   });
 
   const daysByDate = new Map<string, (typeof calendar.days)[0]>();
@@ -109,8 +132,11 @@ Deno.test("Calendar should have summary data for year-boundary days", () => {
 // Loading the same year twice (simulating re-fetch) should not double the
 // contribution counts at year boundaries where summaries overlap.
 Deno.test("Calendar should not double-count contributions at year boundaries", () => {
+  const expectedEnd = getLastDate(threeYearContributions);
   const calendar = Calendar.fromContributions({
     gitHub: threeYearContributions,
+    endDate: expectedEnd,
+    years: 3,
   });
 
   const daysByDate = new Map<string, (typeof calendar.days)[0]>();

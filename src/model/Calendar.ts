@@ -20,6 +20,12 @@ export class Calendar {
   days: Day[] = [];
   repositories = new Map<string, Repository>();
   gitHubSpecificCount: number | undefined;
+  // The first day that is fully updated with contributions data. GitHub data is
+  // loaded in chunks moving backward in time (though internally each chunk is
+  // organized forward in time), so this is the earliest day we've seen with
+  // summary data. This will never update GitHub contributions for days equal to
+  // or greater than this.
+  gitHubFirstLockedEpochDay: number = EPOCH_DAY_MAX;
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
@@ -89,54 +95,59 @@ export class Calendar {
   }
 
   /**
-   * Merges additional contributions data into this calendar.
-   *
-   * If there is summary data in a chunk, then that chunk is assumed to be the
-   * first chunk in a sequence, and all specific contributions are reset.
-   *
-   * Chunks without summary data will only update already existing days.
+   * Adds additional GitHub contributions data into this calendar.
    *
    * This is not idempotent; it must not be run on the same chunk twice. It may
    * be run after updateRepoCounts() and/or updateRepoColors().
    */
   #updateFromGitHub(contributions: github.Contributions) {
-    const findRepoDay = (timestamp: string, repository: gql.Repository) =>
+    const findRepoDay = (timestamp: string, repository: gql.Repository) => {
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
-      this.existingRepoDay(new Date(timestamp), repository);
+      const epochDay = toEpochDays(new Date(timestamp));
+      if (epochDay < this.gitHubFirstLockedEpochDay) {
+        const day = this.days[this.epochDayToIndex(epochDay) ?? -1];
+        if (day) {
+          return this.repoDayForDay(day, repository);
+        }
+      }
+
+      return undefined;
+    };
+
     this.gitHubSpecificCount ??= 0;
 
     if (contributions.calendar) {
-      // Clear specific contributions for all days in this year's summary range
-      // before re-adding them. This ensures that contributions deleted between
-      // reloads are removed when reprocessing.
       const { weeks } = contributions.calendar;
-      const firstDate = weeks[0]?.contributionDays[0]?.date;
-      const lastDate = weeks.at(-1)?.contributionDays.at(-1)?.date;
-      if (firstDate && lastDate) {
-        const fromEpochDay = toEpochDays(parseDateTime(firstDate));
-        const toEpochDay = toEpochDays(parseDateTime(lastDate));
-        for (const day of this.days) {
-          const epochDay = day.epochDay();
-          if (epochDay >= fromEpochDay && epochDay <= toEpochDay) {
-            for (const repoDay of day.repositories.values()) {
-              repoDay.setCommits(0);
-              repoDay.setCreate(0);
-              repoDay.issues.clear();
-              repoDay.prs.clear();
-              repoDay.reviews.clear();
+      const referenceEpochDay = this.days[0]?.epochDay();
+      // referenceEpochDay should never be undefined because it means there are
+      // no days in the calendar.
+      if (referenceEpochDay) {
+        for (const week of weeks) {
+          for (const day of week.contributionDays) {
+            // These are always in oldest to newest order. Update days until
+            // we either find a day with existing summary data (from an already
+            // loaded year) or the first locked day (again, from an already
+            // loaded year).
+            const epochDay = toEpochDays(parseDateTime(day.date));
+            if (epochDay >= this.gitHubFirstLockedEpochDay) {
+              break;
+            }
+
+            const thisDay = this.days[epochDay - referenceEpochDay];
+            if (thisDay) {
+              if (thisDay.contributionCount !== null) {
+                // Found an unlocked day that already has summary data — move
+                // the first locked day earlier.
+                this.gitHubFirstLockedEpochDay = epochDay;
+                break;
+              } else {
+                thisDay.contributionCount = day.contributionCount;
+              }
             }
           }
         }
       }
-
-      this.normalizeDays(
-        weeks.map((week) =>
-          week.contributionDays.map((day) =>
-            new Day(parseDateTime(day.date), day.contributionCount)
-          )
-        ).flat(),
-      );
     }
 
     for (const entry of contributions.commits) {
