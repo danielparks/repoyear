@@ -1,4 +1,4 @@
-//! Test helpers for both unit and integration tests
+//! Test helpers for both unit and integration tests.
 
 use bstr::ByteSlice;
 use duct::cmd;

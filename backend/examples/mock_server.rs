@@ -4,7 +4,7 @@
 //! you can easily create alternative implementations for testing without
 //! duplicating endpoint definitions.
 //!
-//! Run with: `cargo run --example mock_server`
+//! Run with `cargo run --example mock_server`.
 
 use repoyear_backend::api::{
     mock::{MockApiImpl, MockAppState},

@@ -8,78 +8,78 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 pub use clap::Parser;
 
 #[expect(clippy::doc_markdown, reason = "app name")]
-/// RepoYear backend
+/// RepoYear backend.
 ///
 /// The RepoYear frontend displays a heat map of GitHub contributions.
 #[derive(Debug, clap::Parser)]
 #[clap(version, about)]
 pub struct Params {
-    /// Whether or not to output in color
+    /// Whether or not to output in color.
     #[clap(long, default_value = "auto", value_name = "WHEN", global = true)]
     pub color: ColorChoice,
 
-    /// Verbosity (may be repeated up to three times)
+    /// Verbosity (may be repeated up to three times).
     #[clap(short, long, action = clap::ArgAction::Count, global = true)]
     pub verbose: u8,
 
-    /// The subcommand to execute
+    /// The subcommand to execute.
     #[command(subcommand)]
     pub command: Command,
 }
 
-/// Available subcommands
+/// Available subcommands.
 #[derive(Debug, clap::Subcommand)]
 pub enum Command {
-    /// Start the API server
+    /// Start the API server.
     Serve(ServeParams),
-    /// Collect contribution information based on a configuration file
+    /// Collect contribution information based on a configuration file.
     Scan(ScanParams),
-    /// Scan a repository for contribution information
+    /// Scan a repository for contribution information.
     ScanRepo(ScanRepoParams),
-    /// Generate `OpenAPI` specification
+    /// Generate `OpenAPI` specification.
     Openapi(OpenapiParams),
-    /// Display build version
+    /// Display build version.
     Version,
 }
 
-/// Parameters for the `serve` subcommand
+/// Parameters for the `serve` subcommand.
 #[derive(Debug, clap::Args)]
 pub struct ServeParams {
-    /// Address to bind to
+    /// Address to bind to.
     #[arg(long, env, default_value = "127.0.0.1:3000")]
     pub bind: String,
 
-    /// GitHub client ID for OAuth
+    /// GitHub client ID for OAuth.
     #[arg(long, env)]
     pub github_client_id: String,
 
-    /// GitHub client secret for OAuth
+    /// GitHub client secret for OAuth.
     #[arg(long, env, hide_env_values = true)]
     pub github_client_secret: String,
 
-    /// Configuration file for repositories to scan for contributions
+    /// Configuration file for repositories to scan for contributions.
     #[arg(long, env)]
     pub scan_config: Option<PathBuf>,
 }
 
-/// Parameters for the `scan` subcommand
+/// Parameters for the `scan` subcommand.
 #[derive(Debug, clap::Args)]
 pub struct ScanParams {
-    /// Configuration file to scan from
+    /// Configuration file to scan from.
     pub config: PathBuf,
 }
 
-/// Parameters for the `scan-repo` subcommand
+/// Parameters for the `scan-repo` subcommand.
 #[derive(Debug, clap::Args)]
 pub struct ScanRepoParams {
-    /// The repositories to scan
+    /// The repositories to scan.
     pub repositories: Vec<PathBuf>,
 }
 
-/// Parameters for the `openapi` subcommand
+/// Parameters for the `openapi` subcommand.
 #[derive(Debug, clap::Args)]
 pub struct OpenapiParams {
-    /// Output file (defaults to stdout)
+    /// Output file (defaults to stdout).
     #[arg(short, long)]
     pub output: Option<String>,
 }
@@ -121,17 +121,17 @@ impl Params {
     }
 }
 
-/// Whether or not to output in color
+/// Whether or not to output in color.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, clap::ValueEnum)]
 pub enum ColorChoice {
-    /// Output in color when running in a terminal that supports it
+    /// Output in color when running in a terminal that supports it.
     #[default]
     Auto,
 
-    /// Always output in color
+    /// Always output in color.
     Always,
 
-    /// Never output in color
+    /// Never output in color.
     Never,
 }
 

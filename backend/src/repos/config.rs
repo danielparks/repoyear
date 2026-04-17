@@ -236,7 +236,7 @@ pub struct TreeRepoIter<'a> {
         for<'b> fn(&'b DirEntry) -> bool,
     >,
 
-    /// The current name to re
+    /// The tree config.
     tree_config: &'a TreeConfig,
 }
 
@@ -310,7 +310,7 @@ mod tests {
 
     type SummarizedRepo = Result<(String, PathBuf), String>;
 
-    /// Get comparable representation of repo_iter item
+    /// Get comparable representation of repo_iter item.
     fn summarize_repo(
         result: Result<(String, Repository), RepoIterError>,
     ) -> SummarizedRepo {
@@ -320,7 +320,7 @@ mod tests {
         }
     }
 
-    /// Get repos from a config and summarize
+    /// Get repos from a config and summarize.
     #[expect(clippy::needless_pass_by_value, reason = "convenience")]
     fn summarize_config(config: Config) -> Vec<SummarizedRepo> {
         let mut vec: Vec<_> = config.repo_iter().map(summarize_repo).collect();

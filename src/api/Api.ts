@@ -7,7 +7,7 @@
     export type { ApiResult, ErrorBody, ErrorResult } from './http-client.ts'
     
 /**
-* Response from `/api/contributions`
+* Response from `/api/contributions`.
  */
 export type ContributionsResponse =
 {
@@ -15,7 +15,7 @@ export type ContributionsResponse =
 "repos": Record<string,(number)[]>,};
 
 /**
-* Response from `/api/health`
+* Response from `/api/health`.
  */
 export type HealthResponse =
 {
@@ -25,7 +25,7 @@ This indicates that the API server is up and nothing more. */
 "status": string,};
 
 /**
-* Response from OAuth endpoints
+* Response from OAuth endpoints.
 * 
 * * `/api/oauth/callback` * `/api/oauth/refresh`
  */
@@ -41,7 +41,7 @@ export type OAuthTokenResponse =
 "refreshTokenExpiresIn"?: number | null,};
 
 /**
-* Response from `/api/version`
+* Response from `/api/version`.
  */
 export type VersionResponse =
 {

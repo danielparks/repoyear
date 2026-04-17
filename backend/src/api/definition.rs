@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
 
-/// Response from `/api/health`
+/// Response from `/api/health`.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct HealthResponse {
     /// Health status (always `"ok"`).
@@ -18,38 +18,38 @@ pub struct HealthResponse {
     pub status: String,
 }
 
-/// Response from `/api/version`
+/// Response from `/api/version`.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct VersionResponse {
     /// Version string from git describe.
     pub version: String,
 }
 
-/// Response from `/api/contributions`
+/// Response from `/api/contributions`.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ContributionsResponse {
     /// Repository commit times (seconds since epoch) by repository name.
     pub repos: LocalContributions,
 }
 
-/// Local contributions (map repo name to commit times as seconds since epoch)
+/// Local contributions (map repo name to commit times as seconds since epoch).
 pub type LocalContributions = HashMap<String, Vec<i64>>;
 
-/// Parameters for `/api/oauth/callback`
+/// Parameters for `/api/oauth/callback`.
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct CallbackParams {
     /// The code from GitHub.
     pub code: String,
 }
 
-/// Parameters for `/api/oauth/refresh`
+/// Parameters for `/api/oauth/refresh`.
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct RefreshParams {
     /// The refresh token from GitHub.
     pub refresh_token: String,
 }
 
-/// Response from OAuth endpoints
+/// Response from OAuth endpoints.
 ///
 ///   * `/api/oauth/callback`
 ///   * `/api/oauth/refresh`

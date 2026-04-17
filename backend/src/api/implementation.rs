@@ -22,7 +22,7 @@ pub struct AppState {
     pub scan_config: Option<repos::Config>,
 }
 
-/// A request to <https://github.com/login/oauth/access_token>
+/// A request to <https://github.com/login/oauth/access_token>.
 #[derive(Debug, Serialize)]
 struct GitHubTokenRequest<'a> {
     /// The GitHub client ID for OAuth.
@@ -33,7 +33,7 @@ struct GitHubTokenRequest<'a> {
     code: &'a str,
 }
 
-/// A refresh token request to <https://github.com/login/oauth/access_token>
+/// A refresh token request to <https://github.com/login/oauth/access_token>.
 #[derive(Debug, Serialize)]
 struct GitHubRefreshRequest<'a> {
     /// The GitHub client ID for OAuth.
@@ -46,7 +46,7 @@ struct GitHubRefreshRequest<'a> {
     refresh_token: &'a str,
 }
 
-/// A response from <https://github.com/login/oauth/access_token>
+/// A response from <https://github.com/login/oauth/access_token>.
 #[derive(Debug, Deserialize)]
 struct GitHubTokenResponse {
     /// The access token if the request was successful.

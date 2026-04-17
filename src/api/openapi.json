@@ -14,7 +14,7 @@
     },
     "schemas": {
       "ContributionsResponse": {
-        "description": "Response from `/api/contributions`",
+        "description": "Response from `/api/contributions`.",
         "properties": {
           "repos": {
             "additionalProperties": {
@@ -53,7 +53,7 @@
         "type": "object"
       },
       "HealthResponse": {
-        "description": "Response from `/api/health`",
+        "description": "Response from `/api/health`.",
         "properties": {
           "status": {
             "description": "Health status (always `\"ok\"`).\n\nThis indicates that the API server is up and nothing more.",
@@ -66,7 +66,7 @@
         "type": "object"
       },
       "OAuthTokenResponse": {
-        "description": "Response from OAuth endpoints\n\n* `/api/oauth/callback` * `/api/oauth/refresh`",
+        "description": "Response from OAuth endpoints.\n\n* `/api/oauth/callback` * `/api/oauth/refresh`",
         "properties": {
           "access_token": {
             "description": "The access token from GitHub.",
@@ -98,7 +98,7 @@
         "type": "object"
       },
       "VersionResponse": {
-        "description": "Response from `/api/version`",
+        "description": "Response from `/api/version`.",
         "properties": {
           "version": {
             "description": "Version string from git describe.",
