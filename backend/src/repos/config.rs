@@ -181,7 +181,7 @@ impl From<(&str, Option<&str>)> for TreeConfig {
     fn from((root, replace_root): (&str, Option<&str>)) -> Self {
         Self {
             root: root.into(),
-            replace_root: replace_root.map(ToString::to_string),
+            replace_root: replace_root.map(str::to_owned),
         }
     }
 }
@@ -193,7 +193,7 @@ impl From<(&Path, Option<&str>)> for TreeConfig {
     fn from((root, replace_root): (&Path, Option<&str>)) -> Self {
         Self {
             root: root.into(),
-            replace_root: replace_root.map(ToString::to_string),
+            replace_root: replace_root.map(str::to_owned),
         }
     }
 }
@@ -203,7 +203,7 @@ impl From<(&Path, Option<&str>)> for TreeConfig {
 /// Convenience for writing tests.
 impl From<(PathBuf, Option<&str>)> for TreeConfig {
     fn from((root, replace_root): (PathBuf, Option<&str>)) -> Self {
-        Self { root, replace_root: replace_root.map(ToString::to_string) }
+        Self { root, replace_root: replace_root.map(str::to_owned) }
     }
 }
 
