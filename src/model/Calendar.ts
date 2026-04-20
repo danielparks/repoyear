@@ -107,7 +107,11 @@ export class Calendar {
       const epochDay = toEpochDays(new Date(timestamp));
       if (epochDay < this.gitHubFirstLockedEpochDay) {
         const day = this.days[this.epochDayToIndex(epochDay) ?? -1];
-        if (day) {
+        // Only accept specific events for days that have summary data. GitHub
+        // may return specific events slightly outside a chunk's summary range;
+        // accepting them here would double-count with the adjacent chunk that
+        // actually owns those days.
+        if (day && day.contributionCount !== null) {
           return this.repoDayForDay(day, repository);
         }
       }
@@ -117,35 +121,52 @@ export class Calendar {
 
     this.gitHubSpecificCount ??= 0;
 
+    // Compute the new locked boundary from this chunk's summary, but defer
+    // applying it until after specific events are processed — otherwise this
+    // chunk's own specific events would be blocked.
+    let newFirstLockedEpochDay = this.gitHubFirstLockedEpochDay;
+
     if (contributions.calendar) {
       const { weeks } = contributions.calendar;
       const referenceEpochDay = this.days[0]?.epochDay();
       // referenceEpochDay should never be undefined because it means there are
       // no days in the calendar.
       if (referenceEpochDay) {
-        for (const week of weeks) {
+        let firstSummaryEpochDay: number | undefined = undefined;
+        outer: for (const week of weeks) {
           for (const day of week.contributionDays) {
             // These are always in oldest to newest order. Update days until
             // we either find a day with existing summary data (from an already
             // loaded year) or the first locked day (again, from an already
             // loaded year).
             const epochDay = toEpochDays(parseDateTime(day.date));
-            if (epochDay >= this.gitHubFirstLockedEpochDay) {
-              break;
+            if (epochDay >= newFirstLockedEpochDay) {
+              break outer;
             }
+
+            firstSummaryEpochDay ??= epochDay;
 
             const thisDay = this.days[epochDay - referenceEpochDay];
             if (thisDay) {
               if (thisDay.contributionCount !== null) {
                 // Found an unlocked day that already has summary data — move
                 // the first locked day earlier.
-                this.gitHubFirstLockedEpochDay = epochDay;
-                break;
+                newFirstLockedEpochDay = epochDay;
+                break outer;
               } else {
                 thisDay.contributionCount = day.contributionCount;
               }
             }
           }
+        }
+
+        // Even when summaries don't overlap (adjacent years), lock out older
+        // chunks from adding specific events for days in this chunk's range.
+        if (firstSummaryEpochDay !== undefined) {
+          newFirstLockedEpochDay = Math.min(
+            newFirstLockedEpochDay,
+            firstSummaryEpochDay,
+          );
         }
       }
     }
@@ -194,6 +215,8 @@ export class Calendar {
         this.gitHubSpecificCount++;
       }
     }
+
+    this.gitHubFirstLockedEpochDay = newFirstLockedEpochDay;
   }
 
   /**
