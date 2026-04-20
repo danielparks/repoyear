@@ -121,9 +121,8 @@ export class Calendar {
 
     this.gitHubSpecificCount ??= 0;
 
-    // Compute the new locked boundary from this chunk's summary, but defer
-    // applying it until after specific events are processed — otherwise this
-    // chunk's own specific events would be blocked.
+    // Compute the new locked boundary from this chunk's summary, but use the
+    // old locked boundary for applying specific contributions.
     let newFirstLockedEpochDay = this.gitHubFirstLockedEpochDay;
 
     if (contributions.calendar) {
@@ -140,7 +139,7 @@ export class Calendar {
             // loaded year) or the first locked day (again, from an already
             // loaded year).
             const epochDay = toEpochDays(parseDateTime(day.date));
-            if (epochDay >= newFirstLockedEpochDay) {
+            if (epochDay >= this.gitHubFirstLockedEpochDay) {
               break outer;
             }
 
@@ -149,9 +148,9 @@ export class Calendar {
             const thisDay = this.days[epochDay - referenceEpochDay];
             if (thisDay) {
               if (thisDay.contributionCount !== null) {
-                // Found an unlocked day that already has summary data — move
-                // the first locked day earlier.
-                newFirstLockedEpochDay = epochDay;
+                // Should never happen. Found an unlocked day that already has
+                // summary data — move the first locked day earlier.
+                this.gitHubFirstLockedEpochDay = epochDay;
                 break outer;
               } else {
                 thisDay.contributionCount = day.contributionCount;
