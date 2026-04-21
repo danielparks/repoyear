@@ -26,6 +26,12 @@ export class Calendar {
   // summary data. This will never update GitHub contributions for days equal to
   // or greater than this.
   gitHubFirstLockedEpochDay: number = EPOCH_DAY_MAX;
+  // The value of gitHubFirstLockedEpochDay from before the most recently loaded
+  // year's summary was applied. Paginated chunks (which have no summary
+  // calendar) use this as their event gate so that events within the current
+  // year are still accepted even though gitHubFirstLockedEpochDay has already
+  // been set to that year's summary start.
+  gitHubOuterLockedEpochDay: number = EPOCH_DAY_MAX;
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
@@ -101,11 +107,22 @@ export class Calendar {
    * be run after updateRepoCounts() and/or updateRepoColors().
    */
   #updateFromGitHub(contributions: github.Contributions) {
+    // Paginated chunks (no summary calendar) must use gitHubOuterLockedEpochDay
+    // rather than gitHubFirstLockedEpochDay. After a year's first chunk sets
+    // gitHubFirstLockedEpochDay to that year's summary start, all events from
+    // subsequent paginated pages of the same year would fail the lock check
+    // (their dates are within the year, i.e. ≥ the lock). The outer lock is the
+    // lock from before this year's summary was loaded, so paginated events still
+    // get through while cross-year double-counting is still prevented.
+    const eventLock = contributions.calendar
+      ? this.gitHubFirstLockedEpochDay
+      : this.gitHubOuterLockedEpochDay;
+
     const findRepoDay = (timestamp: string, repository: gql.Repository) => {
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
       const epochDay = toEpochDays(new Date(timestamp));
-      if (epochDay < this.gitHubFirstLockedEpochDay) {
+      if (epochDay < eventLock) {
         const day = this.days[this.epochDayToIndex(epochDay) ?? -1];
         // Only accept specific events for days that have summary data. GitHub
         // may return specific events slightly outside a chunk's summary range;
@@ -162,6 +179,9 @@ export class Calendar {
         // Even when summaries don't overlap (adjacent years), lock out older
         // chunks from adding specific events for days in this chunk's range.
         if (firstSummaryEpochDay !== undefined) {
+          // Save the outer lock (the lock before this year) so paginated chunks
+          // that follow can still accept events within this year's range.
+          this.gitHubOuterLockedEpochDay = this.gitHubFirstLockedEpochDay;
           newFirstLockedEpochDay = Math.min(
             newFirstLockedEpochDay,
             firstSummaryEpochDay,
