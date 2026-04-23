@@ -5,6 +5,7 @@ ignore = [
   "RUSTSEC-2026-0049", # rustls-webpki (via dropshot, but we don't use it)
   "RUSTSEC-2026-0098", # rustls-webpki (via dropshot, but we don't use it)
   "RUSTSEC-2026-0099", # rustls-webpki (via dropshot, but we don't use it)
+  "RUSTSEC-2026-0104", # rustls-webpki (via dropshot, but we don't use it)
 ]
 
 [graph]
