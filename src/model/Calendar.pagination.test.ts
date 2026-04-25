@@ -5,10 +5,6 @@
  * When GitHub has more than 100 contributions of a given type in a year, it
  * paginates them across multiple API responses. Only the first response
  * includes a summary calendar; subsequent pages have `calendar: undefined`.
- *
- * Bug: after the first chunk sets gitHubFirstLockedEpochDay to the start of
- * that year's summary, subsequent paginated chunks for the same year have all
- * their events rejected because they fall within (≥) the locked range.
  */
 import { assertEquals } from "@std/assert";
 import { ALL_ON, Calendar } from "./index.ts";

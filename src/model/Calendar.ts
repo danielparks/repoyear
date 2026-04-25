@@ -14,24 +14,39 @@ import { ALL_ON, Filter } from "./Filter.ts";
  * Represents a user’s contribution calendar over a date range.
  *
  * Contains all contributions organized by day and repository.
+ *
+ * ## GitHub contribution order
+ *
+ * The order of GitHub contributions is important to this class. Contributions
+ * must be in chunks moving backward in time, i.e. later years first. Within
+ * each chunk contributions are listed moving forward in time, i.e. earlier days
+ * appear first.
  */
 export class Calendar {
   name: string;
   days: Day[] = [];
   repositories = new Map<string, Repository>();
   gitHubSpecificCount: number | undefined;
-  // The first day that is fully updated with contributions data. GitHub data is
-  // loaded in chunks moving backward in time (though internally each chunk is
-  // organized forward in time), so this is the earliest day we've seen with
-  // summary data. This will never update GitHub contributions for days equal to
-  // or greater than this.
-  gitHubFirstLockedEpochDay: number = EPOCH_DAY_MAX;
-  // The value of gitHubFirstLockedEpochDay from before the most recently loaded
-  // year's summary was applied. Paginated chunks (which have no summary
-  // calendar) use this as their event gate so that events within the current
-  // year are still accepted even though gitHubFirstLockedEpochDay has already
-  // been set to that year's summary start.
-  gitHubOuterLockedEpochDay: number = EPOCH_DAY_MAX;
+
+  // The first day that has summary data from GitHub.
+  //
+  // This is the earliest day we've seen with GitHub summary data. Specific
+  // contributions are loaded for days from this date forward, but before
+  // `gitHubFirstFullyLoadedEpochDay`.
+  //
+  // See “GitHub contribution order” in class docs.
+  gitHubFirstSummarizedEpochDay: number = EPOCH_DAY_MAX;
+
+  // The first day that is fully loaded with GitHub data.
+  //
+  // We never add GitHub contributions to days from this date forward.
+  //
+  // When we receive summary data for a new, earlier year then this is set to
+  // the old value of `gitHubFirstSummarizedEpochDay` and it in turn is updated
+  // to point to the start of the year.
+  //
+  // See “GitHub contribution order” in class docs.
+  gitHubFirstFullyLoadedEpochDay: number = EPOCH_DAY_MAX;
 
   constructor(name: string, days: Day[] = []) {
     this.name = name;
@@ -107,22 +122,11 @@ export class Calendar {
    * be run after updateRepoCounts() and/or updateRepoColors().
    */
   #updateFromGitHub(contributions: github.Contributions) {
-    // Paginated chunks (no summary calendar) must use gitHubOuterLockedEpochDay
-    // rather than gitHubFirstLockedEpochDay. After a year's first chunk sets
-    // gitHubFirstLockedEpochDay to that year's summary start, all events from
-    // subsequent paginated pages of the same year would fail the lock check
-    // (their dates are within the year, i.e. ≥ the lock). The outer lock is the
-    // lock from before this year's summary was loaded, so paginated events still
-    // get through while cross-year double-counting is still prevented.
-    const eventLock = contributions.calendar
-      ? this.gitHubFirstLockedEpochDay
-      : this.gitHubOuterLockedEpochDay;
-
     const findRepoDay = (timestamp: string, repository: gql.Repository) => {
       // Timestamps (`occurredAt`) are UTC times, e.g. "2025-10-02T07:00:00Z",
       // so parsing with `new Date(str)` works correctly.
       const epochDay = toEpochDays(new Date(timestamp));
-      if (epochDay < eventLock) {
+      if (epochDay < this.gitHubFirstFullyLoadedEpochDay) {
         const day = this.days[this.epochDayToIndex(epochDay) ?? -1];
         // Only accept specific events for days that have summary data. GitHub
         // may return specific events slightly outside a chunk's summary range;
@@ -138,36 +142,37 @@ export class Calendar {
 
     this.gitHubSpecificCount ??= 0;
 
-    // Compute the new locked boundary from this chunk's summary, but use the
-    // old locked boundary for applying specific contributions.
-    let newFirstLockedEpochDay = this.gitHubFirstLockedEpochDay;
-
     if (contributions.calendar) {
+      // New year. Move the first full loaded day back to the start of the year
+      // we just loaded (chronologically the next year).
+      this.gitHubFirstFullyLoadedEpochDay = this.gitHubFirstSummarizedEpochDay;
+
       const { weeks } = contributions.calendar;
       const referenceEpochDay = this.days[0]?.epochDay();
       // referenceEpochDay should never be undefined because it means there are
       // no days in the calendar.
       if (referenceEpochDay) {
-        let firstSummaryEpochDay: number | undefined = undefined;
+        let firstSummarizedEpochDay: number | undefined = undefined;
         outer: for (const week of weeks) {
           for (const day of week.contributionDays) {
             // These are always in oldest to newest order. Update days until
             // we either find a day with existing summary data (from an already
-            // loaded year) or the first locked day (again, from an already
-            // loaded year).
+            // loaded year) or the first fully loaded day (again, from an
+            // already loaded year).
             const epochDay = toEpochDays(parseDateTime(day.date));
-            if (epochDay >= this.gitHubFirstLockedEpochDay) {
+            if (epochDay >= this.gitHubFirstFullyLoadedEpochDay) {
               break outer;
             }
 
-            firstSummaryEpochDay ??= epochDay;
+            firstSummarizedEpochDay ??= epochDay;
 
             const thisDay = this.days[epochDay - referenceEpochDay];
             if (thisDay) {
               if (thisDay.contributionCount !== null) {
-                // Should never happen. Found an unlocked day that already has
-                // summary data — move the first locked day earlier.
-                this.gitHubFirstLockedEpochDay = epochDay;
+                // Should never happen. Found a day that already has summary
+                // data before the first day we tracked — move the first fully
+                // loaded day earlier.
+                this.gitHubFirstFullyLoadedEpochDay = epochDay;
                 break outer;
               } else {
                 thisDay.contributionCount = day.contributionCount;
@@ -176,16 +181,8 @@ export class Calendar {
           }
         }
 
-        // Even when summaries don't overlap (adjacent years), lock out older
-        // chunks from adding specific events for days in this chunk's range.
-        if (firstSummaryEpochDay !== undefined) {
-          // Save the outer lock (the lock before this year) so paginated chunks
-          // that follow can still accept events within this year's range.
-          this.gitHubOuterLockedEpochDay = this.gitHubFirstLockedEpochDay;
-          newFirstLockedEpochDay = Math.min(
-            newFirstLockedEpochDay,
-            firstSummaryEpochDay,
-          );
+        if (firstSummarizedEpochDay !== undefined) {
+          this.gitHubFirstSummarizedEpochDay = firstSummarizedEpochDay;
         }
       }
     }
@@ -234,8 +231,6 @@ export class Calendar {
         this.gitHubSpecificCount++;
       }
     }
-
-    this.gitHubFirstLockedEpochDay = newFirstLockedEpochDay;
   }
 
   /**
