@@ -8,7 +8,7 @@ body.compact .calendar-heat-map {
   margin: 0;
 }
 
-.calendar-heat-map > .no-data {
+.calendar-heat-map > .message {
   position: absolute;
   display: flex;
   align-items: center;

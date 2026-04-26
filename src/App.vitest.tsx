@@ -128,7 +128,8 @@ describe("App smoke test", () => {
     );
     renderApp();
 
-    expect(screen.queryByText(/Loading/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Loading/i, { selector: "button" }))
+      .toBeInTheDocument();
 
     await waitFor(() => {
       const { name } = fixtureData[0] as Contributions;
@@ -140,7 +141,7 @@ describe("App smoke test", () => {
     }, { timeout: 500 });
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading contributions/i)).not
+      expect(screen.queryByText(/Loading/i, { selector: "button" })).not
         .toBeInTheDocument();
     }, { timeout: 5000 });
   });
@@ -152,7 +153,8 @@ describe("App smoke test", () => {
     );
     renderApp();
 
-    expect(screen.queryByText(/Loading/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Loading/i, { selector: "button" }))
+      .toBeInTheDocument();
 
     await waitFor(() => {
       const { name } = fixtureData[0] as Contributions;
@@ -164,7 +166,7 @@ describe("App smoke test", () => {
     }, { timeout: 500 });
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading contributions/i)).not
+      expect(screen.queryByText(/Loading/i, { selector: "button" })).not
         .toBeInTheDocument();
     }, { timeout: 5000 });
   });

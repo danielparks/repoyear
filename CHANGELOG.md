@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - Reduced max lightness from 99% to 96%, since 99% looked white.
 - Removed refresh/reload distinction because the new multi-year capable data
   model does not support it.
+- Now displays “Loading…” instead of “No contributions data” when loading data
+  from GitHub before any data has arrived.
 
 ## 0.8.1 (2026-03-07)
 

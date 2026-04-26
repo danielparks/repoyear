@@ -132,7 +132,7 @@
   color: hsl(210deg 100% 45%);
 }
 
-.message {
+.summary-box .message {
   margin: 1rlh 0;
   padding: 10px;
   background: hsl(30deg 100% 95%);

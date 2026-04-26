@@ -65,9 +65,9 @@ export function CalendarHeatMap(
           </div>
         ))}
       </div>
-      {!calendar.hasData() && (
-        <div className="no-data">No contributions data</div>
-      )}
+      {!calendar.hasData() && (loading
+        ? <div className="message">Loading…</div>
+        : <div className="message">No contributions data</div>)}
     </div>
   );
 }

@@ -45,7 +45,7 @@ export default function App(
   // loading percentage we don’t know if the query has finished. We might
   // calculate it to be 97% done, but if the query is finished then we know it
   // is actually 100%.
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [loadingPercent, setLoadingPercent] = useState<number>(0);
 
   // Handle OAuth callback.
@@ -129,6 +129,12 @@ export default function App(
       console.error("Error refetching query:", error);
     });
   }
+
+  useEffect(() => {
+    if (query?.data?.complete) {
+      setLoading(false);
+    }
+  }, [query?.data?.complete]);
 
   const contributions = query.data?.contributions;
 
@@ -315,9 +321,10 @@ export default function App(
       {errorMessage && <div className="error-message">{errorMessage}</div>}
       <RepoYearView
         calendar={calendar}
-        // If loadingPercent == 0, then we might be displaying complete data
-        // (the display doesn’t update until new data is loaded).
-        loading={loading && loadingPercent > 0}
+        // The reload button immediately sets loading=true, but the partial new
+        // data isn’t displayed until it comes in, so it looks weird if the
+        // Calendar immediately switches to loading mode.
+        loading={loading && !query?.data?.complete}
       />
       <Footer
         version={getAppVersion()}
