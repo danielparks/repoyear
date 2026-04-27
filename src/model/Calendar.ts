@@ -256,10 +256,8 @@ export class Calendar {
             firstEpochDay = previousEpochDay;
           }
 
-          this.days[previousEpochDay - firstEpochDay]!.setRepoCommits(
-            repository,
-            commits,
-          );
+          this.days[previousEpochDay - firstEpochDay]!.forRepo(repository)
+            .setCommits(commits);
         }
       };
 
@@ -305,7 +303,7 @@ export class Calendar {
       const unknownCount = (day.contributionCount || 0) - dayTotal;
       if (unknownCount > 0) {
         unknownTotal += unknownCount;
-        day.setRepoCommits(this.internRepository("unknown"), unknownCount);
+        day.forRepo(this.internRepository("unknown")).setUnknowns(unknownCount);
       } else {
         day.repositories.delete("unknown");
       }

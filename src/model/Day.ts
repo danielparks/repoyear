@@ -55,7 +55,7 @@ export class Day {
    * commits to the "unknown" repository.
    */
   unknownCount() {
-    return this.repositories.get("unknown")?.commitCount ?? 0;
+    return this.repositories.get("unknown")?.unknownCount ?? 0;
   }
 
   /**
@@ -103,15 +103,17 @@ export class Day {
   }
 
   /**
-   * Set the commit count for a particularly repository.
+   * Get a RepositoryDay object for a particular repo.
+   *
+   * Creates the RepositoryDay object if it doesn’t exist.
    */
-  setRepoCommits(repository: Repository, count: number) {
+  forRepo(repository: Repository): RepositoryDay {
     let repoDay = this.repositories.get(repository.url);
     if (!repoDay) {
       repoDay = new RepositoryDay(repository);
       this.repositories.set(repository.url, repoDay);
     }
-    repoDay.commitCount = count;
+    return repoDay;
   }
 }
 
@@ -142,6 +144,8 @@ export class RepositoryDay {
   prs: Set<string> = new Set();
   /** PR review URLs */
   reviews: Set<string> = new Set();
+  /** Unknown contribution count */
+  unknownCount = 0;
 
   constructor(repository: Repository) {
     this.repository = repository;
@@ -176,6 +180,13 @@ export class RepositoryDay {
   }
 
   /**
+   * Record unknown contribution counts for this day.
+   */
+  setUnknowns(count: number) {
+    this.unknownCount = count;
+  }
+
+  /**
    * Returns the repository URL.
    */
   url() {
@@ -184,13 +195,9 @@ export class RepositoryDay {
 
   /**
    * Returns the contribution count for this repository on this day.
-   *
-   * This only includes “known” contributions for events that we track, like
-   * commits and PRs. The contribution count returned by the contribution
-   * calendar may include other contributions we don’t check for.
    */
   count() {
     return this.created + this.commitCount + this.issues.size + this.prs.size +
-      this.reviews.size;
+      this.reviews.size + this.unknownCount;
   }
 }

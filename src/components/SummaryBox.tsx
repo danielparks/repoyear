@@ -231,6 +231,9 @@ function DaySummary({ day, filter }: { day: Day; filter: Filter }) {
                   )}
                 </h4>
                 <ul>
+                  {repoDay.unknownCount > 0 && (
+                    <li>{countNoun(repoDay.unknownCount, "contribution")}</li>
+                  )}
                   {repoDay.commitCount > 0 && (
                     <li>{countNoun(repoDay.commitCount, "commit")}</li>
                   )}
