@@ -1,6 +1,12 @@
 import "./CalendarHeatMap.css";
 import { Calendar, Day, Filter } from "../model/index.ts";
 
+const MONTH_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "short" });
+const JANUARY_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "short",
+});
+
 export interface CalendarHeatMapProps {
   calendar: Calendar;
   filter?: Filter;
@@ -47,23 +53,35 @@ export function CalendarHeatMap(
       style={clickUrl ? { cursor: "pointer" } : undefined}
     >
       <div className="weeks" dir="rtl">
-        {[...calendar.weeks()].reverse().map((week) => (
-          <div key={`week ${week[0].date}`} className="week">
-            {week.map((day) => (
-              <GraphDay
-                key={day.date.toString()}
-                day={day}
-                filter={filter}
-                max={dayMax}
-                highlight={highlight}
-                selected={selectedDays.has(day)}
-                onClick={onDayClick}
-                onMouseDown={onDayMouseDown}
-                onMouseEnter={onDayMouseEnter}
-              />
-            ))}
-          </div>
-        ))}
+        {[...calendar.weeks()].reverse().map((week) => {
+          const saturday = week.at(-1)!.date;
+          const month = saturday.getMonth();
+          return (
+            <div
+              key={`week ${week[0].date}`}
+              className={`week ${saturday.getDate() <= 7 ? "first" : ""}`}
+            >
+              <div className={`month ${month === 0 ? "january" : ""}`}>
+                {(month === 0 ? JANUARY_FORMATTER : MONTH_FORMATTER).format(
+                  saturday,
+                )}
+              </div>
+              {week.map((day) => (
+                <GraphDay
+                  key={day.date.toString()}
+                  day={day}
+                  filter={filter}
+                  max={dayMax}
+                  highlight={highlight}
+                  selected={selectedDays.has(day)}
+                  onClick={onDayClick}
+                  onMouseDown={onDayMouseDown}
+                  onMouseEnter={onDayMouseEnter}
+                />
+              ))}
+            </div>
+          );
+        })}
       </div>
       {!calendar.hasData() && (loading
         ? <div className="message">Loading…</div>

@@ -1,7 +1,7 @@
 .calendar-heat-map {
   display: block;
   position: relative;
-  margin: 1rlh -1rlh;
+  margin: 1rlh -2rlh;
 }
 
 body.compact .calendar-heat-map {
@@ -26,11 +26,14 @@ body.compact .calendar-heat-map {
 .calendar-heat-map > .weeks {
   display: flex;
   overflow-x: auto;
+  padding: 0 1rlh;
 }
 
 .calendar-heat-map > .weeks > .week {
   display: block;
+  position: relative;
   flex: 1;
+  padding-top: 1lh;
 }
 
 .calendar-heat-map > .weeks > .week > div {
@@ -41,6 +44,28 @@ body.compact .calendar-heat-map {
   padding: 0;
   aspect-ratio: 1/1;
   min-height: 15px;
+}
+
+.calendar-heat-map > .weeks > .week > div.month {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1lh;
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-heat-map > .weeks > .week.first > div.month {
+  display: block;
+  text-align: left;
+  font-size: 80%;
+  width: 100px;
+  color: #666;
+}
+
+.calendar-heat-map > .weeks > .week.first > div.month.january {
+  font-weight: bold;
 }
 
 .calendar-heat-map.loading > .weeks > .week > div.unknown > ol {
