@@ -102,9 +102,3 @@ body.compact .calendar-heat-map {
 .calendar-heat-map > .weeks > .week > div > ol > li {
   height: 100%;
 }
-
-@media (max-width: 650px) {
-  .calendar-heat-map {
-    margin: 1rlh -0.5rlh;
-  }
-}
