@@ -57,11 +57,22 @@ body.compact .calendar-heat-map {
   left: 0;
   height: 1rlh;
   margin: 0;
-  padding: 0;
+  padding: 2px 0 0 7px;
+  box-sizing: border-box;
   text-align: left;
   font-size: 80%;
   width: 100px;
   color: #666;
+}
+
+.calendar-heat-map > .weeks > .week.first > div.month::after {
+  position: absolute;
+  bottom: -1px;
+  left: 1px;
+  width: 0;
+  height: 0.3rlh;
+  border-left: 1px solid #666;
+  content: "";
 }
 
 .calendar-heat-map > .weeks > .week.first > div.month.january {
