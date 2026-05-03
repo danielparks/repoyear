@@ -33,7 +33,7 @@ body.compact .calendar-heat-map {
   display: block;
   position: relative;
   flex: 1;
-  padding-top: 1lh;
+  padding-top: 1rlh;
 }
 
 .calendar-heat-map > .weeks > .week > div {
@@ -48,16 +48,16 @@ body.compact .calendar-heat-map {
 
 .calendar-heat-map > .weeks > .week > div.month {
   display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 1lh;
-  margin: 0;
-  padding: 0;
 }
 
 .calendar-heat-map > .weeks > .week.first > div.month {
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1rlh;
+  margin: 0;
+  padding: 0;
   text-align: left;
   font-size: 80%;
   width: 100px;
