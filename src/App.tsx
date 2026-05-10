@@ -14,6 +14,7 @@ import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
 import { arrayStartsWith, sum } from "./util.ts";
+import equal from "fast-deep-equal";
 
 export default function App(
   {
@@ -171,7 +172,8 @@ export default function App(
     if (
       gitHub.length &&
       prev &&
-      prev.local === local &&
+      prev.gitHub.length > 0 &&
+      equal(prev.local, local) &&
       arrayStartsWith(gitHub, prev.gitHub)
     ) {
       // Possible updates from GitHub and local contributions haven’t changed.
