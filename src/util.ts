@@ -30,7 +30,8 @@ export function chunk<T>(
  * Check if `array` starts with `prefix`.
  */
 export function arrayStartsWith<T>(array: T[], prefix: T[]): boolean {
-  return equal(array.slice(0, prefix.length), prefix);
+  return array.length >= prefix.length &&
+    prefix.every((e, i) => equal(e, array[i]));
 }
 
 /**
