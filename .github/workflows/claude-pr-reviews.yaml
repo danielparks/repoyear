@@ -18,6 +18,8 @@ jobs:
 
       - name: Render PR discussion
         id: render
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           {
             echo "pr_context<<EOF"
