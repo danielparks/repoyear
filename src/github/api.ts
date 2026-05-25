@@ -142,7 +142,7 @@ export class GitHub {
   }
 
   installRateLimitReport() {
-    let printJob: number | null = null;
+    let printJob: ReturnType<typeof setTimeout> | null = null;
     this.octokit.hook.after("request", (response) => {
       const limit = response.headers["x-ratelimit-limit"] || "";
       const reset = response.headers["x-ratelimit-reset"];
