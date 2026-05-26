@@ -9,6 +9,8 @@ updates:
       github-actions:
         patterns:
           - "*"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -21,6 +23,8 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "cargo"
     directory: "/backend"
@@ -33,3 +37,5 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+    cooldown:
+      default-days: 7
