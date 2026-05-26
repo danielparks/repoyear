@@ -7,6 +7,8 @@ on:
       - main
   pull_request:
 
+permissions: {}
+
 jobs:
   check:
     name: deno check

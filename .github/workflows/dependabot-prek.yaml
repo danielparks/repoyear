@@ -5,6 +5,8 @@ on:
     branches:
       - "dependabot/github_actions/**"
 
+permissions: {}
+
 jobs:
   prek-auto-update:
     # Only run on dependabot PRs

@@ -3,6 +3,8 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
 
+permissions: {}
+
 jobs:
   pr-review:
     if: |
