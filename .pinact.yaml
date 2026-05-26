@@ -4,9 +4,5 @@ version: 3
 
 ignore_actions:
   # These actions don’t have versions
-  - name: danielparks/github-actions/create-release
-    ref: main
-  - name: danielparks/github-actions/create-release-artifacts
-    ref: main
   - name: danielparks/claude-pr-review
     ref: ffaeedbea7afa69130f673fe7f7b4b14e1643732
