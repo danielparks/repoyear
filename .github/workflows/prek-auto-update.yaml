@@ -1,0 +1,43 @@
+name: prek auto-update
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 9:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  prek-auto-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: taiki-e/install-action@d9be7d8cda89035c9c843f78bd44d4f72d8403d4 # v2.79.7
+        with:
+          tool: prek
+      - run: prek auto-update
+      - name: Open PR if changed
+        run: |
+          if [[ -z $(git status --porcelain) ]]; then
+            exit 0
+          fi
+
+          BRANCH="prek-auto-update"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m '`prek auto-update`'
+          git push -u origin "$BRANCH" --force
+
+          if ! gh pr list --head "$BRANCH" --state open --json number --jq '.[0]' | grep -q .; then
+            gh pr create \
+              --title '`prek auto-update`' \
+              --body 'Automated weekly update from `prek auto-update`.'
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
