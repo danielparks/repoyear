@@ -5,8 +5,13 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pr-review:
+    name: Review
     if: |
       contains(
         fromJSON('["OWNER", "COLLABORATOR"]'),
@@ -16,18 +21,18 @@ jobs:
     timeout-minutes: 30
     permissions:
       # contents: write is not safe without branch protection rules
-      contents: read
-      pull-requests: write
-      id-token: write
-      issues: write
-      actions: read
+      contents: read # Read files in private repos
+      pull-requests: write # Write PR comments
+      id-token: write # Coordinate with Claude app
+      issues: write # Write issue comments
+      actions: read # Read GitHub action results
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 2
           persist-credentials: false
 
-      - uses: danielparks/claude-pr-review@ffaeedbea7afa69130f673fe7f7b4b14e1643732 # main
+      - uses: danielparks/claude-pr-review@1567ea721defa4614e1e8bd40ba156f9cd81377b # v1
         with:
           # You can set either of these secrets. If both are set, the API key
           # seems to win.
