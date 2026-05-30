@@ -1,0 +1,248 @@
+name: Checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
+        with:
+          cache: true
+
+      - uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
+        with:
+          components: clippy
+
+      - uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
+        with:
+          toolchain: nightly
+          components: rustfmt
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      - uses: taiki-e/install-action@d9be7d8cda89035c9c843f78bd44d4f72d8403d4 # v2.79.7
+        with:
+          tool: typos,zizmor,cargo-deny,cargo-msrv
+
+      - run: deno install --frozen
+
+      - name: typos
+        id: typos
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          typos || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: zizmor
+        id: zizmor
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          zizmor . || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: deno check
+        id: deno_check
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          deno check || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: deno fmt
+        id: deno_fmt
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          deno fmt --check || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: deno lint
+        id: deno_lint
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          deno lint || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: deno test
+        id: deno_test
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          deno test || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: vitest
+        id: vitest
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          deno run vitest:run || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo fmt
+        id: cargo_fmt
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          cargo +nightly fmt --check || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo clippy
+        id: cargo_clippy
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          cargo clippy --all-features --all-targets || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo doc
+        id: cargo_doc
+        continue-on-error: true
+        env:
+          RUSTDOCFLAGS: --document-private-items -Dwarnings
+        run: |
+          start=$SECONDS
+          cargo doc --no-deps --all-features || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo deny
+        id: cargo_deny
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          cargo deny --rust-version 1.85.0 --manifest-path backend/Cargo.toml check || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo msrv
+        id: cargo_msrv
+        continue-on-error: true
+        working-directory: backend
+        run: |
+          start=$SECONDS
+          cargo msrv verify || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo build
+        id: cargo_build
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          cargo build --tests --all-features || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: cargo test
+        id: cargo_test
+        continue-on-error: true
+        run: |
+          start=$SECONDS
+          cargo test --all-features || rc=$?
+          echo "duration=$((SECONDS - start))" >> "$GITHUB_OUTPUT"
+          exit ${rc:-0}
+
+      - name: Summary
+        if: always()
+        env:
+          TYPOS_OUTCOME: ${{ steps.typos.outcome }}
+          TYPOS_DURATION: ${{ steps.typos.outputs.duration }}
+          ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
+          ZIZMOR_DURATION: ${{ steps.zizmor.outputs.duration }}
+          DENO_CHECK_OUTCOME: ${{ steps.deno_check.outcome }}
+          DENO_CHECK_DURATION: ${{ steps.deno_check.outputs.duration }}
+          DENO_FMT_OUTCOME: ${{ steps.deno_fmt.outcome }}
+          DENO_FMT_DURATION: ${{ steps.deno_fmt.outputs.duration }}
+          DENO_LINT_OUTCOME: ${{ steps.deno_lint.outcome }}
+          DENO_LINT_DURATION: ${{ steps.deno_lint.outputs.duration }}
+          DENO_TEST_OUTCOME: ${{ steps.deno_test.outcome }}
+          DENO_TEST_DURATION: ${{ steps.deno_test.outputs.duration }}
+          VITEST_OUTCOME: ${{ steps.vitest.outcome }}
+          VITEST_DURATION: ${{ steps.vitest.outputs.duration }}
+          CARGO_FMT_OUTCOME: ${{ steps.cargo_fmt.outcome }}
+          CARGO_FMT_DURATION: ${{ steps.cargo_fmt.outputs.duration }}
+          CARGO_CLIPPY_OUTCOME: ${{ steps.cargo_clippy.outcome }}
+          CARGO_CLIPPY_DURATION: ${{ steps.cargo_clippy.outputs.duration }}
+          CARGO_DOC_OUTCOME: ${{ steps.cargo_doc.outcome }}
+          CARGO_DOC_DURATION: ${{ steps.cargo_doc.outputs.duration }}
+          CARGO_DENY_OUTCOME: ${{ steps.cargo_deny.outcome }}
+          CARGO_DENY_DURATION: ${{ steps.cargo_deny.outputs.duration }}
+          CARGO_MSRV_OUTCOME: ${{ steps.cargo_msrv.outcome }}
+          CARGO_MSRV_DURATION: ${{ steps.cargo_msrv.outputs.duration }}
+          CARGO_BUILD_OUTCOME: ${{ steps.cargo_build.outcome }}
+          CARGO_BUILD_DURATION: ${{ steps.cargo_build.outputs.duration }}
+          CARGO_TEST_OUTCOME: ${{ steps.cargo_test.outcome }}
+          CARGO_TEST_DURATION: ${{ steps.cargo_test.outputs.duration }}
+        run: |
+          row() {
+            local name="$1" outcome="$2" duration="$3"
+            local icon
+            case "$outcome" in
+              success) icon="✅" ;;
+              failure) icon="❌" ;;
+              *) icon="⏭️" ;;
+            esac
+            local time="${duration:+${duration}s}"
+            echo "| $name | $icon $outcome | ${time:-—} |"
+          }
+
+          {
+            echo "## Check results"
+            echo ""
+            echo "| Check | Result | Duration |"
+            echo "|-------|--------|----------|"
+            row "typos"        "$TYPOS_OUTCOME"        "$TYPOS_DURATION"
+            row "zizmor"       "$ZIZMOR_OUTCOME"       "$ZIZMOR_DURATION"
+            row "deno check"   "$DENO_CHECK_OUTCOME"   "$DENO_CHECK_DURATION"
+            row "deno fmt"     "$DENO_FMT_OUTCOME"     "$DENO_FMT_DURATION"
+            row "deno lint"    "$DENO_LINT_OUTCOME"    "$DENO_LINT_DURATION"
+            row "deno test"    "$DENO_TEST_OUTCOME"    "$DENO_TEST_DURATION"
+            row "vitest"       "$VITEST_OUTCOME"       "$VITEST_DURATION"
+            row "cargo fmt"    "$CARGO_FMT_OUTCOME"    "$CARGO_FMT_DURATION"
+            row "cargo clippy" "$CARGO_CLIPPY_OUTCOME" "$CARGO_CLIPPY_DURATION"
+            row "cargo doc"    "$CARGO_DOC_OUTCOME"    "$CARGO_DOC_DURATION"
+            row "cargo deny"   "$CARGO_DENY_OUTCOME"   "$CARGO_DENY_DURATION"
+            row "cargo msrv"   "$CARGO_MSRV_OUTCOME"   "$CARGO_MSRV_DURATION"
+            row "cargo build"  "$CARGO_BUILD_OUTCOME"  "$CARGO_BUILD_DURATION"
+            row "cargo test"   "$CARGO_TEST_OUTCOME"   "$CARGO_TEST_DURATION"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          outcomes="$TYPOS_OUTCOME $ZIZMOR_OUTCOME $DENO_CHECK_OUTCOME $DENO_FMT_OUTCOME \
+            $DENO_LINT_OUTCOME $DENO_TEST_OUTCOME $VITEST_OUTCOME $CARGO_FMT_OUTCOME \
+            $CARGO_CLIPPY_OUTCOME $CARGO_DOC_OUTCOME $CARGO_DENY_OUTCOME \
+            $CARGO_MSRV_OUTCOME $CARGO_BUILD_OUTCOME $CARGO_TEST_OUTCOME"
+          if echo "$outcomes" | grep -qw failure; then
+            exit 1
+          fi
