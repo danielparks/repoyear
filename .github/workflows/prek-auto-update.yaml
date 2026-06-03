@@ -19,7 +19,7 @@ jobs:
         with:
           # zizmor: ignore[artipacked] no archive; needed for git
           persist-credentials: true
-      - uses: taiki-e/install-action@13608cbb45b01feb47ef444ab1a42dc41ad56f1a # v2.79.11
+      - uses: taiki-e/install-action@60ae4ce63c7aeb6e96d7f572c1ec7fafbb17ca80 # v2.79.10
         with:
           tool: prek
       - run: prek auto-update
