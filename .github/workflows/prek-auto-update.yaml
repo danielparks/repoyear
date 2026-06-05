@@ -12,35 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write # Change files
+      pull-requests: write # Create and update PRs
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # zizmor: ignore[artipacked] no archive; needed for git
           persist-credentials: true
-      - uses: taiki-e/install-action@60ae4ce63c7aeb6e96d7f572c1ec7fafbb17ca80 # v2.79.10
-        with:
-          tool: prek
-      - run: prek auto-update
-      - name: Open PR if changed
-        run: |
-          if [[ -z $(git status --porcelain) ]]; then
-            exit 0
-          fi
-
-          BRANCH="prek-auto-update"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
-          git add -A
-          git commit -m '`prek auto-update`'
-          git push -u origin "$BRANCH" --force
-
-          if ! gh pr list --head "$BRANCH" --state open --json number --jq '.[0]' | grep -q .; then
-            gh pr create \
-              --title '`prek auto-update`' \
-              --body 'Automated weekly update from `prek auto-update`.'
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: danielparks/github-actions/prek-auto-update@066bc679390bd9adf0780e681993bdd28cf4d8e2 # v1.1.0
