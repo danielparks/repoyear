@@ -25,7 +25,7 @@ jobs:
       security-events: write # SARIF reporting for zizmor
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -43,15 +43,15 @@ jobs:
           toolchain: nightly
           components: rustfmt
 
-      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
-      - uses: taiki-e/install-action@60ae4ce63c7aeb6e96d7f572c1ec7fafbb17ca80 # v2.79.10
+      - uses: taiki-e/install-action@56545b37b57562edd73171cb6c62cc509db4c34e # v2.81.7
         with:
           tool: cargo-msrv
 
       - run: deno install --frozen
 
-      - uses: crate-ci/typos@7b04f660f4ee4f048d18fd341887cf28dfbedfe2 # v1.46.3
+      - uses: crate-ci/typos@37bb98842b0d8c4ffebdb75301a13db0267cef89 # v1.47.2
         if: ${{ !cancelled() }}
 
       - uses: zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d # v0.5.6
@@ -80,7 +80,7 @@ jobs:
       - uses: actions-rust-lang/rustfmt@4066006ec54a31931b9b1fddfd38f2fdf2d27143 # v1.1.2
         if: ${{ !cancelled() }}
 
-      - uses: EmbarkStudios/cargo-deny-action@a531616d8ce3b9177443e48a1159bc945a099823 # v2.0.19
+      - uses: EmbarkStudios/cargo-deny-action@bb137d7af7e4fb67e5f82a49c4fce4fad40782fe # v2.0.20
         if: ${{ !cancelled() }}
         with:
           rust-version: "1.85.0"
