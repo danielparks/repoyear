@@ -15,18 +15,31 @@ body.compact .calendar-heat-map {
   justify-content: center;
   top: 0;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 1rlh;
+  right: 1rlh;
   background: hsl(200deg 20% 95%);
   color: hsl(200deg 20% 40%);
   padding: 15px;
   border-radius: 6px;
 }
 
+.calendar-heat-map > .message::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1rlh;
+  right: -1rlh;
+  background: #fff;
+  z-index: -1;
+}
+
 .calendar-heat-map > .weeks {
+  position: relative;
   display: flex;
   overflow-x: auto;
   padding: 0 1rlh;
+  z-index: -2;
 }
 
 .calendar-heat-map > .weeks > .week {
