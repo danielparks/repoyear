@@ -31,12 +31,8 @@ export default function QueryCacheProvider({ children }: PropsWithChildren) {
       persistClient: async (client: PersistedClient) => {
         await set(idbKey, client);
       },
-      restoreClient: async () => {
-        return await get<PersistedClient>(idbKey);
-      },
-      removeClient: async () => {
-        await del(idbKey);
-      },
+      restoreClient: async () => await get<PersistedClient>(idbKey),
+      removeClient: async () => await del(idbKey),
     } as Persister,
     // Keep data in IndexedDB indefinitely
     maxAge: Infinity,
