@@ -32,6 +32,7 @@ export default function App(
     githubClientId: string;
   },
 ) {
+  const queryClient = useQueryClient();
   const { tokenData, clearTokenData, exchangeAccessToken, refreshAccessToken } =
     useTokenManager(() => {
       queryClient.clear();
@@ -46,7 +47,6 @@ export default function App(
   >(null);
   const authCodeHandled = useRef<boolean>(false);
   const startedFetch = useRef<boolean>(false);
-  const queryClient = useQueryClient();
 
   // loading and loadingPercent are separate because when we calculate the
   // loading percentage we don’t know if the query has finished. We might
@@ -115,7 +115,7 @@ export default function App(
             setAuthError("Session expired. Please log in again.");
             throw error;
           }
-          // Reset so the in-render condition triggers a refetch with the new token.
+          // Reset to trigger a refetch with the new token.
           startedFetch.current = false;
           return { complete: false, contributions: [] };
         } else {

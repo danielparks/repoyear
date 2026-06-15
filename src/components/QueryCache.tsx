@@ -7,12 +7,13 @@ import type {
   Persister,
 } from "@tanstack/react-query-persist-client";
 
+const IDB_KEY: IDBValidKey = `${location.pathname} contributions`;
+
 export async function clearQueryCache(): Promise<void> {
-  await del(`${location.pathname} contributions`);
+  await del(IDB_KEY);
 }
 
 export default function QueryCacheProvider({ children }: PropsWithChildren) {
-  const idbKey: IDBValidKey = `${location.pathname} contributions`;
   const client = new QueryClient({
     defaultOptions: {
       queries: {
@@ -33,10 +34,10 @@ export default function QueryCacheProvider({ children }: PropsWithChildren) {
   const options = {
     persister: {
       persistClient: async (client: PersistedClient) => {
-        await set(idbKey, client);
+        await set(IDB_KEY, client);
       },
-      restoreClient: async () => await get<PersistedClient>(idbKey),
-      removeClient: async () => await del(idbKey),
+      restoreClient: async () => await get<PersistedClient>(IDB_KEY),
+      removeClient: async () => await del(IDB_KEY),
     } as Persister,
     // Keep data in IndexedDB indefinitely
     maxAge: Infinity,
