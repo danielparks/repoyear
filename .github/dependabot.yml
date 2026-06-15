@@ -16,6 +16,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     # Security updates only:
     open-pull-requests-limit: 0
     groups:
@@ -23,13 +25,13 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
-    cooldown:
-      default-days: 7
 
   - package-ecosystem: "cargo"
     directory: "/backend"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     # Security updates only:
     open-pull-requests-limit: 0
     groups:
@@ -37,5 +39,3 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
-    cooldown:
-      default-days: 7
