@@ -11,7 +11,7 @@ export interface GitHubTokenData {
   refreshTokenExpiresAt?: number;
 }
 
-export function useTokenManager() {
+export function useTokenManager(onClear?: () => void) {
   const [tokenData, setTokenData] = useState<GitHubTokenData | null>(
     getStoredTokenData,
   );
@@ -19,6 +19,7 @@ export function useTokenManager() {
   function clearTokenData() {
     localStorage.removeItem(STORAGE_KEY);
     setTokenData(null);
+    onClear?.();
   }
 
   async function exchangeAccessToken(code: string) {

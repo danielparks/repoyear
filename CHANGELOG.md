@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
   model does not support it.
 - Now displays “Loading…” instead of “No contributions data” when loading data
   from GitHub before any data has arrived.
+- No longer loses cached data when the GitHub token refreshes.
 
 ## 0.8.1 (2026-03-07)
 

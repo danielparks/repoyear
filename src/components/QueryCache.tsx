@@ -7,6 +7,10 @@ import type {
   Persister,
 } from "@tanstack/react-query-persist-client";
 
+export async function clearQueryCache(): Promise<void> {
+  await del(`${location.pathname} contributions`);
+}
+
 export default function QueryCacheProvider({ children }: PropsWithChildren) {
   const idbKey: IDBValidKey = `${location.pathname} contributions`;
   const client = new QueryClient({

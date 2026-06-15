@@ -13,6 +13,7 @@ import { Footer } from "./components/Footer.tsx";
 import { Icon } from "./components/Icon.tsx";
 import { getAppVersion } from "./version.ts";
 import { useTokenManager } from "./hooks/useTokenManager.ts";
+import { clearQueryCache } from "./components/QueryCache.tsx";
 import { arrayStartsWith, sum } from "./util.ts";
 import equal from "fast-deep-equal";
 
@@ -32,7 +33,12 @@ export default function App(
   },
 ) {
   const { tokenData, clearTokenData, exchangeAccessToken, refreshAccessToken } =
-    useTokenManager();
+    useTokenManager(() => {
+      queryClient.clear();
+      clearQueryCache().catch((error: unknown) => {
+        console.error("Error clearing query cache:", error);
+      });
+    });
   const [authError, setAuthError] = useState<string | null>(initialAuthError);
   const [authCode, setAuthCode] = useState<string | null>(initialAuthCode);
   const [localContributions, setLocalContributions] = useState<
@@ -68,7 +74,6 @@ export default function App(
   const queryKey = [
     "contributions.2",
     CONTRIBUTIONS_QUERY_TEMPLATE,
-    tokenData?.accessToken,
     username,
   ];
   const query = useQuery({
@@ -110,7 +115,8 @@ export default function App(
             setAuthError("Session expired. Please log in again.");
             throw error;
           }
-          // The accessToken changed, so next tick this will reload.
+          // Reset so the in-render condition triggers a refetch with the new token.
+          startedFetch.current = false;
           return { complete: false, contributions: [] };
         } else {
           throw error;
