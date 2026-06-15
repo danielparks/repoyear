@@ -2,6 +2,7 @@
   display: block;
   position: relative;
   margin: 1rlh -2rlh;
+  isolation: isolate;
 }
 
 body.compact .calendar-heat-map {
