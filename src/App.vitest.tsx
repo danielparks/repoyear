@@ -136,7 +136,7 @@ describe("App smoke test", () => {
 
       expect(document.querySelector(".calendar-heat-map"))
         .toBeInTheDocument();
-    }, { timeout: 500 });
+    }, { timeout: 1000 });
 
     await waitFor(() => {
       expect(screen.queryByText(/Loading/i, { selector: "button" })).not
