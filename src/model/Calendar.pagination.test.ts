@@ -3,8 +3,9 @@
  * summary calendar) are correctly attributed to repositories.
  *
  * When GitHub has more than 100 contributions of a given type in a year, it
- * paginates them across multiple API responses. Only the first response
- * includes a summary calendar; subsequent pages have `calendar: undefined`.
+ * paginates them across multiple API responses. Our query only requests the
+ * summary calendar for the first page; subsequent pages have
+ * `calendar: undefined`.
  */
 import { assertEquals } from "@std/assert";
 import { ALL_ON, Calendar } from "./index.ts";
@@ -73,9 +74,7 @@ function summaryChunk(
   dates: Array<[string, number]>,
   partial: object,
 ): Contributions {
-  return {
-    login: "testuser",
-    name: "Test User",
+  return paginatedChunk({
     calendar: {
       totalContributions: dates.reduce((s, [, n]) => s + n, 0),
       weeks: dates.map(([date, count]) => ({
@@ -86,13 +85,8 @@ function summaryChunk(
         }],
       })),
     },
-    commits: [],
-    issues: [],
-    prs: [],
-    repositories: [],
-    reviews: [],
     ...partial,
-  } as unknown as Contributions;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
