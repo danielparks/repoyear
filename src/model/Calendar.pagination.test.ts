@@ -8,7 +8,7 @@
  * `calendar: undefined`.
  */
 import { assertEquals } from "@std/assert";
-import { ALL_ON, Calendar } from "./index.ts";
+import { ALL_ON, Calendar, Day } from "./index.ts";
 import type { Contributions } from "../github/api.ts";
 
 const REPO_URL = "https://github.com/test/repo";
@@ -87,6 +87,24 @@ function summaryChunk(
     },
     ...partial,
   });
+}
+
+type NumberMethodNames<T> = {
+  [K in keyof T]: T[K] extends () => number ? K : never;
+}[keyof T];
+
+/** Make an assertion function for a count method on `Day`. */
+function _makeDayCountAssert(name: string, method: NumberMethodNames<Day>) {
+  return (day: Day, expected: number, message: string = "") => {
+    const func = day[method] as unknown as () => number;
+    assertEquals(
+      func.apply(day, []),
+      expected,
+      `${day.dateString()} ${name} should equal ${expected}${
+        message && ": " + message
+      }`,
+    );
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
