@@ -85,6 +85,13 @@ export class Day {
   }
 
   /**
+   * Get number of commits made on this repository on this day.
+   */
+  commitCount(filter: Filter = ALL_ON): number {
+    return sum(this.filteredRepos(filter), (repoDay) => repoDay.commitCount);
+  }
+
+  /**
    * Get number of issues opened on this repository on this day.
    */
   issueCount(filter: Filter = ALL_ON): number {

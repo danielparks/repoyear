@@ -7,8 +7,8 @@
  * summary calendar for the first page; subsequent pages have
  * `calendar: undefined`.
  */
-import { assertEquals } from "@std/assert";
-import { ALL_ON, Calendar, Day } from "./index.ts";
+import { assert, assertEquals } from "@std/assert";
+import { Calendar, Day } from "./index.ts";
 import type { Contributions } from "../github/api.ts";
 
 const REPO_URL = "https://github.com/test/repo";
@@ -94,7 +94,7 @@ type NumberMethodNames<T> = {
 }[keyof T];
 
 /** Make an assertion function for a count method on `Day`. */
-function _makeDayCountAssert(name: string, method: NumberMethodNames<Day>) {
+function makeDayCountAssert(name: string, method: NumberMethodNames<Day>) {
   return (day: Day, expected: number, message: string = "") => {
     const func = day[method] as unknown as () => number;
     assertEquals(
@@ -106,6 +106,42 @@ function _makeDayCountAssert(name: string, method: NumberMethodNames<Day>) {
     );
   };
 }
+
+/** Assert `day`’s contributionCount equals `expected`. */
+function assertContributionCount(
+  day: Day,
+  expected: number,
+  message: string = "",
+) {
+  assertEquals(
+    day.contributionCount,
+    expected,
+    `${day.dateString()} contributionCount should equal ${expected}${
+      message && ": " + message
+    }`,
+  );
+}
+
+/** Assert `day`’s calculated contributions equal `expected`. */
+const assertContributions = makeDayCountAssert(
+  "known contributions",
+  "knownContributionCount",
+);
+
+/** Assert `day`’s commits equal `expected`. */
+const assertCommits = makeDayCountAssert("commits", "commitCount");
+
+/** Assert `day`’s issues equal `expected`. */
+const assertIssues = makeDayCountAssert("issues", "issueCount");
+
+/** Assert `day`’s PRs equal `expected`. */
+const assertPrs = makeDayCountAssert("PRs", "prCount");
+
+/** Assert `day`’s PR reviews equal `expected`. */
+const assertReviews = makeDayCountAssert("PR reviews", "reviewCount");
+
+/** Assert `day`’s unknowns equal `expected`. */
+const assertUnknowns = makeDayCountAssert("unknowns", "unknownCount");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Commit pagination
@@ -132,34 +168,18 @@ Deno.test("Calendar should link commits from paginated second chunk", () => {
 
   // June 1 is covered by the first chunk — should always be linked.
   const june1 = days.get("2024-06-01")!;
-  assertEquals(
-    june1?.contributionCount,
-    1,
-    "June 1 should have 1 contribution",
-  );
-  assertEquals(
-    june1?.unknownCount(),
-    0,
-    "June 1 should have no unknown contributions",
-  );
+  assertContributionCount(june1, 1, "first chunk");
+  assertContributions(june1, 1, "first chunk");
+  assertCommits(june1, 1, "first chunk");
+  assertUnknowns(june1, 0, "first chunk");
 
-  // June 15 is covered by the second (paginated) chunk — currently broken.
+  // June 15 is covered by the second (paginated) chunk.
   const june15 = days.get("2024-06-15")!;
-  assertEquals(
-    june15?.contributionCount,
-    1,
-    "June 15 should have 1 contribution",
-  );
-  assertEquals(
-    june15?.unknownCount(),
-    0,
-    "June 15 commit should not be unknown (it was on paginated page 2)",
-  );
-  assertEquals(
-    june15?.repositories.has(REPO_URL),
-    true,
-    "June 15 should be linked to the repo",
-  );
+  assertContributionCount(june15, 1, "second chunk");
+  assertContributions(june15, 1, "second chunk");
+  assertCommits(june15, 1, "second chunk");
+  assertUnknowns(june15, 0, "second chunk");
+  assert(june15.repositories.has(REPO_URL), "6/15 should have repo");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,12 +202,10 @@ Deno.test("Calendar should link issues from paginated second chunk", () => {
   }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
-  assertEquals(june15?.contributionCount, 1);
-  assertEquals(
-    june15?.unknownCount(),
-    0,
-    "June 15 issue should not be unknown (it was on paginated page 2)",
-  );
+  assertContributionCount(june15, 1, "second chunk");
+  assertContributions(june15, 1, "second chunk");
+  assertIssues(june15, 1, "second chunk");
+  assertUnknowns(june15, 0, "second chunk");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -210,12 +228,10 @@ Deno.test("Calendar should link PRs from paginated second chunk", () => {
   }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
-  assertEquals(june15?.contributionCount, 1);
-  assertEquals(
-    june15?.unknownCount(),
-    0,
-    "June 15 PR should not be unknown (it was on paginated page 2)",
-  );
+  assertContributionCount(june15, 1, "second chunk");
+  assertContributions(june15, 1, "second chunk");
+  assertPrs(june15, 1, "second chunk");
+  assertUnknowns(june15, 0, "second chunk");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -238,12 +254,10 @@ Deno.test("Calendar should link PR reviews from paginated second chunk", () => {
   }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
-  assertEquals(june15?.contributionCount, 1);
-  assertEquals(
-    june15?.unknownCount(),
-    0,
-    "June 15 review should not be unknown (it was on paginated page 2)",
-  );
+  assertContributionCount(june15, 1, "second chunk");
+  assertContributions(june15, 1, "second chunk");
+  assertReviews(june15, 1, "second chunk");
+  assertUnknowns(june15, 0, "second chunk");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,22 +294,12 @@ Deno.test("Calendar should link paginated events across multiple years", () => {
   for (
     const dateStr of ["2024-06-01", "2024-06-15", "2023-06-01", "2023-06-15"]
   ) {
-    const day = days.get(dateStr);
-    assertEquals(
-      day?.contributionCount,
-      1,
-      `${dateStr} should have 1 contribution`,
-    );
-    assertEquals(
-      day?.unknownCount(),
-      0,
-      `${dateStr} should have no unknown contributions`,
-    );
-    assertEquals(
-      day?.repositories.has(REPO_URL),
-      true,
-      `${dateStr} should be linked to the repo`,
-    );
+    const day = days.get(dateStr)!;
+    assertContributionCount(day, 1);
+    assertContributions(day, 1);
+    assertCommits(day, 1);
+    assertUnknowns(day, 0);
+    assert(day.repositories.has(REPO_URL), `${dateStr} should have repo`);
   }
 });
 
@@ -331,14 +335,8 @@ Deno.test("Calendar should not double-count via paginated chunks at year boundar
   }).daysByDate();
 
   const boundaryDay = days.get("2024-06-01")!;
-  assertEquals(
-    boundaryDay?.contributionCount,
-    2,
-    "Boundary day has 2 contributions",
-  );
-  assertEquals(
-    boundaryDay?.filteredCount(ALL_ON),
-    2,
-    "Boundary day should not be double-counted from paginated older-year chunk",
-  );
+  assertContributionCount(boundaryDay, 2);
+  assertContributions(boundaryDay, 2);
+  assertCommits(boundaryDay, 2);
+  assertUnknowns(boundaryDay, 0);
 });
