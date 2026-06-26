@@ -106,15 +106,11 @@ Deno.test("Calendar should link commits from paginated second chunk", () => {
     paginatedChunk({ commits: commitsEntry([["2024-06-15", 1]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 1,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   // June 1 is covered by the first chunk — should always be linked.
   const june1 = days.get("2024-06-01")!;
@@ -161,15 +157,11 @@ Deno.test("Calendar should link issues from paginated second chunk", () => {
     paginatedChunk({ issues: issueNodes([["2024-06-15", 2]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 1,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
   assertEquals(june15?.contributionCount, 1);
@@ -193,15 +185,11 @@ Deno.test("Calendar should link PRs from paginated second chunk", () => {
     paginatedChunk({ prs: prNodes([["2024-06-15", 2]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 1,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
   assertEquals(june15?.contributionCount, 1);
@@ -225,15 +213,11 @@ Deno.test("Calendar should link PR reviews from paginated second chunk", () => {
     paginatedChunk({ reviews: reviewNodes([["2024-06-15", 2]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 1,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   const june15 = days.get("2024-06-15")!;
   assertEquals(june15?.contributionCount, 1);
@@ -269,15 +253,11 @@ Deno.test("Calendar should link paginated events across multiple years", () => {
     paginatedChunk({ commits: commitsEntry([["2023-06-15", 1]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 2,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   for (
     const dateStr of ["2024-06-01", "2024-06-15", "2023-06-01", "2023-06-15"]
@@ -326,15 +306,11 @@ Deno.test("Calendar should not double-count via paginated chunks at year boundar
     paginatedChunk({ commits: commitsEntry([["2024-06-01", 2]]) }),
   ];
 
-  const calendar = Calendar.fromContributions({
+  const days = Calendar.fromContributions({
     gitHub,
     endDate: new Date(2024, 11, 31),
     years: 2,
-  });
-
-  const days = new Map(
-    calendar.days.map((d) => [d.date.toISOString().slice(0, 10), d]),
-  );
+  }).daysByDate();
 
   const boundaryDay = days.get("2024-06-01")!;
   assertEquals(

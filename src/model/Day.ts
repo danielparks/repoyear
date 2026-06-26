@@ -2,6 +2,9 @@ import { Repository } from "./Repository.ts";
 import { ALL_ON, Filter } from "./Filter.ts";
 import { sum } from "../util.ts";
 
+// The Swedish locale uses ISO 8601.
+const ISO8601 = new Intl.DateTimeFormat("sv");
+
 /**
  * Represents a single day in the contribution calendar.
  *
@@ -27,6 +30,13 @@ export class Day {
    */
   epochDay() {
     return toEpochDays(this.date);
+  }
+
+  /**
+   * Get the date as YYYY-MM-DD.
+   */
+  dateString() {
+    return ISO8601.format(this.date);
   }
 
   /**

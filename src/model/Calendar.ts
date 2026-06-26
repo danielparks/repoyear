@@ -562,6 +562,13 @@ export class Calendar {
       yield this.days.slice(i, i + 7);
     }
   }
+
+  /**
+   * Returns a map of Days indexed by date string (YYYY-MM-DD local time).
+   */
+  daysByDate(): Map<string, Day> {
+    return new Map(this.days.map((day) => [day.dateString(), day]));
+  }
 }
 
 /**
