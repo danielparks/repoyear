@@ -161,9 +161,12 @@ Deno.test("Day should check if day has specific repo", () => {
   assert(!day.hasRepo("https://github.com/other/repo"));
 });
 
-Deno.test("Day.dateString() is in the local timezone", () => {
-  // This only works if the timezone isn’t UTC (it will always pass in UTC).
-  for (let h = 0; h < 24; h++) {
-    assertEquals(new Day(new Date(2025, 0, 1, h)).dateString(), "2025-01-01");
-  }
+Deno.test({
+  name: "Day.dateString() is in the local timezone",
+  ignore: Intl.DateTimeFormat().resolvedOptions().timeZone === "UTC",
+  fn() {
+    for (let h = 0; h < 24; h++) {
+      assertEquals(new Day(new Date(2025, 0, 1, h)).dateString(), "2025-01-01");
+    }
+  },
 });
