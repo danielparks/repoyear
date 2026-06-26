@@ -15,6 +15,15 @@ All notable changes to this project will be documented in this file.
 - No longer loses cached data when the GitHub token refreshes.
 - Extend calendar map to the edges of the screen in narrow windows or on mobile.
 
+### Security fixes
+
+- Updated [git2] version to avoid two vulnerabilities ([RUSTSEC-2026-0183] and
+  [RUSTSEC-2026-0184]).
+
+[git2]: https://crates.io/crates/git2
+[RUSTSEC-2026-0183]: https://rustsec.org/advisories/RUSTSEC-2026-0183
+[RUSTSEC-2026-0184]: https://rustsec.org/advisories/RUSTSEC-2026-0184
+
 ## 0.8.1 (2026-03-07)
 
 - Bugfix: if local contributions were displayed with GitHub contributions some

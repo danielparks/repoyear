@@ -34,9 +34,9 @@ pub fn scan_repo(repo: &Repository) -> anyhow::Result<Vec<i64>> {
     let default_branch_oid = get_default_branch(repo)?;
     revwalk.push(default_branch_oid)?;
 
-    for remote_name in repo.remotes()?.into_iter().flatten() {
+    for remote_name in repo.remotes()?.into_iter().flatten().flatten() {
         let remote = repo.find_remote(remote_name)?;
-        if let Some(url) = remote.url()
+        if let Ok(url) = remote.url()
             && (url.starts_with("git@github.com:")
                 || url.starts_with("https://github.com/"))
         {
@@ -118,7 +118,7 @@ fn remote_head_to_local_branch(
 ) -> anyhow::Result<Option<String>> {
     match repo.find_reference(&format!("refs/remotes/{origin}/HEAD")) {
         Ok(reference) => {
-            if let Some(target) = reference.symbolic_target()
+            if let Ok(Some(target)) = reference.symbolic_target()
                 && target.starts_with("refs/remotes/")
             {
                 let mut iter = target.splitn(4, '/');
