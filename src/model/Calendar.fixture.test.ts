@@ -48,9 +48,7 @@ Deno.test("Calendar should not create days from specific events outside summary 
       assertEquals(
         day.knownContributionCount(),
         0,
-        `Day ${
-          day.date.toISOString().slice(0, 10)
-        } should have no specific contributions`,
+        `Day ${day.dateString()} should have no specific contributions`,
       );
     }
   }
@@ -104,16 +102,11 @@ Deno.test("Calendar should span all years when loading multi-year data", () => {
 // queries — specifically the day before and after each boundary.
 Deno.test("Calendar should have summary data for year-boundary days", () => {
   const expectedEnd = getLastDate(threeYearContributions);
-  const calendar = Calendar.fromContributions({
+  const daysByDate = Calendar.fromContributions({
     gitHub: threeYearContributions,
     endDate: expectedEnd,
     years: 3,
-  });
-
-  const daysByDate = new Map<string, (typeof calendar.days)[0]>();
-  for (const day of calendar.days) {
-    daysByDate.set(day.date.toISOString().slice(0, 10), day);
-  }
+  }).daysByDate();
 
   // Year 1 starts 2025-04-06, year 2 ends 2025-04-05.
   // Year 2 starts 2024-04-07, year 3 ends 2024-04-06.
@@ -133,16 +126,11 @@ Deno.test("Calendar should have summary data for year-boundary days", () => {
 // contribution counts at year boundaries where summaries overlap.
 Deno.test("Calendar should not double-count contributions at year boundaries", () => {
   const expectedEnd = getLastDate(threeYearContributions);
-  const calendar = Calendar.fromContributions({
+  const daysByDate = Calendar.fromContributions({
     gitHub: threeYearContributions,
     endDate: expectedEnd,
     years: 3,
-  });
-
-  const daysByDate = new Map<string, (typeof calendar.days)[0]>();
-  for (const day of calendar.days) {
-    daysByDate.set(day.date.toISOString().slice(0, 10), day);
-  }
+  }).daysByDate();
 
   // 2025-04-05 appears in both year 1 and year 2 summaries. Its
   // filteredCount() should equal its contributionCount (no double-counting).
