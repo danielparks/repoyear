@@ -28,32 +28,25 @@ function commitsEntry(dates: Array<[string, number]>) {
   }];
 }
 
-/** Build a list of issue contribution nodes. */
-function issueNodes(dates: Array<[string, number]>): object[] {
-  return dates.map(([date, n]) => ({
-    isRestricted: false,
-    occurredAt: `${date}T12:00:00Z`,
-    issue: { repository: REPO, url: `${REPO_URL}/issues/${n}` },
-  }));
+/** Build a function to build a list of $key contribution nodes. */
+function makeNodeBuilder(key: string, path: string) {
+  return (dates: Array<[string, number]>): object[] => {
+    return dates.map(([date, n]) => ({
+      isRestricted: false,
+      occurredAt: `${date}T12:00:00Z`,
+      [key]: { repository: REPO, url: `${REPO_URL}/${path}/${n}` },
+    }));
+  };
 }
+
+/** Build a list of issue contribution nodes. */
+const issueNodes = makeNodeBuilder("issue", "issues");
 
 /** Build a list of PR contribution nodes. */
-function prNodes(dates: Array<[string, number]>): object[] {
-  return dates.map(([date, n]) => ({
-    isRestricted: false,
-    occurredAt: `${date}T12:00:00Z`,
-    pullRequest: { repository: REPO, url: `${REPO_URL}/pull/${n}` },
-  }));
-}
+const prNodes = makeNodeBuilder("pullRequest", "pull");
 
 /** Build a list of PR review contribution nodes. */
-function reviewNodes(dates: Array<[string, number]>): object[] {
-  return dates.map(([date, n]) => ({
-    isRestricted: false,
-    occurredAt: `${date}T12:00:00Z`,
-    pullRequestReview: { repository: REPO, url: `${REPO_URL}/pull/${n}` },
-  }));
-}
+const reviewNodes = makeNodeBuilder("pullRequestReview", "pull");
 
 /** Minimal chunk without a summary calendar (simulates a pagination page). */
 function paginatedChunk(partial: object): Contributions {
