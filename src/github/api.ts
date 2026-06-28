@@ -21,6 +21,16 @@ export type GithubError = GraphqlResponseError<GraphQlQueryResponseData>;
 
 /**
  * GraphQL query template for fetching GitHub contributions.
+ *
+ * This excludes parts of the query based on the status of the relevant cursor,
+ * e.g. `$commitCursorNextPage`. At least in the commitContributionsByRepository
+ * data certain circumstances can cause it to return the last page again even if
+ * the cursor should be dead (the previous page info returned a new ID along
+ * with `hasNextPage: false`).
+ *
+ * This occurred when two repos had a second page of results (repoyear and
+ * yanki). I’m not sure if it’s new behavior.
+ *
  * FIXME: Consider adding joinedGitHubContribution
  * FIXME: What about joining an organization (see ~danielparks on 2025-12-04)
  * FIXME: Check contributionYears or hasActivityInThePast?
@@ -43,7 +53,9 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           }
         }
       }
-      commitContributionsByRepository(maxRepositories: 100) {
+      commitContributionsByRepository(maxRepositories: 100)
+          @include(if: $commitCursorNextPage)
+      {
         repository {
           isFork
           isPrivate
@@ -61,7 +73,9 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           }
         }
       }
-      issueContributions(first: 100, after: $issueCursor) {
+      issueContributions(first: 100, after: $issueCursor)
+          @include(if: $issueCursorNextPage)
+      {
         nodes {
           isRestricted
           occurredAt
@@ -79,7 +93,9 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           endCursor
         }
       }
-      pullRequestContributions(first: 100, after: $prCursor) {
+      pullRequestContributions(first: 100, after: $prCursor)
+          @include(if: $prCursorNextPage)
+      {
         nodes {
           isRestricted
           occurredAt
@@ -97,7 +113,9 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           endCursor
         }
       }
-      pullRequestReviewContributions(first: 100, after: $reviewCursor) {
+      pullRequestReviewContributions(first: 100, after: $reviewCursor)
+          @include(if: $reviewCursorNextPage)
+      {
         nodes {
           isRestricted
           occurredAt
@@ -115,7 +133,9 @@ export const CONTRIBUTIONS_QUERY_TEMPLATE =
           endCursor
         }
       }
-      repositoryContributions(first: 100, after: $repoCursor) {
+      repositoryContributions(first: 100, after: $repoCursor)
+          @include(if: $repoCursorNextPage)
+      {
         nodes {
           isRestricted
           occurredAt
@@ -191,10 +211,16 @@ export class GitHub {
 
     while (!Object.values(pageInfo).every((info) => !info.hasNextPage)) {
       let rootField = "viewer";
-      const parameters = cursors.map((name) => `$${name}:String`);
-      const parameterObject = Object.fromEntries(
-        cursors.map((name) => [name, pageInfo[name].endCursor]),
-      );
+      const parameters = [
+        ...cursors.map((name) => `$${name}:String`),
+        ...cursors.map((name) => `$${name}NextPage:Boolean!`),
+      ];
+      const parameterObject = Object.fromEntries([
+        ...cursors.map((name) => [name, pageInfo[name].endCursor]),
+        ...cursors.map((
+          name,
+        ) => [`${name}NextPage`, pageInfo[name].hasNextPage]),
+      ]);
 
       if (username) {
         rootField = "user(login: $login)";
@@ -218,11 +244,11 @@ export class GitHub {
         login: user.login,
         name: user.name || "",
         calendar: collection.contributionCalendar,
-        commits: collection.commitContributionsByRepository,
-        issues: cleanNodes(collection.issueContributions.nodes),
-        prs: cleanNodes(collection.pullRequestContributions.nodes),
-        repositories: cleanNodes(collection.repositoryContributions.nodes),
-        reviews: cleanNodes(collection.pullRequestReviewContributions.nodes),
+        commits: collection.commitContributionsByRepository ?? [],
+        issues: cleanNodes(collection.issueContributions?.nodes),
+        prs: cleanNodes(collection.pullRequestContributions?.nodes),
+        repositories: cleanNodes(collection.repositoryContributions?.nodes),
+        reviews: cleanNodes(collection.pullRequestReviewContributions?.nodes),
       };
 
       // Try to request next pages
@@ -265,7 +291,7 @@ export class GitHub {
 export function cleanNodes<NodeType>(
   nodes: Maybe<Maybe<NodeType>[]> | undefined,
 ): NodeType[] {
-  return (nodes || []).filter((node) => node !== null && node !== undefined);
+  return (nodes || []).filter((node) => node != null);
 }
 
 export interface Contributions {
