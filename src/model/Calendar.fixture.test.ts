@@ -32,23 +32,35 @@ function getLastDate(contributions: Contributions[]): Date {
 // Extra-week handling
 // ----------------------------------------------------------------------------
 
-// The extra-week fixture has commits for 2025-03-30 through 2025-04-05 in chunk
-// 1, which has no summary calendar. Those dates are before the summary start of
-// 2025-04-06 and should be silently dropped.
+// The extra-week fixture has commits for 2025-03-30 through 2025-04-05, but no
+// summary calendar data for those days. Those dates should be silently dropped.
 Deno.test("Calendar should not create days from specific events outside summary range", () => {
+  const summaryStart = getFirstDate(extraWeekContributions);
+
+  let found = false;
+  for (const contributions of extraWeekContributions) {
+    for (const repo of contributions.commits) {
+      for (const commit of repo.contributions!.nodes ?? []) {
+        if (commit && new Date(commit.occurredAt) < summaryStart) {
+          found = true;
+          break;
+        }
+      }
+    }
+  }
+  assert(found, `No commits before first summary day (${summaryStart})`);
+
   const calendar = Calendar.fromContributions({
     gitHub: extraWeekContributions,
+    endDate: getLastDate(extraWeekContributions),
   });
-
-  // Summary calendar starts 2025-04-06. Any day before that with
-  // knownContributionCount() > 0 came from the spurious extra-week events.
-  const summaryStart = new Date(2025, 3, 6); // April 6, 2025
   for (const day of calendar.days) {
     if (day.date < summaryStart) {
       assertEquals(
         day.knownContributionCount(),
         0,
-        `Day ${day.dateString()} should have no specific contributions`,
+        `Day ${day.dateString()} (before ${summaryStart}) should have no ` +
+          "specific contributions",
       );
     }
   }
