@@ -93,10 +93,10 @@ export class Calendar {
    * Creates a Calendar from GitHub and/or local contributions data.
    */
   static fromContributions(
-    { gitHub = [], local = [], endDate = new Date(), years = 1 }: {
+    { gitHub = [], local = [], endDate, years = 1 }: {
       gitHub?: github.Contributions[];
       local?: Record<string, number[]>[];
-      endDate?: Date;
+      endDate: Date;
       years?: number;
     },
   ): Calendar {

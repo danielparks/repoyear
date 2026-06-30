@@ -68,6 +68,7 @@ export function useStaticCalendar(): UseStaticCalendarResult {
       Calendar.fromContributions({
         gitHub: contributions || [],
         local: localContributions ? [localContributions] : [],
+        endDate: fetchedAt ? new Date(fetchedAt) : new Date(),
       }),
     [contributions, localContributions],
   );

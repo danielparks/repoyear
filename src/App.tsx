@@ -88,6 +88,7 @@ export default function App(
       setLoading(true);
       setLoadingPercent(0);
       setAuthError(null); // The ability to query implies we’re authenticated.
+      const endDate = new Date();
 
       const gh = new github.GitHub(tokenData.accessToken);
       gh.installRateLimitReport();
@@ -100,6 +101,7 @@ export default function App(
           queryClient.setQueryData(queryKey, {
             complete: false,
             contributions: [...contributions],
+            endDate,
           });
         }
       } catch (error: unknown) {
@@ -117,14 +119,14 @@ export default function App(
           }
           // Reset to trigger a refetch with the new token.
           startedFetch.current = false;
-          return { complete: false, contributions: [] };
+          return { complete: false, contributions: [], endDate };
         } else {
           throw error;
         }
       }
 
       setLoading(false);
-      return { complete: true, contributions };
+      return { complete: true, contributions, endDate };
     },
   });
 
@@ -143,7 +145,7 @@ export default function App(
     }
   }, [query?.data?.complete]);
 
-  const contributions = query.data?.contributions;
+  const { contributions, endDate } = query.data ?? { endDate: new Date() };
 
   useEffect(() => {
     if (localContributions === null) {
@@ -187,7 +189,7 @@ export default function App(
       calendar.appendGitHubUpdates(gitHub.slice(prev.gitHub.length));
     } else {
       // Something changed that requires full regeneration.
-      calendar = Calendar.fromContributions({ gitHub, local, years });
+      calendar = Calendar.fromContributions({ gitHub, local, years, endDate });
     }
 
     // Calculate progress bar.
