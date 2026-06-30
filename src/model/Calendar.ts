@@ -48,10 +48,10 @@ export class Calendar {
   // See “GitHub contribution order” in class docs.
   gitHubFirstFullyLoadedEpochDay: number = EPOCH_DAY_MAX;
 
+  // The `days` parameter is a convenience for tests.
   constructor(name: string, days: Day[] = []) {
     this.name = name;
-    // FIXME this path is now only really used by tests:
-    this.normalizeDays(days);
+    this.#normalizeDays(days);
   }
 
   /**
@@ -73,7 +73,6 @@ export class Calendar {
     );
     firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
 
-    // No need to run normalizeDays():
     const calendar = new Calendar(name);
     calendar.days = Array.from(
       { length: 1 + toEpochDays(lastSaturday) - toEpochDays(firstSunday) },
@@ -133,7 +132,7 @@ export class Calendar {
         // accepting them here would double-count with the adjacent chunk that
         // actually owns those days.
         if (day && day.contributionCount !== null) {
-          return this.repoDayForDay(day, repository);
+          return this.#repoDayForDay(day, repository);
         }
       }
 
@@ -361,36 +360,24 @@ export class Calendar {
   }
 
   /**
-   * Gets the `RepositoryDay` for a given time and repository, creating the day
-   * if it doesn't exist.
-   */
-  repoDay(time: Date, repositorySource: RepositorySource): RepositoryDay {
-    return this.repoDayForDay(this.day(time), repositorySource);
-  }
-
-  /**
-   * Gets the `RepositoryDay` for a given time and repository, or `null` if
-   * the date falls outside the calendar's current range.
+   * Gets the `RepositoryDay` for a given time and repository.
    *
-   * Unlike `repoDay()`, this never creates new days. Use this for specific
-   * event data (commits, issues, etc.) so that events outside the summary
-   * date range are silently dropped rather than extending the calendar.
+   * Returns `undefined` if the day isn’t in the calendar.
    */
-  existingRepoDay(
-    time: Date,
-    repositorySource: RepositorySource,
-  ): RepositoryDay | null {
-    const day = this.days[this.epochDayToIndex(toEpochDays(time)) ?? -1];
-    if (!day) {
-      return null;
+  repoDay(time: Date, source: RepositorySource): RepositoryDay | undefined {
+    const day = this.day(time);
+    if (day === undefined) {
+      return undefined;
     }
-    return this.repoDayForDay(day, repositorySource);
+    return this.#repoDayForDay(day, source);
   }
 
   /**
    * Get the `RepositoryDay` for a given `Day` and repo.
+   *
+   * Creates the `RepositoryDay` if necessary.
    */
-  repoDayForDay(day: Day, repositorySource: RepositorySource): RepositoryDay {
+  #repoDayForDay(day: Day, repositorySource: RepositorySource): RepositoryDay {
     const repository = this.internRepository(repositorySource);
     let repoDay = day.repositories.get(repository.url);
     if (!repoDay) {
@@ -401,52 +388,12 @@ export class Calendar {
   }
 
   /**
-   * Gets the Day for a given localtime date, creating it if needed.
+   * Gets the `Day` for a given localtime date.
    *
-   * Maintains the invariant that `days[0]` is always a Sunday.
+   * Returns `undefined` if the day isn’t in the calendar.
    */
-  day(requestedDate: Date): Day {
-    // FIXME assumes date is midnight local time.
-    const requestedEpochDay = toEpochDays(requestedDate);
-
-    let firstEpochDay = requestedEpochDay;
-    if (this.days.length != 0) {
-      firstEpochDay = this.days[0].epochDay();
-    }
-
-    // If this.days is empty the following block will handle it.
-    const relativeDay = requestedEpochDay - firstEpochDay;
-    if (relativeDay >= this.days.length) {
-      // endPadding makes sure this.days ends on a Saturday:
-      const endPadding = 6 - requestedDate.getDay();
-      for (let i = this.days.length - relativeDay; i <= endPadding; i++) {
-        this.days.push(new Day(plusDays(requestedDate, i)));
-      }
-    }
-
-    if (relativeDay >= 0) {
-      return this.days[relativeDay];
-    }
-
-    // There are existing days, and the requested date is before the first one.
-    // Make a prefix array to prepend.
-
-    // Pad prefix to start with Sunday (date - date.getDay())
-    const prefix = [];
-    for (let i = -requestedDate.getDay(); i < 0; i++) {
-      prefix.push(new Day(plusDays(requestedDate, i)));
-    }
-    const returnDay = new Day(new Date(requestedDate));
-    prefix.push(returnDay);
-
-    // Fill gap between date and firstDate.
-    const gap = firstEpochDay - requestedEpochDay;
-    for (let i = 1; i < gap; i++) {
-      prefix.push(new Day(plusDays(requestedDate, i)));
-    }
-
-    this.days.unshift(...prefix);
-    return returnDay;
+  day(requestedDate: Date): Day | undefined {
+    return this.days[this.epochDayToIndex(toEpochDays(requestedDate)) ?? -1];
   }
 
   /**
@@ -454,8 +401,10 @@ export class Calendar {
    *
    * For existing days, only `contributionCounts` will be changed. For new days,
    * the `Day` object is inserted into the `Calendar`.
+   *
+   * Only used by tests.
    */
-  normalizeDays(newDays: Day[]) {
+  #normalizeDays(newDays: Day[]) {
     if (newDays.length === 0) {
       return;
     }

@@ -1,4 +1,4 @@
-import { assertEquals, assertStrictEquals } from "@std/assert";
+import { assertEquals, assertExists, assertStrictEquals } from "@std/assert";
 import { Calendar, Day, Repository } from "./index.ts";
 import * as gql from "../github/gql.ts";
 
@@ -33,32 +33,31 @@ Deno.test("Calendar should calculate max contributions", () => {
 });
 
 Deno.test("Calendar.updateRepoCounts() should clear stale unknown repo", () => {
+  const date = new Date(2025, 0, 1);
   // Simulates progressive loading: summary arrives first (all contributions
   // appear unknown), then specific events arrive that account for everything.
-  const calendar = new Calendar("testuser");
-  const date = new Date(2025, 0, 1);
-  calendar.day(date).contributionCount = 5;
+  const calendar = new Calendar("testuser", [new Day(date, 5)]);
 
   // First call: summary only, no specific repos yet.
   calendar.updateRepoCounts();
 
   // Add specific events that account for all contributions.
-  calendar.repoDay(date, "repo1").setCommits(5);
+  calendar.repoDay(date, "repo1")!.setCommits(5);
 
   // Second call: should clear the stale "unknown" RepositoryDay.
   calendar.updateRepoCounts();
 
   const day = calendar.day(date);
-  assertEquals(day.unknownCount(), 0);
-  assertEquals(day.repositories.has("unknown"), false);
+  assertEquals(day?.unknownCount(), 0);
+  assertEquals(day?.repositories.has("unknown"), false);
 });
 
 Deno.test("Calendar should sort repos by contribution count", () => {
-  const calendar = new Calendar("testuser");
   const date = new Date(2025, 0, 1);
-  calendar.repoDay(date, "repo1").setCommits(5);
-  calendar.repoDay(date, "repo2").setCommits(10);
-  calendar.repoDay(date, "repo3").setCommits(3);
+  const calendar = new Calendar("testuser", [new Day(date)]);
+  calendar.repoDay(date, "repo1")!.setCommits(5);
+  calendar.repoDay(date, "repo2")!.setCommits(10);
+  calendar.repoDay(date, "repo3")!.setCommits(3);
   calendar.updateRepoCounts();
 
   const sorted = calendar.mostUsedRepos().map((repo) =>
@@ -72,20 +71,20 @@ Deno.test("Calendar should sort repos by contribution count", () => {
 });
 
 Deno.test("Calendar should assign distinct hues to repos by usage", () => {
-  const calendar = new Calendar("testuser");
   const date = new Date(2025, 0, 1);
+  const calendar = new Calendar("testuser", [new Day(date)]);
 
   const repo1 = new Repository("https://github.com/test/repo1");
   calendar.repositories.set(repo1.url, repo1);
-  calendar.repoDay(date, repo1.url).setCommits(10);
+  calendar.repoDay(date, repo1.url)!.setCommits(10);
 
   const repo2 = new Repository("https://github.com/test/repo2");
   calendar.repositories.set(repo2.url, repo2);
-  calendar.repoDay(date, repo2.url).setCommits(5);
+  calendar.repoDay(date, repo2.url)!.setCommits(5);
 
   const repo3 = new Repository("https://github.com/test/repo3");
   calendar.repositories.set(repo3.url, repo3);
-  calendar.repoDay(date, repo3.url).setCommits(3);
+  calendar.repoDay(date, repo3.url)!.setCommits(3);
 
   calendar.updateRepoCounts();
   calendar.updateRepoColors();
@@ -213,22 +212,8 @@ Deno.test("Calendar.weeks() should returns 7 day weeks", () => {
   ]);
 });
 
-Deno.test("Calendar.weeks() should return 7 day weeks after prepending", () => {
-  const days = [
-    new Day(new Date(2025, 0, 1), 5),
-    new Day(new Date(2025, 0, 2), 3),
-    new Day(new Date(2025, 0, 3), 2),
-  ];
-  assertEquals(days[0].date.getDay(), 3);
-
-  const calendar = new Calendar("testuser", days);
-  const day = calendar.day(new Date(2024, 11, 28));
-  day.contributionCount = 7;
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
-    [null, null, null, null, null, null, 7],
-    [null, null, null, 5, 3, 2, null],
-  ]);
+Deno.test("Calendar.weeks() returns [] when calendar is empty", () => {
+  assertEquals([...new Calendar("testuser").weeks()], []);
 });
 
 Deno.test("Calendar.day() should return existing day when in range", () => {
@@ -244,25 +229,25 @@ Deno.test("Calendar.day() should return existing day when in range", () => {
   assertEquals(day.contributionCount, 3);
 });
 
-Deno.test("Calendar.day() should create day when calendar is empty", () => {
+Deno.test("Calendar.day() should return undefined when out of range", () => {
+  const calendar = new Calendar("testuser", [
+    new Day(new Date(2025, 0, 1), 5),
+  ]);
+  assertStrictEquals(calendar.day(new Date(2025, 1, 1)), undefined);
+});
+
+Deno.test("Calendar.day() returns undefined when calendar is empty", () => {
   const calendar = new Calendar("testuser");
-  const wednesday = new Date(2025, 0, 1);
-  assertEquals(wednesday.getDay(), 3);
-
-  const day = calendar.day(wednesday);
-  assertEquals(day.date, wednesday);
-  day.contributionCount = 9;
-
-  const dayAgain = calendar.day(wednesday);
-  assertStrictEquals(day, dayAgain);
-  assertEquals(dayAgain.contributionCount, 9);
+  assertStrictEquals(calendar.day(new Date(2025, 0, 1)), undefined);
 });
 
 Deno.test("Calendar.day() should handle earlier day in the initial week", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
   ]);
-  calendar.day(new Date(2024, 11, 30)).contributionCount = 3;
+  const day = calendar.day(new Date(2024, 11, 30));
+  assertExists(day);
+  day!.contributionCount = 3;
 
   assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
     [null, 3, null, 10, null, null, null],
@@ -273,108 +258,20 @@ Deno.test("Calendar.day() should handle later day in the initial week", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 1), 10),
   ]);
-  calendar.day(new Date(2025, 0, 3)).contributionCount = 3;
+  const day = calendar.day(new Date(2025, 0, 3));
+  assertExists(day);
+  day!.contributionCount = 3;
 
   assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
     [null, null, null, 10, null, 3, null],
   ]);
 });
 
-Deno.test("Calendar.day() should prepend days before initial week", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-  ]);
-  calendar.day(new Date(2024, 11, 24)).contributionCount = 3;
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
-    [null, null, 3, null, null, null, null],
-    [null, null, null, 10, null, null, null],
-  ]);
-});
-
-Deno.test("Calendar.day() should append days after initial week", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-  ]);
-  calendar.day(new Date(2025, 0, 10)).contributionCount = 3;
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
-    [null, null, null, 10, null, null, null],
-    [null, null, null, null, null, 3, null],
-  ]);
-});
-
-Deno.test("Calendar.normalizeDays() can prepend days", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-  ]);
-  calendar.normalizeDays([new Day(new Date(2024, 11, 24), 3)]);
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
-    [null, null, 3, null, null, null, null],
-    [null, null, null, 10, null, null, null],
-  ]);
-});
-
-Deno.test("Calendar.normalizeDays() can append days", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-  ]);
-  calendar.normalizeDays([new Day(new Date(2025, 0, 10), 3)]);
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 29), [
-    [null, null, null, 10, null, null, null],
-    [null, null, null, null, null, 3, null],
-  ]);
-});
-
-Deno.test("Calendar.normalizeDays() can prepend and append days", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-  ]);
-  calendar.normalizeDays([
-    new Day(new Date(2024, 11, 24), 1),
-    new Day(new Date(2025, 0, 10), 3),
-  ]);
-
-  assertWeeksContributions([...calendar.weeks()], new Date(2024, 11, 22), [
-    [null, null, 1, null, null, null, null],
-    [null, null, null, 10, null, null, null],
-    [null, null, null, null, null, 3, null],
-  ]);
-});
-
-Deno.test("Calendar.normalizeDays() updates days", () => {
-  const calendar = new Calendar("testuser", [
-    new Day(new Date(2025, 0, 1), 10),
-    new Day(new Date(2025, 0, 2), 11),
-    new Day(new Date(2025, 0, 3), 12),
-  ]);
-  calendar.repoDay(new Date(2025, 0, 1), "test-repo").commitCount = 1;
-  calendar.normalizeDays([
-    new Day(new Date(2024, 11, 31), 1),
-    new Day(new Date(2025, 0, 1), 2),
-  ]);
-
-  const weeks = [...calendar.weeks()];
-  assertWeeksContributions(weeks, new Date(2024, 11, 29), [
-    [null, null, 1, 2, 11, 12, null],
-  ]);
-
-  assertEquals(
-    weeks[0][3].repositories.get("test-repo")?.commitCount,
-    1,
-    "Must not update details",
-  );
-});
-
-Deno.test("Calendar.normalizeDays() can accept out-of-order days", () => {
+Deno.test("new Calendar() can accept out-of-order days", () => {
   const calendar = new Calendar("testuser", [
     new Day(new Date(2025, 0, 3), 12),
     new Day(new Date(2025, 0, 1), 10),
     new Day(new Date(2025, 0, 2), 11),
-  ]);
-  calendar.normalizeDays([
     new Day(new Date(2025, 0, 1), 2),
     new Day(new Date(2024, 11, 31), 1),
     new Day(new Date(2025, 0, 5), 5),
