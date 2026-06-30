@@ -19,7 +19,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-anyhow = "1.0.95"
+anyhow = "1.0.103"
 clap = { version = "4.5.27", features = ["derive", "env"] }
 dropshot = "0.16.3"
 git2 = { version = "0.21.0", default-features = false }
