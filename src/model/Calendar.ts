@@ -397,12 +397,9 @@ export class Calendar {
   }
 
   /**
-   * Ensure `Day`s are contiguous and summary counts are up-to-date.
+   * Ensure `Day`s are contiguous.
    *
-   * For existing days, only `contributionCounts` will be changed. For new days,
-   * the `Day` object is inserted into the `Calendar`.
-   *
-   * Only used by tests.
+   * Only called from constructor; only used by tests.
    */
   #normalizeDays(newDays: Day[]) {
     if (newDays.length === 0) {
@@ -410,17 +407,8 @@ export class Calendar {
     }
 
     const daysByEpochDay = new Map<number, Day>();
-    for (const day of this.days) {
-      daysByEpochDay.set(day.epochDay(), day);
-    }
     for (const day of newDays) {
-      const i = day.epochDay();
-      const oldDay = daysByEpochDay.get(i);
-      if (oldDay) {
-        oldDay.contributionCount = day.contributionCount;
-      } else {
-        daysByEpochDay.set(i, day);
-      }
+      daysByEpochDay.set(day.epochDay(), day);
     }
 
     let firstEpochDay = Math.min(...daysByEpochDay.keys());
@@ -437,12 +425,10 @@ export class Calendar {
 
     this.days = [];
     for (let i = firstEpochDay; i <= lastEpochDay; i++) {
-      const existingDay = daysByEpochDay.get(i);
-      if (existingDay) {
-        this.days.push(existingDay);
-      } else {
-        this.days.push(new Day(plusDays(firstDate, i - firstEpochDay)));
-      }
+      this.days.push(
+        daysByEpochDay.get(i) ??
+          new Day(plusDays(firstDate, i - firstEpochDay)),
+      );
     }
   }
 
