@@ -4,7 +4,6 @@ set -eo pipefail
 shopt -s extglob
 
 version=$1
-branch_name=$(git rev-parse --abbrev-ref HEAD)
 
 awk-in-place () {
   local tmpfile=$(mktemp)
@@ -35,7 +34,23 @@ crate-names () {
   cargo metadata --format-version 1 --no-deps | jq -r '.packages[].name'
 }
 
+crate-names-to-publish () {
+  # I’m not sure why publish shows up as [] for false and null for true.
+  cargo metadata --format-version 1 --no-deps \
+    | jq -r '.packages[] | select(.publish == null) |.name'
+}
+
+branch-name () {
+  git rev-parse --abbrev-ref HEAD
+}
+
 auto-pr () {
+  local branch_name="$(branch-name)"
+  if [[ "$(branch-name)" = main ]] ; then
+    echo "Cannot auto-pr on main branch." >&2
+    return 1
+  fi
+
   pr_url=$((gh pr view --json url,closed 2>/dev/null || true) \
     | jq -r 'select(.closed | not) | .url')
 
@@ -90,8 +105,10 @@ command -v parse-changelog &>/dev/null || {
   exit 1
 }
 
-if [[ "$branch_name" = main ]] ; then
-  git switch -c "release-$version"
+if [[ -z "$(crate-names-to-publish)" ]] ; then
+  echo 'Could not find any packages to publish.' >&2
+  echo '(Check that crate-names-to-publish function still works.)' >&2
+  exit 1
 fi
 
 check-changes
@@ -146,6 +163,9 @@ confirm 'Release notes displayed above. Continue?'
 
 # Commit version bump if necessary.
 check-changes &>/dev/null || {
+  if [[ "$(branch-name)" = main ]] ; then
+    git switch -c "release-$version"
+  fi
   git add -u
   git commit --cleanup=verbatim --file - <<EOF
 Release ${version}
@@ -158,9 +178,13 @@ check-changes
 
 git tag --force --sign --file "$changelog" --cleanup=verbatim "v${version}"
 git push --force --tags origin HEAD
-auto-pr "Release ${version}"
 
-cargo publish
+if [[ "$(branch-name)" != main ]] ; then
+  # Only need a PR if something was changed.
+  auto-pr "Release ${version}"
+fi
+
+cargo publish $(crate-names-to-publish | sed -e 's/^/-p /')
 
 awk-in-place CHANGELOG.md '
   /^## Release/ && !done {
