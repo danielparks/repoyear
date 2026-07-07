@@ -46,7 +46,7 @@ branch-name () {
 
 auto-pr () {
   local branch_name="$(branch-name)"
-  if [[ "$(branch-name)" = main ]] ; then
+  if [[ "$branch_name" = main ]] ; then
     echo "Cannot auto-pr on main branch." >&2
     return 1
   fi
