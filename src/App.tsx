@@ -72,7 +72,7 @@ export default function App(
   }, [authCode, tokenData]);
 
   const queryKey = [
-    "contributions.2",
+    "contributions.3",
     CONTRIBUTIONS_QUERY_TEMPLATE,
     username,
   ];
