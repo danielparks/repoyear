@@ -27,7 +27,7 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           if (req.url?.startsWith("/assets/") && req.url?.endsWith(".json")) {
             // This does not protect against /../ since it’s only for dev mode.
-            const path = resolve(__dirname, `dist${req.url}`);
+            const path = resolve(import.meta.dirname!, `dist${req.url}`);
             if (fs.existsSync(path)) {
               res.setHeader("Content-Type", "application/json");
               fs.createReadStream(path).pipe(res);
@@ -42,9 +42,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "index.html"),
-        static: resolve(__dirname, "static.html"),
-        compact: resolve(__dirname, "compact.html"),
+        main: resolve(import.meta.dirname!, "index.html"),
+        static: resolve(import.meta.dirname!, "static.html"),
+        compact: resolve(import.meta.dirname!, "compact.html"),
       },
     },
   },
