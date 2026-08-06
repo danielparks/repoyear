@@ -7,9 +7,9 @@
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "npm:@deno/vite-plugin@^2.0.3": "2.0.3_vite@8.2.0__@types+node@26.1.2_@types+node@26.1.2",
-    "npm:@graphql-codegen/add@^7.1.0": "7.1.0_graphql@17.0.2",
-    "npm:@graphql-codegen/cli@^7.2.0": "7.2.0_@types+node@26.1.2_typescript@7.0.2",
-    "npm:@graphql-codegen/typescript@^6.1.0": "6.1.0_graphql@17.0.2",
+    "npm:@graphql-codegen/add@^7.1.0": "7.1.0_graphql@16.14.2",
+    "npm:@graphql-codegen/cli@^7.2.0": "7.2.0_graphql@16.14.2",
+    "npm:@graphql-codegen/typescript@^6.1.0": "6.1.0_graphql@16.14.2",
     "npm:@octokit/core@^7.0.7": "7.0.7",
     "npm:@octokit/graphql@^9.0.4": "9.0.4",
     "npm:@tanstack/react-query-persist-client@^5.101.4": "5.101.4_@tanstack+react-query@5.101.4__react@19.2.8_react@19.2.8",
@@ -26,6 +26,7 @@
     "npm:chokidar-cli@3": "3.0.0",
     "npm:fast-deep-equal@^3.1.3": "3.1.3",
     "npm:globals@^17.9.0": "17.9.0",
+    "npm:graphql@^16.14.2": "16.14.2",
     "npm:happy-dom@^20.11.1": "20.11.1",
     "npm:idb-keyval@^6.3.0": "6.3.0",
     "npm:react-dom@^19.2.8": "19.2.8_react@19.2.8",
@@ -60,7 +61,7 @@
     "@adobe/css-tools@4.5.0": {
       "integrity": "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="
     },
-    "@ardatan/relay-compiler@13.0.2_graphql@17.0.2": {
+    "@ardatan/relay-compiler@13.0.2_graphql@16.14.2": {
       "integrity": "sha512-VFpv9UP820SiwDUPYtq7PmD3jifzZlevkQ26bhbSzFeruSTys0eHzQCZyKg+IhgmZzwPI9AFjPe26ABNjGeIKg==",
       "dependencies": [
         "@babel/runtime@8.0.0",
@@ -239,7 +240,7 @@
     "@fastify/busboy@3.2.0": {
       "integrity": "sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA=="
     },
-    "@graphql-codegen/add@7.1.0_graphql@17.0.2": {
+    "@graphql-codegen/add@7.1.0_graphql@16.14.2": {
       "integrity": "sha512-bytJg1kel5zfgK3JSYbGwtpbNe6F9OPZSR6DiMDe9RVxblAgl6w4zEEPd/mM3rhNJ1VmGYLbNnf5e1eUfXQEbg==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -247,7 +248,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/cli@7.2.0_@types+node@26.1.2_typescript@7.0.2": {
+    "@graphql-codegen/cli@7.2.0_graphql@16.14.2": {
       "integrity": "sha512-JPJw2vquEIpO3b8XJyxFVTrYi6WRn/OKu/SlzQA+IwAVT7GZPeG+AHmfRXAvpVMj31899nTpQYEQGUxx3ZqubQ==",
       "dependencies": [
         "@babel/generator",
@@ -289,7 +290,7 @@
       ],
       "bin": true
     },
-    "@graphql-codegen/client-preset@6.1.0_graphql@17.0.2": {
+    "@graphql-codegen/client-preset@6.1.0_graphql@16.14.2": {
       "integrity": "sha512-mGmBuwrOU5oRoaWFodx8g9xu1jecYIiydqvk88QsAIsyMcZwuoybs1lyne85TovpBHjH5CC2wnZGsbDQfcgOCQ==",
       "dependencies": [
         "@babel/helper-plugin-utils",
@@ -308,7 +309,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/core@6.2.0_graphql@17.0.2": {
+    "@graphql-codegen/core@6.2.0_graphql@16.14.2": {
       "integrity": "sha512-RZadhhwYhuy2ZdIGK40vYVBMzXEFGkCC+58MUC/F2af/gKznEYNzHgmNBUBCk/BTklyUsNu0mIXmyGE4tTA0PA==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -318,7 +319,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/gql-tag-operations@6.1.0_graphql@17.0.2": {
+    "@graphql-codegen/gql-tag-operations@6.1.0_graphql@16.14.2": {
       "integrity": "sha512-AmMcZFwonufvWJnQm7I0lBxKpAm+35BcCrOOvUlBoviohiR17aPoTGAOaNAEtpcpI86lnZ9m9AXUdiKMdm8nnQ==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -329,7 +330,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/plugin-helpers@7.1.0_graphql@17.0.2": {
+    "@graphql-codegen/plugin-helpers@7.1.0_graphql@16.14.2": {
       "integrity": "sha512-ieJH7kZ5oSZKBPJs7CvHMrFY/CLYLklqv74ir93qMwRna6geZsbIMoJzTDBXohxcQTITiProiYSGrEtZjIpYGg==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -340,7 +341,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/schema-ast@6.1.0_graphql@17.0.2": {
+    "@graphql-codegen/schema-ast@6.1.0_graphql@16.14.2": {
       "integrity": "sha512-/xuGkM5gUNFRoaQLumKbENdX7Hc8ha49z9OXsEZY8E+46mMjqzXGF0NtCJ892cmoX7EUgI5c8T+LZqS2upx2Aw==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -349,7 +350,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/typed-document-node@7.1.0_graphql@17.0.2": {
+    "@graphql-codegen/typed-document-node@7.1.0_graphql@16.14.2": {
       "integrity": "sha512-V6H+ItyqXtYY+JQb76LAoN627Xfzpn29/ifwCFAv61iEepzNzh86sa+yZclflr0G8LDmhcVY5hpPJd3a1qbOfw==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -360,7 +361,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/typescript-operations@6.1.2_graphql@17.0.2": {
+    "@graphql-codegen/typescript-operations@6.1.2_graphql@16.14.2": {
       "integrity": "sha512-EP9xry09q4cOVaf/aC4NO3/SwvXRNzlJIe4dhfA0xyy45Taix5yDL3jeJpmJIv03sa7nK5udVs5vZqdHFU8Xmw==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -371,7 +372,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/typescript@6.1.0_graphql@17.0.2": {
+    "@graphql-codegen/typescript@6.1.0_graphql@16.14.2": {
       "integrity": "sha512-2Hu3111O/AwV28Ap7tNsixlmXSAJuQbQArQklx+IC/tNswpckZnCfmlcBtTJrGU1+mJXEneJXGfb2XWvKjbhlQ==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -382,7 +383,7 @@
         "tslib"
       ]
     },
-    "@graphql-codegen/visitor-plugin-common@7.2.2_graphql@17.0.2": {
+    "@graphql-codegen/visitor-plugin-common@7.2.2_graphql@16.14.2": {
       "integrity": "sha512-nOkAVd8J8r2YdHm9Z4YrBiy+3IQgE8Ndn/EiRWTvWuemMEhioBWyvdlnbq5rHmIo2bNdRQ5ghs0Q3jw7YBrwLQ==",
       "dependencies": [
         "@graphql-codegen/plugin-helpers",
@@ -401,7 +402,7 @@
     "@graphql-hive/signal@2.0.0": {
       "integrity": "sha512-Pz8wB3K0iU6ae9S1fWfsmJX24CcGeTo6hE7T44ucmV/ALKRj+bxClmqrYcDT7v3f0d12Rh4FAXBb6gon+WkDpQ=="
     },
-    "@graphql-tools/apollo-engine-loader@8.0.34_graphql@17.0.2": {
+    "@graphql-tools/apollo-engine-loader@8.0.34_graphql@16.14.2": {
       "integrity": "sha512-pxmrIbUtpiH2/Dx0093EQ0x7dXWdlfAZ97uSY280CkUxIB8EYZeNeV2pvk6HksZzBtHrprLRysrjnegLOmQBRA==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -411,7 +412,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/batch-execute@10.0.9_graphql@17.0.2": {
+    "@graphql-tools/batch-execute@10.0.9_graphql@16.14.2": {
       "integrity": "sha512-khIgAPlyaWJ3dVX6SsqOkABZCH1Gii32WHn3xMzavupsxPCfb/9G3zjdswptzTFrOcZ92dWo7MXvwNFkRfNN4w==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -421,7 +422,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/code-file-loader@8.1.36_graphql@17.0.2": {
+    "@graphql-tools/code-file-loader@8.1.36_graphql@16.14.2": {
       "integrity": "sha512-EAIogV/vUmcrNa4icqnx5Xr5z3uLNSZ6867DEJyizuUfOCnD5JzCBQNsBjOBl3R5rzUiV3+GGSzzo15/jLN4oQ==",
       "dependencies": [
         "@graphql-tools/graphql-tag-pluck",
@@ -432,7 +433,7 @@
         "unixify"
       ]
     },
-    "@graphql-tools/delegate@12.1.1_graphql@17.0.2": {
+    "@graphql-tools/delegate@12.1.1_graphql@16.14.2": {
       "integrity": "sha512-BiePOU2Nev9KDpAEOw25isTm6y/Ea6Sb3c/aH0P9s25c/6mzluvpEo66nnA9vWeirIRScS7rUtN0Jv3P02h3VA==",
       "dependencies": [
         "@graphql-tools/batch-execute",
@@ -446,7 +447,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/documents@1.0.1_graphql@17.0.2": {
+    "@graphql-tools/documents@1.0.1_graphql@16.14.2": {
       "integrity": "sha512-aweoMH15wNJ8g7b2r4C4WRuJxZ0ca8HtNO54rkye/3duxTkW4fGBEutCx03jCIr5+a1l+4vFJNP859QnAVBVCA==",
       "dependencies": [
         "graphql",
@@ -454,7 +455,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/executor-common@1.0.6_graphql@17.0.2": {
+    "@graphql-tools/executor-common@1.0.6_graphql@16.14.2": {
       "integrity": "sha512-23/K5C+LSlHDI0mj2SwCJ33RcELCcyDUgABm1Z8St7u/4Z5+95i925H/NAjUyggRjiaY8vYtNiMOPE49aPX1sg==",
       "dependencies": [
         "@envelop/core",
@@ -462,7 +463,7 @@
         "graphql"
       ]
     },
-    "@graphql-tools/executor-graphql-ws@3.1.5_graphql@17.0.2": {
+    "@graphql-tools/executor-graphql-ws@3.1.5_graphql@16.14.2": {
       "integrity": "sha512-WXRsfwu9AkrORD9nShrd61OwwxeQ5+eXYcABRR3XPONFIS8pWQfDJGGqxql9/227o/s0DV5SIfkBURb5Knzv+A==",
       "dependencies": [
         "@graphql-tools/executor-common",
@@ -475,7 +476,7 @@
         "ws"
       ]
     },
-    "@graphql-tools/executor-http@3.3.0_graphql@17.0.2_@types+node@26.1.2": {
+    "@graphql-tools/executor-http@3.3.0_graphql@16.14.2": {
       "integrity": "sha512-IkKXIjSg9U8MNsQUBVJAXE4+LSxaQ0cs7p5JTALLGDABY1o17vPDRwWALsX81AXD5dY27ihi/+OhGMueW/Fopg==",
       "dependencies": [
         "@graphql-hive/signal",
@@ -490,7 +491,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/executor-legacy-ws@1.1.32_graphql@17.0.2": {
+    "@graphql-tools/executor-legacy-ws@1.1.32_graphql@16.14.2": {
       "integrity": "sha512-rmSp846dAgEGtwdQ7ntdgpLJzzRvw5rE8sR7ASPci2QoIn3McxVYwjq52SMNntoH4VaBeI/BrpyQIN5L68zAfA==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -501,7 +502,7 @@
         "ws"
       ]
     },
-    "@graphql-tools/executor@1.5.7_graphql@17.0.2": {
+    "@graphql-tools/executor@1.5.7_graphql@16.14.2": {
       "integrity": "sha512-UcXVClkBml+qyGEsQxfEaAkboqySVGFUd9ivn7pDc9jZSckgF6zL21cNxuRH5ZA2exneV3PTtcc0I0rDOdE0Tg==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -513,7 +514,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/git-loader@8.0.40_graphql@17.0.2": {
+    "@graphql-tools/git-loader@8.0.40_graphql@16.14.2": {
       "integrity": "sha512-aQkcTTymjeQBREoH8/x5JZWt/banq9D7fs8Gqqd2HGirh8JBYGoEbKm45bSdUqCLnqsOJ2oal5A73rsC7ASASw==",
       "dependencies": [
         "@graphql-tools/graphql-tag-pluck",
@@ -525,7 +526,7 @@
         "unixify"
       ]
     },
-    "@graphql-tools/github-loader@9.1.6_graphql@17.0.2_@types+node@26.1.2": {
+    "@graphql-tools/github-loader@9.1.6_graphql@16.14.2": {
       "integrity": "sha512-hWsCcTZJ5NLKDUYynZjK7kVh/xmc/MpnLkBII+WQHCLOOXimaESZRnUuoo/nMqOwBKghBC0iF1nHiG9PqD9t3w==",
       "dependencies": [
         "@graphql-tools/executor-http",
@@ -538,7 +539,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/graphql-file-loader@8.1.18_graphql@17.0.2": {
+    "@graphql-tools/graphql-file-loader@8.1.18_graphql@16.14.2": {
       "integrity": "sha512-MBbAPFfGZN+jaRQQkqfY1Ztj4ftFgk9m7zh0h1jQC83xsVJ8zvMk2TGwg7g3lEGqa0cLOOEp/a1/78MSdhj2Zg==",
       "dependencies": [
         "@graphql-tools/import",
@@ -549,7 +550,7 @@
         "unixify"
       ]
     },
-    "@graphql-tools/graphql-tag-pluck@8.3.35_graphql@17.0.2": {
+    "@graphql-tools/graphql-tag-pluck@8.3.35_graphql@16.14.2": {
       "integrity": "sha512-k6udGhRFzf/FnfV/pl+2dxVURHtqdOj8evG3xFJahMS9bSMLkmTRCqTaR8e+ErYZEUODE2zCSPth3JLQEfAEqQ==",
       "dependencies": [
         "@babel/core",
@@ -562,7 +563,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/import@7.1.18_graphql@17.0.2": {
+    "@graphql-tools/import@7.1.18_graphql@16.14.2": {
       "integrity": "sha512-/lCEk28rbUiypbX8jl5x0RBiHDsXk3YJ5jAU1nlqXEdxNiNI6p5ts+vt0N7UximIuolwV7BeRxLn5RUejyKZYQ==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -571,7 +572,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/json-file-loader@8.0.32_graphql@17.0.2": {
+    "@graphql-tools/json-file-loader@8.0.32_graphql@16.14.2": {
       "integrity": "sha512-PJ06nGC836vWWLCAPignLKAnIF+CKNkXlCIe9zkkb02jFPNdG5nA0PUxa1rqt/lqZd/x/ravZQ4yM47pxtLajg==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -581,7 +582,7 @@
         "unixify"
       ]
     },
-    "@graphql-tools/load@8.1.15_graphql@17.0.2": {
+    "@graphql-tools/load@8.1.15_graphql@16.14.2": {
       "integrity": "sha512-QpCve0kf1IxNOWAk99VjS4CEZinQjKAfsgDDRWGUg9+9TqBbvCdsLAQshykHcfueEUPetVRVqqqOIRKo9eJ2xQ==",
       "dependencies": [
         "@graphql-tools/schema",
@@ -591,7 +592,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/merge@9.2.2_graphql@17.0.2": {
+    "@graphql-tools/merge@9.2.2_graphql@16.14.2": {
       "integrity": "sha512-DSLLAztOIQId7QE3m8Ehk5lV+0pjxNSSRDHPzlYQ9E4KJ9AoUMBprC4C+eX3v4srh05S2ujm5/veqAr5yEWFSQ==",
       "dependencies": [
         "@graphql-tools/utils",
@@ -599,14 +600,14 @@
         "tslib"
       ]
     },
-    "@graphql-tools/optimize@2.0.0_graphql@17.0.2": {
+    "@graphql-tools/optimize@2.0.0_graphql@16.14.2": {
       "integrity": "sha512-nhdT+CRGDZ+bk68ic+Jw1OZ99YCDIKYA5AlVAnBHJvMawSx9YQqQAIj4refNc1/LRieGiuWvhbG3jvPVYho0Dg==",
       "dependencies": [
         "graphql",
         "tslib"
       ]
     },
-    "@graphql-tools/relay-operation-optimizer@7.1.8_graphql@17.0.2": {
+    "@graphql-tools/relay-operation-optimizer@7.1.8_graphql@16.14.2": {
       "integrity": "sha512-s16NYT+66VSLCITBURoGNTwh+YvZRSlW3MtFJC2gsvrHZHf6KpCvIR3Qju4yh0FtCoN7Wg7yOI/JT/UzaMEOwQ==",
       "dependencies": [
         "@ardatan/relay-compiler",
@@ -615,7 +616,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/schema@10.0.38_graphql@17.0.2": {
+    "@graphql-tools/schema@10.0.38_graphql@16.14.2": {
       "integrity": "sha512-Kckk2/vm+rELJ7ijvFaAn9ouWSVUTD0D4SJIvYF4rKeuQHAfCzE/jzMFonZVpTXleqJjPXLZjVbuaMorw7A5Og==",
       "dependencies": [
         "@graphql-tools/merge",
@@ -624,7 +625,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/url-loader@9.1.6_graphql@17.0.2_@types+node@26.1.2": {
+    "@graphql-tools/url-loader@9.1.6_graphql@16.14.2": {
       "integrity": "sha512-BUFafQJv1OVZ/pZvzqXx4oLi2SKeqiWUAIDgz9HGRF/UpJuLY98tYMFzxhYurXg7lAuJMrDjUfl2nFSCX743Nw==",
       "dependencies": [
         "@graphql-tools/executor-graphql-ws",
@@ -642,7 +643,7 @@
         "ws"
       ]
     },
-    "@graphql-tools/utils@11.2.2_graphql@17.0.2": {
+    "@graphql-tools/utils@11.2.2_graphql@16.14.2": {
       "integrity": "sha512-Do2A/t6ayqOma8m7PvpYMsCBswL+NB35BQSng4GWSBqafL2/BnfAZy/NSENPwV721Rm2fG0BHETFC0+FJJZmLw==",
       "dependencies": [
         "@graphql-typed-document-node/core",
@@ -652,7 +653,7 @@
         "tslib"
       ]
     },
-    "@graphql-tools/wrap@11.1.21_graphql@17.0.2": {
+    "@graphql-tools/wrap@11.1.21_graphql@16.14.2": {
       "integrity": "sha512-28a+cTtDONeO+Bg+241biALEHdZuIyFk7libduztuh+Ecwk5hCZgLVFn1S5yJXgvMvkm9+MRVSRQaWILsyougA==",
       "dependencies": [
         "@graphql-tools/delegate",
@@ -663,7 +664,7 @@
         "tslib"
       ]
     },
-    "@graphql-typed-document-node/core@3.2.0_graphql@17.0.2": {
+    "@graphql-typed-document-node/core@3.2.0_graphql@16.14.2": {
       "integrity": "sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==",
       "dependencies": [
         "graphql"
@@ -1808,7 +1809,7 @@
         "slash"
       ]
     },
-    "graphql-config@5.1.6_graphql@17.0.2_@types+node@26.1.2_typescript@7.0.2": {
+    "graphql-config@5.1.6_graphql@16.14.2": {
       "integrity": "sha512-fCkYnm4Kdq3un0YIM4BCZHVR5xl0UeLP6syxxO7KAstdY7QVyVvTHP0kRPDYEP1v08uwtJVgis5sj3IOTLOniQ==",
       "dependencies": [
         "@graphql-tools/graphql-file-loader",
@@ -1825,14 +1826,14 @@
         "tslib"
       ]
     },
-    "graphql-tag@2.12.7_graphql@17.0.2": {
+    "graphql-tag@2.12.7_graphql@16.14.2": {
       "integrity": "sha512-xnE/NFzy+0eIesvAsREJZ284zTl/wYuBAvpsFSDhRGRdRHdnE90M21Q3xAWyYInb0J756c6x0pIQ62+vtvOs1Q==",
       "dependencies": [
         "graphql",
         "tslib"
       ]
     },
-    "graphql-ws@6.2.0_graphql@17.0.2_ws@8.21.2": {
+    "graphql-ws@6.2.0_graphql@16.14.2_ws@8.21.2": {
       "integrity": "sha512-A0kH9R7JZNh4AKKHykmJdOb5IgRya07uCrhYOXm1UDyxCwc/6jEi5+UMUhoBVj/hsowJHRK7Y3LllMdlNJR+HA==",
       "dependencies": [
         "graphql",
@@ -1842,8 +1843,8 @@
         "ws"
       ]
     },
-    "graphql@17.0.2": {
-      "integrity": "sha512-FRWbddMxfkjiB7z+aQDWIR+E34xo9I8c9mtK2RPv8PmMzKRvrdsreHL/Ui/TmwHJfhHChEtsFPyMHKI+xuarQQ=="
+    "graphql@16.14.2": {
+      "integrity": "sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA=="
     },
     "happy-dom@20.11.1": {
       "integrity": "sha512-XSt8tMzbW9ymE7687xztkO1ckR7qJNQ3LywY9vlYGhGi3zXrGBHuUo2Cl1ztZaICW+1eAGdkLbj6iwVqDT33kg==",
@@ -2793,6 +2794,7 @@
         "npm:chokidar-cli@3",
         "npm:fast-deep-equal@^3.1.3",
         "npm:globals@^17.9.0",
+        "npm:graphql@^16.14.2",
         "npm:happy-dom@^20.11.1",
         "npm:idb-keyval@^6.3.0",
         "npm:react-dom@^19.2.8",
