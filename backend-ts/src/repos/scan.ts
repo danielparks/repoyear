@@ -93,8 +93,8 @@ function splitN(s: string, sep: string, n: number): string[] {
   return parts;
 }
 
-/** Resolve `name` (a ref, branch name, or `HEAD`) to a commit oid. */
-async function refToOid(
+/** Resolve `name` (a ref, branch name, or `HEAD`) to a commit hash. */
+async function refToHash(
   gitDir: string,
   name: string,
 ): Promise<string | null> {
@@ -105,8 +105,8 @@ async function refToOid(
     name,
   ]);
   if (!result.success) return null;
-  const oid = result.stdout.trim();
-  return oid.length > 0 ? oid : null;
+  const hash = result.stdout.trim();
+  return hash.length > 0 ? hash : null;
 }
 
 /** Get the local branch name a remote `HEAD` points to, if any. */
@@ -128,7 +128,7 @@ async function remoteHeadToLocalBranch(
 }
 
 /**
- * Find the default branch of a repository, as a commit oid.
+ * Find the default branch of a repository, as a commit hash.
  *
  * `git` doesn't really have a concept of a default branch, so this involves
  * some guesswork. We check:
@@ -146,8 +146,8 @@ export async function getDefaultBranch(gitDir: string): Promise<string> {
   for (const remote of ["origin", "upstream"]) {
     const branch = await remoteHeadToLocalBranch(gitDir, remote);
     if (branch !== null) {
-      const oid = await refToOid(gitDir, branch);
-      if (oid !== null) return oid;
+      const hash = await refToHash(gitDir, branch);
+      if (hash !== null) return hash;
     }
   }
 
@@ -159,14 +159,14 @@ export async function getDefaultBranch(gitDir: string): Promise<string> {
   if (configResult.success) {
     const branch = configResult.stdout.trim();
     if (branch.length > 0) {
-      const oid = await refToOid(gitDir, branch);
-      if (oid !== null) return oid;
+      const hash = await refToHash(gitDir, branch);
+      if (hash !== null) return hash;
     }
   }
 
   for (const ref of ["refs/heads/main", "refs/heads/master", "HEAD"]) {
-    const oid = await refToOid(gitDir, ref);
-    if (oid !== null) return oid;
+    const hash = await refToHash(gitDir, ref);
+    if (hash !== null) return hash;
   }
 
   throw new Error("Could not find a default branch");
@@ -174,7 +174,7 @@ export async function getDefaultBranch(gitDir: string): Promise<string> {
 
 /** Scan history of a repository; commit dates as seconds since 1970. */
 export async function scanRepo(gitDir: string): Promise<number[]> {
-  const defaultOid = await getDefaultBranch(gitDir);
+  const defaultHash = await getDefaultBranch(gitDir);
 
   const remotesResult = await runGit(gitDir, ["remote"]);
   const remoteNames = remotesResult.stdout
@@ -196,7 +196,7 @@ export async function scanRepo(gitDir: string): Promise<number[]> {
     }
   }
 
-  const logResult = await runGit(gitDir, ["log", "--format=%at", defaultOid]);
+  const logResult = await runGit(gitDir, ["log", "--format=%at", defaultHash]);
   if (!logResult.success) {
     throw new Error(`git log failed: ${logResult.stderr}`);
   }
