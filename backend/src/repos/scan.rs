@@ -158,10 +158,215 @@ mod tests {
     use assert2::assert;
     use testdir::testdir;
 
-    // FIXME add test of find default with remote
-    // FIXME add test of find default with no config
-    // FIXME add test of find default with no main or master
-    // FIXME test having more/less commits than upstream
+    #[test]
+    fn default_branch_prefers_origin_head_over_upstream_head() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0); // main: 1 commit (c0)
+
+        repo.git(["branch", "upstream-branch"]);
+        repo.git(["checkout", "upstream-branch"]);
+        repo.make_commit(1); // upstream-branch: 2 commits (c0, c1)
+
+        repo.git(["branch", "origin-branch"]); // branched from upstream-branch
+        repo.git(["checkout", "origin-branch"]);
+        repo.make_commit(2); // origin-branch: 3 commits (c0, c1, c2)
+
+        repo.git(["checkout", "main"]);
+
+        repo.git([
+            "symbolic-ref",
+            "refs/remotes/upstream/HEAD",
+            "refs/remotes/upstream/upstream-branch",
+        ]);
+        repo.git([
+            "symbolic-ref",
+            "refs/remotes/origin/HEAD",
+            "refs/remotes/origin/origin-branch",
+        ]);
+
+        // Both origin/HEAD and upstream/HEAD are set, pointing at different
+        // (real) branches with different history lengths: origin must win.
+        assert!(let Ok([_, _, _]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn default_branch_falls_back_to_upstream_head_over_config() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0); // main: 1 commit (c0)
+
+        repo.git(["branch", "config-branch"]);
+        repo.git(["checkout", "config-branch"]);
+        repo.make_commit(1); // config-branch: 2 commits (c0, c1)
+
+        repo.git(["branch", "upstream-branch"]); // branched from config-branch
+        repo.git(["checkout", "upstream-branch"]);
+        repo.make_commit(2); // upstream-branch: 3 commits (c0, c1, c2)
+
+        repo.git(["checkout", "main"]);
+
+        repo.git(["config", "init.defaultBranch", "config-branch"]);
+        repo.git([
+            "symbolic-ref",
+            "refs/remotes/upstream/HEAD",
+            "refs/remotes/upstream/upstream-branch",
+        ]);
+
+        // No origin/HEAD; upstream/HEAD and init.defaultBranch both point at
+        // real, different branches: upstream must win over the config.
+        assert!(let Ok([_, _, _]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn default_branch_uses_local_config_when_no_remote_head() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0); // main: 1 commit
+
+        repo.git(["branch", "feature"]);
+        repo.git(["checkout", "feature"]);
+        repo.make_commit(1); // feature: 2 commits
+        repo.git(["checkout", "main"]);
+
+        repo.git(["config", "init.defaultBranch", "feature"]);
+
+        assert!(let Ok([_, _]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn default_branch_local_config_falls_through_when_branch_missing() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0); // main: 1 commit
+
+        // "ghost" doesn't exist, so this should fall through to `main`
+        // rather than erroring.
+        repo.git(["config", "init.defaultBranch", "ghost"]);
+
+        assert!(let Ok([_]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn default_branch_uses_master_when_no_main() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        repo.git(["branch", "-m", "main", "master"]);
+
+        // The home's global `init.defaultBranch = main` config still points
+        // at a branch that no longer exists, so this exercises the
+        // `master` fallback specifically.
+        assert!(let Ok([_]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn default_branch_falls_back_to_head() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        // No `main`, no `master`, and the global `init.defaultBranch = main`
+        // config points at a branch that doesn't exist either.
+        repo.git(["branch", "-m", "main", "custom"]);
+
+        assert!(let Ok([_]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn scan_empty_repo_errors() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        // No commits: HEAD is unborn, and there's no branch to fall back to.
+        assert!(let Err(_) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn scan_repo_uses_author_time_not_committer_time() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.write("a", "a");
+        repo.git(["add", "a"]);
+        repo.git([
+            "commit",
+            "-m",
+            "commit",
+            "--date",
+            "2000-01-01T00:00:00+00:00",
+        ]);
+
+        // If this used committer time instead of author time, it would be
+        // ~now, not the fixed date above (946_684_800 = 2000-01-01 UTC).
+        assert!(scan_repo_path(repo.path()).unwrap() == vec![946_684_800]);
+    }
+
+    #[test]
+    fn scan_repo_skips_when_origin_is_github_ssh() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        repo.git([
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:example/repo.git",
+        ]);
+
+        assert!(scan_repo_path(repo.path()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn scan_repo_skips_when_origin_is_github_https() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        repo.git([
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/example/repo.git",
+        ]);
+
+        assert!(scan_repo_path(repo.path()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn scan_repo_returns_history_for_non_github_remote() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        repo.git([
+            "remote",
+            "add",
+            "origin",
+            "https://git.example.com/repo.git",
+        ]);
+
+        assert!(let Ok([_]) = scan_repo_path(repo.path()).as_deref());
+    }
+
+    #[test]
+    fn scan_repo_skips_if_any_remote_is_github() {
+        let home = Home::init(testdir!());
+        let repo = home.git_init("repo");
+        repo.make_commit(0);
+        repo.git([
+            "remote",
+            "add",
+            "origin",
+            "https://git.example.com/repo.git",
+        ]);
+        repo.git([
+            "remote",
+            "add",
+            "github",
+            "https://github.com/example/repo.git",
+        ]);
+
+        // Documents current behavior: a single GitHub remote is enough to
+        // skip the whole repo, even if other remotes aren't GitHub. Worth
+        // confirming this is actually intended.
+        assert!(scan_repo_path(repo.path()).unwrap().is_empty());
+    }
 
     #[test]
     fn scan_repo() {
