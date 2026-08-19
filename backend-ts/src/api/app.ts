@@ -26,6 +26,7 @@ function errorBody(message: string): { message: string; request_id: string } {
 const healthRoute = createRoute({
   method: "get",
   path: "/api/health",
+  operationId: "health_check",
   summary: "Handle `/api/health`",
   responses: {
     200: {
@@ -38,6 +39,7 @@ const healthRoute = createRoute({
 const versionRoute = createRoute({
   method: "get",
   path: "/api/version",
+  operationId: "version",
   summary: "Handle `/api/version`",
   responses: {
     200: {
@@ -50,6 +52,7 @@ const versionRoute = createRoute({
 const contributionsRoute = createRoute({
   method: "get",
   path: "/api/contributions",
+  operationId: "contributions",
   summary: "Handle `/api/contributions`",
   responses: {
     200: {
@@ -64,6 +67,7 @@ const contributionsRoute = createRoute({
 const oauthCallbackRoute = createRoute({
   method: "get",
   path: "/api/oauth/callback",
+  operationId: "oauth_callback",
   summary: "Handle `/api/oauth/callback`",
   request: { query: CallbackQuerySchema },
   responses: {
@@ -81,6 +85,7 @@ const oauthCallbackRoute = createRoute({
 const oauthRefreshRoute = createRoute({
   method: "get",
   path: "/api/oauth/refresh",
+  operationId: "oauth_refresh",
   summary: "Handle `/api/oauth/refresh`",
   request: { query: RefreshQuerySchema },
   responses: {

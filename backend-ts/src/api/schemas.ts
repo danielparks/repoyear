@@ -76,4 +76,4 @@ export const ErrorResponseSchema = z
     request_id: z.string(),
     error_code: z.string().optional(),
   })
-  .openapi("Error");
+  .openapi("Error", { description: "Error information from a response." });
