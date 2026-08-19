@@ -1,5 +1,10 @@
-// GitHub OAuth token exchange.
+// GitHub OAuth token exchange, via @octokit/oauth-methods.
 
+import {
+  exchangeWebFlowCode,
+  refreshToken as octokitRefreshToken,
+} from "@octokit/oauth-methods";
+import { RequestError } from "@octokit/request-error";
 import type { Logger } from "../logging.ts";
 
 export interface OAuthCredentials {
@@ -18,68 +23,50 @@ export type OAuthResult =
   | { ok: true; value: OAuthTokenResponse }
   | { ok: false; error: string };
 
-/** The response shape from https://github.com/login/oauth/access_token. */
-interface GitHubTokenResponse {
-  access_token?: string;
-  refresh_token?: string;
-  expires_in?: number;
-  refresh_token_expires_in?: number;
-  error?: string;
-  error_description?: string;
+/**
+ * The two shapes GitHub's token endpoint returns for a GitHub App,
+ * depending on whether the app has user-token expiration enabled.
+ */
+type GitHubAppTokenData =
+  | { access_token: string; token_type: string }
+  | {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string;
+    refresh_token_expires_in: number;
+  };
+
+function toOAuthTokenResponse(data: GitHubAppTokenData): OAuthTokenResponse {
+  return {
+    access_token: data.access_token,
+    refresh_token: "refresh_token" in data ? data.refresh_token : undefined,
+    expires_in: "expires_in" in data ? data.expires_in : undefined,
+    refresh_token_expires_in: "refresh_token_expires_in" in data
+      ? data.refresh_token_expires_in
+      : undefined,
+  };
 }
 
-async function requestGitHubToken(
-  body: Record<string, string>,
+/**
+ * GitHub's OAuth token endpoint always responds 200, even on failure --
+ * `@octokit/oauth-methods` detects that itself (by checking for an `error`
+ * field in the body) and raises it as a `RequestError` with `status: 400`.
+ * Any other status means the *request* failed (network error, a genuine
+ * HTTP error from GitHub, etc.), which shouldn't be relayed to the client
+ * verbatim.
+ */
+function handleOAuthError(
+  error: unknown,
   errorContext: string,
   logger: Logger,
-): Promise<OAuthResult> {
-  let response: Response;
-  try {
-    response = await fetch(
-      "https://github.com/login/oauth/access_token",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(body),
-      },
-    );
-  } catch (error) {
-    logger.error(`${errorContext} request failed: ${error}`);
-    return { ok: false, error: "Service temporarily unavailable" };
+): OAuthResult {
+  if (error instanceof RequestError && error.status === 400) {
+    logger.error(`Error in ${errorContext} response: ${error.message}`);
+    return { ok: false, error: error.message };
   }
-
-  let tokenData: GitHubTokenResponse;
-  try {
-    tokenData = await response.json();
-  } catch (error) {
-    logger.error(`Failed to parse ${errorContext} response: ${error}`);
-    return { ok: false, error: "Internal server error" };
-  }
-
-  if (tokenData.error !== undefined) {
-    logger.error(`Error in ${errorContext} response: ${tokenData.error}`);
-    return {
-      ok: false,
-      error: tokenData.error_description ?? `${errorContext} failed`,
-    };
-  }
-
-  if (tokenData.access_token === undefined) {
-    return { ok: false, error: "Internal server error" };
-  }
-
-  return {
-    ok: true,
-    value: {
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      expires_in: tokenData.expires_in,
-      refresh_token_expires_in: tokenData.refresh_token_expires_in,
-    },
-  };
+  logger.error(`${errorContext} request failed: ${error}`);
+  return { ok: false, error: "Service temporarily unavailable" };
 }
 
 /** Exchange a GitHub OAuth code for an access token. */
@@ -88,15 +75,17 @@ export async function exchangeOAuthToken(
   code: string,
   logger: Logger,
 ): Promise<OAuthResult> {
-  return await requestGitHubToken(
-    {
-      client_id: credentials.githubClientId,
-      client_secret: credentials.githubClientSecret,
+  try {
+    const response = await exchangeWebFlowCode({
+      clientType: "github-app",
+      clientId: credentials.githubClientId,
+      clientSecret: credentials.githubClientSecret,
       code,
-    },
-    "OAuth",
-    logger,
-  );
+    });
+    return { ok: true, value: toOAuthTokenResponse(response.data) };
+  } catch (error) {
+    return handleOAuthError(error, "OAuth", logger);
+  }
 }
 
 /** Refresh a GitHub OAuth access token using a refresh token. */
@@ -105,14 +94,15 @@ export async function refreshOAuthToken(
   refreshToken: string,
   logger: Logger,
 ): Promise<OAuthResult> {
-  return await requestGitHubToken(
-    {
-      client_id: credentials.githubClientId,
-      client_secret: credentials.githubClientSecret,
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    },
-    "OAuth refresh",
-    logger,
-  );
+  try {
+    const response = await octokitRefreshToken({
+      clientType: "github-app",
+      clientId: credentials.githubClientId,
+      clientSecret: credentials.githubClientSecret,
+      refreshToken,
+    });
+    return { ok: true, value: toOAuthTokenResponse(response.data) };
+  } catch (error) {
+    return handleOAuthError(error, "OAuth refresh", logger);
+  }
 }

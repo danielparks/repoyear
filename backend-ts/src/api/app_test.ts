@@ -57,16 +57,32 @@ Deno.test("GET /api/oauth/callback requires a code", async () => {
   assertEquals(res.status, 400);
 });
 
+/**
+ * A GitHub-shaped JSON response. Real responses from
+ * https://github.com/login/oauth/access_token always include `scope`
+ * (empty for GitHub Apps) and a `date` header --
+ * @octokit/oauth-methods reads both unconditionally, and throws if
+ * they're missing.
+ */
+function githubResponse(body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify({ scope: "", ...body }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "date": new Date().toUTCString(),
+    },
+  });
+}
+
 Deno.test("GET /api/oauth/callback surfaces GitHub errors as 400", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = (() =>
     Promise.resolve(
-      new Response(
-        JSON.stringify({
-          error: "bad_verification_code",
-          error_description: "expired",
-        }),
-      ),
+      githubResponse({
+        error: "bad_verification_code",
+        error_description: "expired",
+        error_uri: "https://docs.github.com/apps/managing-oauth-apps",
+      }),
     )) as typeof fetch;
 
   try {
@@ -74,7 +90,11 @@ Deno.test("GET /api/oauth/callback surfaces GitHub errors as 400", async () => {
     const res = await app.request("/api/oauth/callback?code=bad");
     assertEquals(res.status, 400);
     const body = await res.json();
-    assertEquals(body.message, "expired");
+    assertEquals(
+      body.message,
+      "expired (bad_verification_code, " +
+        "https://docs.github.com/apps/managing-oauth-apps)",
+    );
     assertEquals(typeof body.request_id, "string");
   } finally {
     globalThis.fetch = original;
@@ -85,7 +105,7 @@ Deno.test("GET /api/oauth/callback returns the token on success", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = (() =>
     Promise.resolve(
-      new Response(JSON.stringify({ access_token: "abc123" })),
+      githubResponse({ access_token: "abc123", token_type: "bearer" }),
     )) as typeof fetch;
 
   try {

@@ -9,8 +9,28 @@ const credentials = {
 
 const silentLogger = createLogger(Level.Silent);
 
+/**
+ * A GitHub-shaped JSON response. Real responses from
+ * https://github.com/login/oauth/access_token always include `scope`
+ * (empty for GitHub Apps, which don't use OAuth scopes) and a `date`
+ * header -- @octokit/oauth-methods reads both unconditionally, and throws
+ * if they're missing.
+ */
+function githubResponse(body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify({ scope: "", ...body }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "date": new Date().toUTCString(),
+    },
+  });
+}
+
 function withFetch<T>(
-  handler: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  handler: (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ) => Promise<Response>,
   run: () => Promise<T>,
 ): Promise<T> {
   const original = globalThis.fetch;
@@ -20,7 +40,7 @@ function withFetch<T>(
   });
 }
 
-Deno.test("exchangeOAuthToken success", async () => {
+Deno.test("exchangeOAuthToken success, expiring token", async () => {
   const result = await withFetch(
     (_input, init) => {
       const body = JSON.parse(init?.body as string);
@@ -30,14 +50,13 @@ Deno.test("exchangeOAuthToken success", async () => {
         code: "the-code",
       });
       return Promise.resolve(
-        new Response(
-          JSON.stringify({
-            access_token: "abc123",
-            refresh_token: "refresh123",
-            expires_in: 28_800,
-            refresh_token_expires_in: 15_897_600,
-          }),
-        ),
+        githubResponse({
+          access_token: "abc123",
+          token_type: "bearer",
+          refresh_token: "refresh123",
+          expires_in: 28_800,
+          refresh_token_expires_in: 15_897_600,
+        }),
       );
     },
     () => exchangeOAuthToken(credentials, "the-code", silentLogger),
@@ -54,39 +73,50 @@ Deno.test("exchangeOAuthToken success", async () => {
   });
 });
 
-Deno.test("exchangeOAuthToken GitHub error", async () => {
+Deno.test("exchangeOAuthToken success, non-expiring token", async () => {
   const result = await withFetch(
     () =>
       Promise.resolve(
-        new Response(
-          JSON.stringify({
-            error: "bad_verification_code",
-            error_description: "The code passed is incorrect or expired.",
-          }),
-        ),
+        githubResponse({ access_token: "abc123", token_type: "bearer" }),
+      ),
+    () => exchangeOAuthToken(credentials, "the-code", silentLogger),
+  );
+
+  assertEquals(result, {
+    ok: true,
+    value: {
+      access_token: "abc123",
+      refresh_token: undefined,
+      expires_in: undefined,
+      refresh_token_expires_in: undefined,
+    },
+  });
+});
+
+Deno.test("exchangeOAuthToken GitHub-declared error", async () => {
+  const result = await withFetch(
+    () =>
+      Promise.resolve(
+        githubResponse({
+          error: "bad_verification_code",
+          error_description: "The code passed is incorrect or expired.",
+          error_uri: "https://docs.github.com/apps/managing-oauth-apps",
+        }),
       ),
     () => exchangeOAuthToken(credentials, "bad-code", silentLogger),
   );
 
-  assertEquals(result, {
-    ok: false,
-    error: "The code passed is incorrect or expired.",
-  });
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(
+      result.error,
+      "The code passed is incorrect or expired. (bad_verification_code, " +
+        "https://docs.github.com/apps/managing-oauth-apps)",
+    );
+  }
 });
 
-Deno.test("exchangeOAuthToken GitHub error without description", async () => {
-  const result = await withFetch(
-    () =>
-      Promise.resolve(
-        new Response(JSON.stringify({ error: "server_error" })),
-      ),
-    () => exchangeOAuthToken(credentials, "code", silentLogger),
-  );
-
-  assertEquals(result, { ok: false, error: "OAuth failed" });
-});
-
-Deno.test("exchangeOAuthToken network failure", async () => {
+Deno.test("exchangeOAuthToken network failure returns a generic error", async () => {
   const result = await withFetch(
     () => Promise.reject(new Error("network down")),
     () => exchangeOAuthToken(credentials, "code", silentLogger),
@@ -98,25 +128,19 @@ Deno.test("exchangeOAuthToken network failure", async () => {
   });
 });
 
-Deno.test("exchangeOAuthToken unparsable response", async () => {
+Deno.test("exchangeOAuthToken HTTP failure returns a generic error", async () => {
   const result = await withFetch(
-    () => Promise.resolve(new Response("not json")),
+    () => Promise.resolve(new Response("bad gateway", { status: 502 })),
     () => exchangeOAuthToken(credentials, "code", silentLogger),
   );
 
-  assertEquals(result, { ok: false, error: "Internal server error" });
+  assertEquals(result, {
+    ok: false,
+    error: "Service temporarily unavailable",
+  });
 });
 
-Deno.test("exchangeOAuthToken missing access_token", async () => {
-  const result = await withFetch(
-    () => Promise.resolve(new Response(JSON.stringify({}))),
-    () => exchangeOAuthToken(credentials, "code", silentLogger),
-  );
-
-  assertEquals(result, { ok: false, error: "Internal server error" });
-});
-
-Deno.test("refreshOAuthToken sends grant_type and refresh_token", async () => {
+Deno.test("refreshOAuthToken sends grant info and returns the new token", async () => {
   const result = await withFetch(
     (_input, init) => {
       const body = JSON.parse(init?.body as string);
@@ -127,7 +151,13 @@ Deno.test("refreshOAuthToken sends grant_type and refresh_token", async () => {
         refresh_token: "the-refresh-token",
       });
       return Promise.resolve(
-        new Response(JSON.stringify({ access_token: "new-token" })),
+        githubResponse({
+          access_token: "new-token",
+          token_type: "bearer",
+          refresh_token: "new-refresh-token",
+          expires_in: 28_800,
+          refresh_token_expires_in: 15_897_600,
+        }),
       );
     },
     () => refreshOAuthToken(credentials, "the-refresh-token", silentLogger),
@@ -137,9 +167,33 @@ Deno.test("refreshOAuthToken sends grant_type and refresh_token", async () => {
     ok: true,
     value: {
       access_token: "new-token",
-      refresh_token: undefined,
-      expires_in: undefined,
-      refresh_token_expires_in: undefined,
+      refresh_token: "new-refresh-token",
+      expires_in: 28_800,
+      refresh_token_expires_in: 15_897_600,
     },
   });
+});
+
+Deno.test("refreshOAuthToken surfaces a GitHub-declared error", async () => {
+  const result = await withFetch(
+    () =>
+      Promise.resolve(
+        githubResponse({
+          error: "bad_refresh_token",
+          error_description:
+            "The refresh token passed is incorrect or expired.",
+          error_uri: "https://docs.github.com/apps/managing-oauth-apps",
+        }),
+      ),
+    () => refreshOAuthToken(credentials, "bad-refresh-token", silentLogger),
+  );
+
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(
+      result.error,
+      "The refresh token passed is incorrect or expired. " +
+        "(bad_refresh_token, https://docs.github.com/apps/managing-oauth-apps)",
+    );
+  }
 });
