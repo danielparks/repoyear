@@ -6,8 +6,6 @@
 // the weight. Doesn't implement --help/usage text -- not worth building
 // out for the one person who runs this.
 
-export type Color = "auto" | "always" | "never";
-
 export type Command =
   | {
     kind: "serve";
@@ -22,7 +20,6 @@ export type Command =
   | { kind: "version" };
 
 export interface Params {
-  color: Color;
   quiet: number;
   command: Command;
 }
@@ -37,21 +34,11 @@ function requireValue(args: string[], index: number, flag: string): string {
   return value;
 }
 
-function parseColor(value: string): Color {
-  if (value === "auto" || value === "always" || value === "never") {
-    return value;
-  }
-  throw new ArgError(
-    `Invalid --color value: ${value} (expected auto, always, or never)`,
-  );
-}
-
 /** Parse `argv` (i.e. `Deno.args`) into `Params`. */
 export function parseParams(
   argv: string[],
   env: Record<string, string | undefined> = Deno.env.toObject(),
 ): Params {
-  let color: Color = "auto";
   let quiet = 0;
   let i = 0;
 
@@ -60,13 +47,7 @@ export function parseParams(
   // simplification for this tool's actual usage.
   while (i < argv.length) {
     const arg = argv[i];
-    if (arg === "--color") {
-      color = parseColor(requireValue(argv, ++i, "--color"));
-      i += 1;
-    } else if (arg.startsWith("--color=")) {
-      color = parseColor(arg.slice("--color=".length));
-      i += 1;
-    } else if (arg === "--quiet") {
+    if (arg === "--quiet") {
       quiet += 1;
       i += 1;
     } else if (/^-q+$/.test(arg)) {
@@ -81,7 +62,7 @@ export function parseParams(
   }
 
   const [subcommand, ...subArgs] = argv.slice(i);
-  return { color, quiet, command: parseCommand(subcommand, subArgs, env) };
+  return { quiet, command: parseCommand(subcommand, subArgs, env) };
 }
 
 function parseCommand(

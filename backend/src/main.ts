@@ -1,6 +1,6 @@
 // repoyear-backend executable.
 
-import { type Color, type Params, parseParams } from "./params.ts";
+import { type Params, parseParams } from "./params.ts";
 import { createLogger, levelFromQuiet, type Logger } from "./logging.ts";
 import { getPackageVersion, getVersion } from "./version.ts";
 import { configRepoIter, parseConfig } from "./repos/config.ts";
@@ -93,31 +93,18 @@ async function run(params: Params, logger: Logger): Promise<void> {
   }
 }
 
-function printError(error: unknown, color: Color): void {
+function printError(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
   const prefix = /^error/i.test(message) ? "" : "Error: ";
-  const text = `${prefix}${message}\n`;
-  const useColor = color === "always" ||
-    (color === "auto" && Deno.stderr.isTerminal());
-  const output = useColor ? `\x1b[1;31m${text}\x1b[0m` : text;
-  Deno.stderr.writeSync(new TextEncoder().encode(output));
+  Deno.stderr.writeSync(new TextEncoder().encode(`${prefix}${message}\n`));
 }
 
 async function main(): Promise<void> {
-  let params: Params;
   try {
-    params = parseParams(Deno.args);
+    const params = parseParams(Deno.args);
+    await run(params, createLogger(levelFromQuiet(params.quiet)));
   } catch (error) {
-    printError(error, "auto");
-    Deno.exit(1);
-  }
-
-  const logger = createLogger(levelFromQuiet(params.quiet));
-
-  try {
-    await run(params, logger);
-  } catch (error) {
-    printError(error, params.color);
+    printError(error);
     Deno.exit(1);
   }
 }

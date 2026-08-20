@@ -15,7 +15,6 @@ Deno.test("serve: defaults and required flags from argv", () => {
     noEnv,
   );
   assertEquals(params, {
-    color: "auto",
     quiet: 0,
     command: {
       kind: "serve",
@@ -136,23 +135,5 @@ Deno.test("more than three -q throws", () => {
     () => parseParams(["-qqqq", "version"], noEnv),
     ArgError,
     "only allowed up to 3",
-  );
-});
-
-Deno.test("--color accepts auto/always/never", () => {
-  assertEquals(
-    parseParams(["--color", "always", "version"], noEnv).color,
-    "always",
-  );
-  assertEquals(
-    parseParams(["--color=never", "version"], noEnv).color,
-    "never",
-  );
-});
-
-Deno.test("--color rejects invalid values", () => {
-  assertThrows(
-    () => parseParams(["--color", "purple", "version"], noEnv),
-    ArgError,
   );
 });
