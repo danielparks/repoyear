@@ -5,8 +5,7 @@
     "jsxImportSource": "react"
   },
   "exclude": [
-    "backend",
-    "backend-ts"
+    "backend"
   ],
   "fmt": {
     "exclude": [

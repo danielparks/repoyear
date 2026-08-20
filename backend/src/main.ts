@@ -2,7 +2,7 @@
 
 import { type Color, type Params, parseParams } from "./params.ts";
 import { createLogger, levelFromVerbosity, type Logger } from "./logging.ts";
-import { getVersion } from "./version.ts";
+import { getPackageVersion, getVersion } from "./version.ts";
 import { configRepoIter, parseConfig } from "./repos/config.ts";
 import { scanRepo, scanRepoPath } from "./repos/scan.ts";
 import { serve } from "./server.ts";
@@ -68,16 +68,20 @@ async function run(params: Params, logger: Logger): Promise<void> {
 
     case "openapi": {
       // Only the route shapes matter for the spec; the state's
-      // credentials/config are never consulted while generating it.
+      // credentials/config are never consulted while generating it. Uses
+      // the package version (deno.jsonc), not the git-describe `version`
+      // above -- matches the Rust `openapi` subcommand using
+      // CARGO_PKG_VERSION rather than GIT_VERSION, so the spec's version
+      // only changes on an actual release.
       const state: AppState = {
         githubClientId: "",
         githubClientSecret: "",
         scanConfig: null,
-        version,
+        version: await getPackageVersion(),
         logger,
       };
       const res = await createApp(state).request("/api/openapi.json");
-      const json = `${await res.text()}\n`;
+      const json = `${JSON.stringify(await res.json(), null, 2)}\n`;
       if (params.command.output !== undefined) {
         await Deno.writeTextFile(params.command.output, json);
       } else {

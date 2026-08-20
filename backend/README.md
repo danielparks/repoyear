@@ -1,38 +1,40 @@
 # repoyear-backend
 
-Generated from template https://github.com/danielparks/danielparks-template.rs
-with [cargo-generate](https://github.com/ashleygwilliams/cargo-generate).
+The RepoYear backend: scans local git repositories for contribution history not
+visible to GitHub, and proxies GitHub OAuth token exchange for the frontend.
+Written in TypeScript, runs on [Deno][deno].
+
+[deno]: https://deno.com/
 
 ## Installation
 
-```sh
-cargo install repoyear-backend
-```
-
-If you have [`cargo binstall`][binstall], you can use it to download and install
-a binary:
-
-```sh
-cargo binstall repoyear-backend
-```
-
-Finally, you can download binaries directly from the
-[GitHub releases page][releases]. Just extract the archive and copy the file
-inside into your `$PATH`, e.g. `/usr/local/bin`. The most common ones are:
+Download binaries directly from the [GitHub releases page][releases]. Just
+extract the archive and copy the file inside into your `$PATH`, e.g.
+`/usr/local/bin`. The most common ones are:
 
 - Linux:
   [x86-64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-x86_64-unknown-linux-gnu.tar.gz),
-  [ARM](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-aarch64-unknown-linux-musl.tar.gz)
+  [ARM64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-aarch64-unknown-linux-gnu.tar.gz)
 - macOS:
   [Intel](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-x86_64-apple-darwin.tar.gz),
   [Apple silicon](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-aarch64-apple-darwin.tar.gz)
-- [Windows on x86-64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-x86_64-pc-windows-msvc.zip)
+- Windows:
+  [x86-64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-x86_64-pc-windows-msvc.zip),
+  [ARM64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-aarch64-pc-windows-msvc.zip)
 
-## Rust Crate
+These are `deno compile`d standalone binaries with no runtime dependency (not
+even Deno itself). Note that `deno compile`'s supported target list is narrower
+than what the previous Rust build produced: no musl targets (so no
+static/Alpine-friendly Linux build), and no FreeBSD, illumos, PowerPC64, RISC-V,
+or s390x. If you need one of those, run from source with [Deno][deno] installed
+instead:
 
-[![docs.rs](https://img.shields.io/docsrs/repoyear-backend)][docs.rs]
-[![Crates.io](https://img.shields.io/crates/v/repoyear-backend)][crates.io]
-![Rust version 1.85+](https://img.shields.io/badge/Rust%20version-1.85%2B-success)
+```sh
+deno run --allow-read --allow-write --allow-run --allow-net --allow-env \
+  src/main.ts <subcommand>
+```
+
+[releases]: https://github.com/danielparks/repoyear/releases
 
 ## Development status
 
@@ -52,8 +54,4 @@ Unless you explicitly state otherwise, any contribution you submit as defined in
 the Apache 2.0 license shall be dual licensed as above, without any additional
 terms or conditions.
 
-[docs.rs]: https://docs.rs/repoyear-backend/latest/repoyear_backend/
-[crates.io]: https://crates.io/crates/repoyear-backend
-[binstall]: https://github.com/cargo-bins/cargo-binstall
-[releases]: https://github.com/danielparks/repoyear/releases
 [issues]: https://github.com/danielparks/repoyear/issues

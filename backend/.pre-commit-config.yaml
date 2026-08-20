@@ -1,33 +1,43 @@
-exclude: ^target/
+exclude: ^deno\.lock$
 
 repos:
   - repo: local
     hooks:
-      - id: cargo clippy
-        name: cargo clippy
+      - id: deno check
+        name: deno check
         language: system
-        entry: cargo clippy --quiet --all-targets --all-features -- -D warnings
-        files: (\.rs|Cargo\.toml)$
+        entry: deno check
+        files: \.ts$
         pass_filenames: false
         priority: 0
-      - id: cargo doc
-        name: cargo doc
+      - id: deno lint
+        name: deno lint
         language: system
-        entry: sh -c 'RUSTDOCFLAGS=-Dwarnings cargo doc --all-features --workspace --no-deps --document-private-items' --
-        files: \.rs$
+        entry: deno lint
+        files: \.ts$
         pass_filenames: false
         priority: 0
-      - id: cargo fmt
-        name: cargo fmt
+      - id: deno fmt
+        name: deno fmt
         language: system
-        entry: cargo +nightly fmt --check
-        files: (\.rs|rustfmt\.toml)$
+        entry: deno fmt --check
+        files: \.(ts|jsonc?)$
         pass_filenames: false
         priority: 0
-      - id: cargo run openapi
-        name: cargo run openapi
+      - id: deno test
+        name: deno test
         language: system
-        entry: sh -c 'cargo run --quiet -- openapi -o ../target/openapi.json && diff -u --color=always ../src/api/openapi.json ../target/openapi.json'
-        files: (\.rs|Cargo\.(lock|toml))$
+        entry: deno task test
+        files: \.ts$
+        pass_filenames: false
+        priority: 0
+      - id: deno run openapi
+        name: deno run openapi
+        description: Ensure the frontend's copy of openapi.json is up to date.
+        language: system
+        entry: >-
+          sh -c 'deno run -A src/main.ts openapi -o /tmp/repoyear-openapi-check.json
+          && diff -u --color=always ../src/api/openapi.json /tmp/repoyear-openapi-check.json'
+        files: \.ts$
         pass_filenames: false
         priority: 0

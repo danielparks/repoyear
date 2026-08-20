@@ -89,17 +89,10 @@ permissions are needed:
 
 ## Stack
 
-This is a TypeScript and React app with a simple Rust backend built on
-[Dropshot]. Dropshot provides automatic OpenAPI support, which enables
-compile-time type checking of calls across the API boundary.
-
-### Likely incompatible
-
-- **Systemd socket activation.** Dropshot takes a `SocketAddr` as configuration
-  then binds a `TcpListener`. In order to use [systemd socket activation], e.g.
-  with [systemd_socket], we need to pass Dropshot an already bound
-  `TcpListener`, or some sort of generic that supports
-  `systemd_socket::SocketAddr`. This would require changes to Dropshot.
+This is a TypeScript and React app with a TypeScript/Deno backend built on
+[Hono] and [`@hono/zod-openapi`]. `@hono/zod-openapi` provides automatic OpenAPI
+support, which enables compile-time type checking of calls across the API
+boundary.
 
 ## Alternatives
 
@@ -140,6 +133,5 @@ terms or conditions.
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
 [.env.example]: .env.example
 [GitHub personal access token]: https://github.com/settings/personal-access-tokens
-[Dropshot]: https://docs.rs/dropshot/latest/dropshot/
-[systemd socket activation]: https://www.freedesktop.org/software/systemd/man/latest/sd_listen_fds.html
-[systemd_socket]: https://docs.rs/systemd_socket/latest/systemd_socket/
+[Hono]: https://hono.dev/
+[`@hono/zod-openapi`]: https://github.com/honojs/middleware/tree/main/packages/zod-openapi

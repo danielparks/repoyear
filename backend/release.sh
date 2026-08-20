@@ -30,16 +30,6 @@ check-changes () {
   }
 }
 
-crate-names () {
-  cargo metadata --format-version 1 --no-deps | jq -r '.packages[].name'
-}
-
-crate-names-to-publish () {
-  # I’m not sure why publish is [] for false and null for true (the default).
-  cargo metadata --format-version 1 --no-deps \
-    | jq -r '.packages[] | select(.publish == null) |.name'
-}
-
 branch-name () {
   git rev-parse --abbrev-ref HEAD
 }
@@ -105,42 +95,22 @@ command -v parse-changelog &>/dev/null || {
   exit 1
 }
 
-if [[ -z "$(crate-names-to-publish)" ]] ; then
-  echo 'Could not find any packages to publish.' >&2
-  echo '(Check that crate-names-to-publish function still works.)' >&2
-  exit 1
-fi
-
 check-changes
 
 echo 'Making sure version is correct.'
 
-awk-in-place Cargo.toml '
-  /^version *=/ && !done {
+awk-in-place deno.jsonc '
+  /^ *"version": *"[0-9.]+"/ && !done {
     sub(/"[0-9.]+"/, "\"'$version'\"")
     done=1
   }
   { print }'
 
-# Fix docs.rs links in README, if present
-echo 'Updating links in README.md'
-for name in $(crate-names) ; do
-  awk-in-place README.md '{
-      sub(/https:\/\/docs\.rs\/'"$name"'\/[0-9]+.[0-9]+.[0-9]+\//, \
-        "https://docs.rs/'"$name"'/'$version'/")
-      print
-    }'
-done
-
-cargo check --quiet
-
-# Do semver checks only if there is a version on crates.io to compare to.
-# FIXME: can’t tell if crates.io search failed for another reason.
-main_crate_name=$(crate-names | head -1)
-if (cd / && cargo info "$main_crate_name" &>/dev/null) ; then
-  echo 'Doing semantic versioning checks'
-  cargo semver-checks || { echo ; confirm 'Release anyway?' ; }
-fi
+echo 'Running quality checks (deno check/test/lint/fmt).'
+deno check
+deno task test
+deno lint
+deno fmt --check
 
 awk-in-place CHANGELOG.md '
   /^## / && !done {
@@ -183,8 +153,6 @@ if [[ "$(branch-name)" != main ]] ; then
   # Only need a PR if something was changed.
   auto-pr "Release ${version}"
 fi
-
-cargo publish $(crate-names-to-publish | sed -e 's/^/-p /')
 
 awk-in-place CHANGELOG.md '
   /^## Release/ && !done {
