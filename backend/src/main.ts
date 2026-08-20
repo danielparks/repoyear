@@ -1,21 +1,18 @@
 // repoyear-backend executable.
 
-import type { Command } from "./params.ts";
-import { parseParams } from "./params.ts";
+import { Command, Option } from "commander";
 import { createLogger, Level, type Logger } from "./logging.ts";
 import { getPackageVersion, getVersion } from "./version.ts";
-import { configRepoIter, parseConfig } from "./repos/config.ts";
+import { type Config, configRepoIter, parseConfig } from "./repos/config.ts";
 import { scanRepo, scanRepoPath } from "./repos/scan.ts";
 import { serve } from "./server.ts";
 import { createApp } from "./api/app.ts";
-import type { AppState } from "./api/handlers.ts";
 
 /** Run one `scan`/`scan-repo`-style pass over a config, as JSON to stdout. */
 async function scanConfigToStdout(
-  configPath: string,
+  config: Config,
   logger: Logger,
 ): Promise<void> {
-  const config = parseConfig(await Deno.readTextFile(configPath));
   const result: Record<string, number[]> = {};
   for await (const item of configRepoIter(config)) {
     if ("error" in item) {
@@ -31,32 +28,63 @@ async function scanConfigToStdout(
   console.log(JSON.stringify(result));
 }
 
-async function run(command: Command, logger: Logger): Promise<void> {
+async function main(): Promise<void> {
+  const logger = createLogger(Level.Info);
   const version = await getVersion();
+  const program = new Command()
+    .name("repoyear-backend")
+    .version(version);
+  program.command("serve")
+    .addOption(
+      new Option("--bind <addr>", "address to bind to").env("BIND").default(
+        "127.0.0.1:3000",
+      ),
+    )
+    .addOption(
+      new Option("--github-client-id <id>", "GitHub client ID").env(
+        "GITHUB_CLIENT_ID",
+      ).makeOptionMandatory(),
+    )
+    .addOption(
+      new Option("--github-client-secret <secret>", "GitHub client secret").env(
+        "GITHUB_CLIENT_SECRET",
+      ).makeOptionMandatory(),
+    )
+    .addOption(
+      new Option("--scan-config <path>", "Configuration file").env(
+        "SCAN_CONFIG",
+      ).argParser((path: string) => parseConfig(Deno.readTextFileSync(path))),
+    )
+    .action(
+      async (
+        { bind, ...options }: {
+          bind: string;
+          githubClientId: string;
+          githubClientSecret: string;
+          scanConfig: Config | undefined;
+        },
+      ) => {
+        await serve(bind, {
+          ...options,
+          version,
+          logger,
+        }).finished;
+      },
+    );
 
-  switch (command.kind) {
-    case "serve": {
-      const scanConfig = command.scanConfig
-        ? parseConfig(await Deno.readTextFile(command.scanConfig))
-        : null;
-      const state: AppState = {
-        githubClientId: command.githubClientId,
-        githubClientSecret: command.githubClientSecret,
-        scanConfig,
-        version,
+  program.command("scan").argument("<config>").action(
+    async (config: string) => {
+      await scanConfigToStdout(
+        parseConfig(await Deno.readTextFile(config)),
         logger,
-      };
-      await serve(command.bind, state).finished;
-      return;
-    }
+      );
+    },
+  );
 
-    case "scan":
-      await scanConfigToStdout(command.config, logger);
-      return;
-
-    case "scan-repo": {
+  program.command("scan-repo").argument("<repositories...>").action(
+    async (repositories: string[]) => {
       const result: Record<string, number[]> = {};
-      for (const path of command.repositories) {
+      for (const path of repositories) {
         try {
           result[path] = await scanRepoPath(path);
         } catch (error) {
@@ -64,45 +92,33 @@ async function run(command: Command, logger: Logger): Promise<void> {
         }
       }
       console.log(JSON.stringify(result));
-      return;
-    }
+    },
+  );
 
-    case "openapi": {
+  program.command("openapi").option("-o, --output <path>").action(
+    async ({ output }: { output: string | undefined }) => {
       // Only the route shapes matter for the spec; the state's
       // credentials/config are never consulted while generating it. Uses the
       // package version (deno.jsonc), not the git-describe `version`.
-      const state: AppState = {
+      const response = await createApp({
         githubClientId: "",
         githubClientSecret: "",
-        scanConfig: null,
+        scanConfig: undefined,
         version: await getPackageVersion(),
         logger,
-      };
-      const res = await createApp(state).request("/api/openapi.json");
-      const json = `${JSON.stringify(await res.json(), null, 2)}\n`;
-      if (command.output !== undefined) {
-        await Deno.writeTextFile(command.output, json);
+      }).request("/api/openapi.json");
+      const json = `${JSON.stringify(await response.json(), null, 2)}\n`;
+      if (output !== undefined) {
+        await Deno.writeTextFile(output, json);
       } else {
         console.log(json);
       }
-      return;
-    }
+    },
+  );
 
-    case "version":
-      console.log(version);
-      return;
-  }
-}
+  program.command("version").action(() => console.log(version));
 
-async function main(): Promise<void> {
-  try {
-    const command = parseParams(Deno.args);
-    await run(command, createLogger(Level.Info));
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    Deno.stderr.writeSync(new TextEncoder().encode(`Error: ${message}\n`));
-    Deno.exit(1);
-  }
+  await program.parseAsync();
 }
 
 if (import.meta.main) {

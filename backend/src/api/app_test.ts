@@ -4,7 +4,8 @@ import { createLogger, Level } from "../logging.ts";
 import { Home, tempDir } from "../test/fixtures.ts";
 
 function baseState(
-  scanConfig: { repos: { root: string; replaceRoot?: string }[] } | null = null,
+  scanConfig: { repos: { root: string; replaceRoot?: string }[] } | undefined =
+    undefined,
 ) {
   return {
     githubClientId: "id",

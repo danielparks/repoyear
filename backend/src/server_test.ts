@@ -32,7 +32,7 @@ Deno.test("serve: actually serves the app on the given port", async () => {
   const server = serve("127.0.0.1:0", {
     githubClientId: "id",
     githubClientSecret: "secret",
-    scanConfig: null,
+    scanConfig: undefined,
     version: "test",
     logger: createLogger(Level.Silent),
   });

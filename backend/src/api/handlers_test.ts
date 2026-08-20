@@ -6,13 +6,14 @@ import { Home, tempDir } from "../test/fixtures.ts";
 const baseState = {
   githubClientId: "id",
   githubClientSecret: "secret",
+  scanConfig: undefined,
   version: "test",
   logger: createLogger(Level.Silent),
 };
 
 Deno.test("getContributions with no scan config returns empty", async () => {
   assertEquals(
-    await getContributions({ ...baseState, scanConfig: null }),
+    await getContributions(baseState),
     {},
   );
 });

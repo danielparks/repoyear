@@ -8,7 +8,7 @@ import type { Logger } from "../logging.ts";
 export interface AppState {
   githubClientId: string;
   githubClientSecret: string;
-  scanConfig: Config | null;
+  scanConfig: Config | undefined;
   version: string;
   logger: Logger;
 }
@@ -17,7 +17,7 @@ export interface AppState {
 export async function getContributions(
   state: AppState,
 ): Promise<Record<string, number[]>> {
-  if (state.scanConfig === null) {
+  if (state.scanConfig === undefined) {
     return {};
   }
 

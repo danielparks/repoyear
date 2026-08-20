@@ -10,6 +10,7 @@
     "vitest": "vitest",
     "vitest:ui": "vitest --ui",
     "vitest:run": "vitest run",
+    "backend": "cd backend && deno run start",
     "generate:api": "scripts/generate-api.sh",
     "generate:api:watch": "chokidar src/api/openapi.json -c 'npm run generate:api' --initial --silent",
     "generate:graphql": "deno run -A npm:@graphql-codegen/cli/graphql-codegen-esm --config src/github/codegen_config.ts",
