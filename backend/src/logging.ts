@@ -5,31 +5,27 @@ export enum Level {
   Error = 0,
   Warning = 1,
   Info = 2,
-  Debug = 3,
-  Trace = 4,
 }
 
 export interface Logger {
   error(message: string): void;
   warn(message: string): void;
   info(message: string): void;
-  debug(message: string): void;
-  trace(message: string): void;
 }
 
-/** Turn a `-v` count into a log level. */
-export function levelFromVerbosity(verbose: number): Level {
-  switch (verbose) {
+/** Turn a `-q` count into a log level. */
+export function levelFromQuiet(quiet: number): Level {
+  switch (quiet) {
     case 0:
-      return Level.Warning;
-    case 1:
       return Level.Info;
+    case 1:
+      return Level.Warning;
     case 2:
-      return Level.Debug;
+      return Level.Error;
     case 3:
-      return Level.Trace;
+      return Level.Silent;
     default:
-      throw new Error("-v is only allowed up to 3 times.");
+      throw new Error("-q is only allowed up to 3 times.");
   }
 }
 
@@ -44,7 +40,5 @@ export function createLogger(level: Level): Logger {
     error: (message) => write(Level.Error, "ERROR", message),
     warn: (message) => write(Level.Warning, "WARN", message),
     info: (message) => write(Level.Info, "INFO", message),
-    debug: (message) => write(Level.Debug, "DEBUG", message),
-    trace: (message) => write(Level.Trace, "TRACE", message),
   };
 }

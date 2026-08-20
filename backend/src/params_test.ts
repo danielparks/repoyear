@@ -16,7 +16,7 @@ Deno.test("serve: defaults and required flags from argv", () => {
   );
   assertEquals(params, {
     color: "auto",
-    verbose: 0,
+    quiet: 0,
     command: {
       kind: "serve",
       bind: "127.0.0.1:3000",
@@ -111,29 +111,29 @@ Deno.test("unknown subcommand throws", () => {
   assertThrows(() => parseParams(["bogus"], noEnv), ArgError);
 });
 
-Deno.test("-v repeated counts verbosity, up to 3", () => {
+Deno.test("-q repeated counts quiet, up to 3", () => {
   assertEquals(
-    parseParams(["-v", "version"], noEnv).verbose,
+    parseParams(["-q", "version"], noEnv).quiet,
     1,
   );
   assertEquals(
-    parseParams(["-v", "-v", "-v", "version"], noEnv).verbose,
+    parseParams(["-q", "-q", "-q", "version"], noEnv).quiet,
     3,
   );
   assertEquals(
-    parseParams(["--verbose", "--verbose", "version"], noEnv).verbose,
+    parseParams(["--quiet", "--quiet", "version"], noEnv).quiet,
     2,
   );
 });
 
-Deno.test("-vv stacks like repeated -v", () => {
-  assertEquals(parseParams(["-vv", "version"], noEnv).verbose, 2);
-  assertEquals(parseParams(["-vvv", "version"], noEnv).verbose, 3);
+Deno.test("-qq stacks like repeated -q", () => {
+  assertEquals(parseParams(["-qq", "version"], noEnv).quiet, 2);
+  assertEquals(parseParams(["-qqq", "version"], noEnv).quiet, 3);
 });
 
-Deno.test("more than three -v throws", () => {
+Deno.test("more than three -q throws", () => {
   assertThrows(
-    () => parseParams(["-vvvv", "version"], noEnv),
+    () => parseParams(["-qqqq", "version"], noEnv),
     ArgError,
     "only allowed up to 3",
   );

@@ -23,7 +23,7 @@ export type Command =
 
 export interface Params {
   color: Color;
-  verbose: number;
+  quiet: number;
   command: Command;
 }
 
@@ -52,7 +52,7 @@ export function parseParams(
   env: Record<string, string | undefined> = Deno.env.toObject(),
 ): Params {
   let color: Color = "auto";
-  let verbose = 0;
+  let quiet = 0;
   let i = 0;
 
   // Global flags are only recognized before the subcommand, unlike clap's
@@ -66,22 +66,22 @@ export function parseParams(
     } else if (arg.startsWith("--color=")) {
       color = parseColor(arg.slice("--color=".length));
       i += 1;
-    } else if (arg === "-v" || arg === "--verbose") {
-      verbose += 1;
+    } else if (arg === "--quiet") {
+      quiet += 1;
       i += 1;
-    } else if (/^-v{2,}$/.test(arg)) {
-      verbose += arg.length - 1;
+    } else if (/^-q+$/.test(arg)) {
+      quiet += arg.length - 1;
       i += 1;
     } else {
       break;
     }
   }
-  if (verbose > 3) {
-    throw new ArgError("-v is only allowed up to 3 times.");
+  if (quiet > 3) {
+    throw new ArgError("-q or --quiet is only allowed up to 3 times.");
   }
 
   const [subcommand, ...subArgs] = argv.slice(i);
-  return { color, verbose, command: parseCommand(subcommand, subArgs, env) };
+  return { color, quiet, command: parseCommand(subcommand, subArgs, env) };
 }
 
 function parseCommand(

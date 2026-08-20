@@ -1,7 +1,7 @@
 // repoyear-backend executable.
 
 import { type Color, type Params, parseParams } from "./params.ts";
-import { createLogger, levelFromVerbosity, type Logger } from "./logging.ts";
+import { createLogger, levelFromQuiet, type Logger } from "./logging.ts";
 import { getPackageVersion, getVersion } from "./version.ts";
 import { configRepoIter, parseConfig } from "./repos/config.ts";
 import { scanRepo, scanRepoPath } from "./repos/scan.ts";
@@ -112,7 +112,7 @@ async function main(): Promise<void> {
     Deno.exit(1);
   }
 
-  const logger = createLogger(levelFromVerbosity(params.verbose));
+  const logger = createLogger(levelFromQuiet(params.quiet));
 
   try {
     await run(params, logger);
