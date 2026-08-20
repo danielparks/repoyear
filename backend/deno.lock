@@ -10,7 +10,8 @@
     "npm:@hono/zod-openapi@^1.6.0": "1.6.0_hono@4.13.3_zod@4.4.3",
     "npm:@octokit/oauth-methods@6": "6.0.4",
     "npm:@octokit/oauth-methods@^6.0.4": "6.0.4",
-    "npm:@octokit/request-error@^7.1.1": "7.1.1"
+    "npm:@octokit/request-error@^7.1.1": "7.1.1",
+    "npm:commander@15": "15.0.0"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -108,6 +109,9 @@
         "@octokit/openapi-types"
       ]
     },
+    "commander@15.0.0": {
+      "integrity": "sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg=="
+    },
     "content-type@2.1.0": {
       "integrity": "sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag=="
     },
@@ -141,7 +145,8 @@
       "jsr:@std/path@^1.1.6",
       "npm:@hono/zod-openapi@^1.6.0",
       "npm:@octokit/oauth-methods@^6.0.4",
-      "npm:@octokit/request-error@^7.1.1"
+      "npm:@octokit/request-error@^7.1.1",
+      "npm:commander@15"
     ]
   }
 }
