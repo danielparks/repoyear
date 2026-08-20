@@ -5,10 +5,7 @@ import { parse as parseJsonc } from "@std/jsonc";
 /**
  * Get the package's own semver, from `deno.jsonc`'s `version` field.
  *
- * Used only for the generated OpenAPI spec's `info.version` -- the TS
- * equivalent of the Rust build's `CARGO_PKG_VERSION` (which is what the
- * Rust `openapi` subcommand used, deliberately *not* `GIT_VERSION`, so the
- * spec's version only changes on an actual release, not every commit).
+ * Used only for the generated OpenAPI spec's `info.version`.
  */
 export async function getPackageVersion(): Promise<string> {
   const configUrl = new URL("../deno.jsonc", import.meta.url);
@@ -23,11 +20,10 @@ export async function getPackageVersion(): Promise<string> {
 /**
  * Get the application's build/git identity.
  *
- * Prefers `REPOYEAR_VERSION` (meant to be baked in at `deno compile` time,
- * the TS equivalent of the Rust build's `GIT_VERSION` env-at-compile-time
- * trick), then falls back to `git describe` for local development, then
- * `"unknown"`. Used for the `version` CLI subcommand and `/api/version` --
- * *not* the OpenAPI spec, see `getPackageVersion`.
+ * Prefers `REPOYEAR_VERSION` (meant to be baked in at `deno compile` time),
+ * then falls back to `git describe` for local development, then `"unknown"`.
+ * Used for the `version` CLI subcommand and `/api/version`, *not* the OpenAPI
+ * spec (see `getPackageVersion`).
  */
 export async function getVersion(): Promise<string> {
   const envVersion = Deno.env.get("REPOYEAR_VERSION");

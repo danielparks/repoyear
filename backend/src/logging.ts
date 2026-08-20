@@ -17,7 +17,7 @@ export interface Logger {
   trace(message: string): void;
 }
 
-/** Turn a `-v` count (0-3) into a log level, matching the Rust CLI's scheme. */
+/** Turn a `-v` count into a log level. */
 export function levelFromVerbosity(verbose: number): Level {
   switch (verbose) {
     case 0:

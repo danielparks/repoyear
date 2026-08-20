@@ -4,9 +4,9 @@ The RepoYear backend: scans local git repositories for contribution history not
 visible to GitHub, and proxies GitHub OAuth token exchange for the frontend.
 Written in TypeScript, runs on [Deno][deno].
 
-[deno]: https://deno.com/
-
 ## Installation
+
+### Binaries
 
 Download binaries directly from the [GitHub releases page][releases]. Just
 extract the archive and copy the file inside into your `$PATH`, e.g.
@@ -23,18 +23,16 @@ extract the archive and copy the file inside into your `$PATH`, e.g.
   [ARM64](https://github.com/danielparks/repoyear/releases/latest/download/repoyear-aarch64-pc-windows-msvc.zip)
 
 These are `deno compile`d standalone binaries with no runtime dependency (not
-even Deno itself). Note that `deno compile`'s supported target list is narrower
-than what the previous Rust build produced: no musl targets (so no
-static/Alpine-friendly Linux build), and no FreeBSD, illumos, PowerPC64, RISC-V,
-or s390x. If you need one of those, run from source with [Deno][deno] installed
-instead:
+even Deno itself).
+
+### source
+
+With [Deno][deno] installed:
 
 ```sh
 deno run --allow-read --allow-write --allow-run --allow-net --allow-env \
   src/main.ts <subcommand>
 ```
-
-[releases]: https://github.com/danielparks/repoyear/releases
 
 ## Development status
 
@@ -54,4 +52,6 @@ Unless you explicitly state otherwise, any contribution you submit as defined in
 the Apache 2.0 license shall be dual licensed as above, without any additional
 terms or conditions.
 
+[deno]: https://deno.com/
+[releases]: https://github.com/danielparks/repoyear/releases
 [issues]: https://github.com/danielparks/repoyear/issues

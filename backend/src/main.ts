@@ -68,11 +68,8 @@ async function run(params: Params, logger: Logger): Promise<void> {
 
     case "openapi": {
       // Only the route shapes matter for the spec; the state's
-      // credentials/config are never consulted while generating it. Uses
-      // the package version (deno.jsonc), not the git-describe `version`
-      // above -- matches the Rust `openapi` subcommand using
-      // CARGO_PKG_VERSION rather than GIT_VERSION, so the spec's version
-      // only changes on an actual release.
+      // credentials/config are never consulted while generating it. Uses the
+      // package version (deno.jsonc), not the git-describe `version`.
       const state: AppState = {
         githubClientId: "",
         githubClientSecret: "",
