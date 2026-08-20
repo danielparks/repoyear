@@ -1,7 +1,8 @@
 // repoyear-backend executable.
 
-import { type Params, parseParams } from "./params.ts";
-import { createLogger, levelFromQuiet, type Logger } from "./logging.ts";
+import type { Command } from "./params.ts";
+import { parseParams } from "./params.ts";
+import { createLogger, Level, type Logger } from "./logging.ts";
 import { getPackageVersion, getVersion } from "./version.ts";
 import { configRepoIter, parseConfig } from "./repos/config.ts";
 import { scanRepo, scanRepoPath } from "./repos/scan.ts";
@@ -30,32 +31,32 @@ async function scanConfigToStdout(
   console.log(JSON.stringify(result));
 }
 
-async function run(params: Params, logger: Logger): Promise<void> {
+async function run(command: Command, logger: Logger): Promise<void> {
   const version = await getVersion();
 
-  switch (params.command.kind) {
+  switch (command.kind) {
     case "serve": {
-      const scanConfig = params.command.scanConfig
-        ? parseConfig(await Deno.readTextFile(params.command.scanConfig))
+      const scanConfig = command.scanConfig
+        ? parseConfig(await Deno.readTextFile(command.scanConfig))
         : null;
       const state: AppState = {
-        githubClientId: params.command.githubClientId,
-        githubClientSecret: params.command.githubClientSecret,
+        githubClientId: command.githubClientId,
+        githubClientSecret: command.githubClientSecret,
         scanConfig,
         version,
         logger,
       };
-      await serve(params.command.bind, state).finished;
+      await serve(command.bind, state).finished;
       return;
     }
 
     case "scan":
-      await scanConfigToStdout(params.command.config, logger);
+      await scanConfigToStdout(command.config, logger);
       return;
 
     case "scan-repo": {
       const result: Record<string, number[]> = {};
-      for (const path of params.command.repositories) {
+      for (const path of command.repositories) {
         try {
           result[path] = await scanRepoPath(path);
         } catch (error) {
@@ -79,8 +80,8 @@ async function run(params: Params, logger: Logger): Promise<void> {
       };
       const res = await createApp(state).request("/api/openapi.json");
       const json = `${JSON.stringify(await res.json(), null, 2)}\n`;
-      if (params.command.output !== undefined) {
-        await Deno.writeTextFile(params.command.output, json);
+      if (command.output !== undefined) {
+        await Deno.writeTextFile(command.output, json);
       } else {
         console.log(json);
       }
@@ -93,18 +94,13 @@ async function run(params: Params, logger: Logger): Promise<void> {
   }
 }
 
-function printError(error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
-  const prefix = /^error/i.test(message) ? "" : "Error: ";
-  Deno.stderr.writeSync(new TextEncoder().encode(`${prefix}${message}\n`));
-}
-
 async function main(): Promise<void> {
   try {
-    const params = parseParams(Deno.args);
-    await run(params, createLogger(levelFromQuiet(params.quiet)));
+    const command = parseParams(Deno.args);
+    await run(command, createLogger(Level.Info));
   } catch (error) {
-    printError(error);
+    const message = error instanceof Error ? error.message : String(error);
+    Deno.stderr.writeSync(new TextEncoder().encode(`Error: ${message}\n`));
     Deno.exit(1);
   }
 }

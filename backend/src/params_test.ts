@@ -4,7 +4,7 @@ import { ArgError, parseParams } from "./params.ts";
 const noEnv = {};
 
 Deno.test("serve: defaults and required flags from argv", () => {
-  const params = parseParams(
+  const command = parseParams(
     [
       "serve",
       "--github-client-id",
@@ -14,20 +14,17 @@ Deno.test("serve: defaults and required flags from argv", () => {
     ],
     noEnv,
   );
-  assertEquals(params, {
-    quiet: 0,
-    command: {
-      kind: "serve",
-      bind: "127.0.0.1:3000",
-      githubClientId: "id",
-      githubClientSecret: "secret",
-      scanConfig: undefined,
-    },
+  assertEquals(command, {
+    kind: "serve",
+    bind: "127.0.0.1:3000",
+    githubClientId: "id",
+    githubClientSecret: "secret",
+    scanConfig: undefined,
   });
 });
 
 Deno.test("serve: flags override env vars", () => {
-  const params = parseParams(
+  const command = parseParams(
     ["serve", "--github-client-id", "flag-id"],
     {
       GITHUB_CLIENT_ID: "env-id",
@@ -35,7 +32,6 @@ Deno.test("serve: flags override env vars", () => {
       BIND: "0.0.0.0:8080",
     },
   );
-  const command = params.command;
   if (command.kind !== "serve") throw new Error("expected serve");
   assertEquals(command.githubClientId, "flag-id");
   assertEquals(command.githubClientSecret, "env-secret");
@@ -59,8 +55,8 @@ Deno.test("serve: missing client secret throws", () => {
 });
 
 Deno.test("scan: takes exactly one positional config path", () => {
-  const params = parseParams(["scan", "config.jsonc"], noEnv);
-  assertEquals(params.command, { kind: "scan", config: "config.jsonc" });
+  const command = parseParams(["scan", "config.jsonc"], noEnv);
+  assertEquals(command, { kind: "scan", config: "config.jsonc" });
 });
 
 Deno.test("scan: rejects zero or multiple args", () => {
@@ -69,8 +65,8 @@ Deno.test("scan: rejects zero or multiple args", () => {
 });
 
 Deno.test("scan-repo: takes one or more positional paths", () => {
-  const params = parseParams(["scan-repo", "a", "b", "c"], noEnv);
-  assertEquals(params.command, {
+  const command = parseParams(["scan-repo", "a", "b", "c"], noEnv);
+  assertEquals(command, {
     kind: "scan-repo",
     repositories: ["a", "b", "c"],
   });
@@ -81,24 +77,22 @@ Deno.test("scan-repo: rejects zero args", () => {
 });
 
 Deno.test("openapi: output is optional", () => {
-  assertEquals(parseParams(["openapi"], noEnv).command, {
+  assertEquals(parseParams(["openapi"], noEnv), {
     kind: "openapi",
     output: undefined,
   });
   assertEquals(
-    parseParams(["openapi", "-o", "out.json"], noEnv).command,
+    parseParams(["openapi", "-o", "out.json"], noEnv),
     { kind: "openapi", output: "out.json" },
   );
   assertEquals(
-    parseParams(["openapi", "--output", "out.json"], noEnv).command,
+    parseParams(["openapi", "--output", "out.json"], noEnv),
     { kind: "openapi", output: "out.json" },
   );
 });
 
 Deno.test("version: takes no arguments", () => {
-  assertEquals(parseParams(["version"], noEnv).command, {
-    kind: "version",
-  });
+  assertEquals(parseParams(["version"], noEnv), { kind: "version" });
   assertThrows(() => parseParams(["version", "extra"], noEnv), ArgError);
 });
 
@@ -108,32 +102,4 @@ Deno.test("no subcommand throws", () => {
 
 Deno.test("unknown subcommand throws", () => {
   assertThrows(() => parseParams(["bogus"], noEnv), ArgError);
-});
-
-Deno.test("-q repeated counts quiet, up to 3", () => {
-  assertEquals(
-    parseParams(["-q", "version"], noEnv).quiet,
-    1,
-  );
-  assertEquals(
-    parseParams(["-q", "-q", "-q", "version"], noEnv).quiet,
-    3,
-  );
-  assertEquals(
-    parseParams(["--quiet", "--quiet", "version"], noEnv).quiet,
-    2,
-  );
-});
-
-Deno.test("-qq stacks like repeated -q", () => {
-  assertEquals(parseParams(["-qq", "version"], noEnv).quiet, 2);
-  assertEquals(parseParams(["-qqq", "version"], noEnv).quiet, 3);
-});
-
-Deno.test("more than three -q throws", () => {
-  assertThrows(
-    () => parseParams(["-qqqq", "version"], noEnv),
-    ArgError,
-    "only allowed up to 3",
-  );
 });

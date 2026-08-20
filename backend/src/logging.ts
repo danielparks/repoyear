@@ -13,22 +13,6 @@ export interface Logger {
   info(message: string): void;
 }
 
-/** Turn a `-q` count into a log level. */
-export function levelFromQuiet(quiet: number): Level {
-  switch (quiet) {
-    case 0:
-      return Level.Info;
-    case 1:
-      return Level.Warning;
-    case 2:
-      return Level.Error;
-    case 3:
-      return Level.Silent;
-    default:
-      throw new Error("-q is only allowed up to 3 times.");
-  }
-}
-
 /** A logger that writes to stderr, filtered by `level`. */
 export function createLogger(level: Level): Logger {
   const write = (messageLevel: Level, tag: string, message: string) => {

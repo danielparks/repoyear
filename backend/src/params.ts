@@ -19,11 +19,6 @@ export type Command =
   | { kind: "openapi"; output?: string }
   | { kind: "version" };
 
-export interface Params {
-  quiet: number;
-  command: Command;
-}
-
 export class ArgError extends Error {}
 
 function requireValue(args: string[], index: number, flag: string): string {
@@ -34,35 +29,13 @@ function requireValue(args: string[], index: number, flag: string): string {
   return value;
 }
 
-/** Parse `argv` (i.e. `Deno.args`) into `Params`. */
+/** Parse `argv` (i.e. `Deno.args`) into a `Command`. */
 export function parseParams(
   argv: string[],
   env: Record<string, string | undefined> = Deno.env.toObject(),
-): Params {
-  let quiet = 0;
-  let i = 0;
-
-  // Global flags are only recognized before the subcommand, unlike clap's
-  // `global = true` (which allows them anywhere) -- a reasonable
-  // simplification for this tool's actual usage.
-  while (i < argv.length) {
-    const arg = argv[i];
-    if (arg === "--quiet") {
-      quiet += 1;
-      i += 1;
-    } else if (/^-q+$/.test(arg)) {
-      quiet += arg.length - 1;
-      i += 1;
-    } else {
-      break;
-    }
-  }
-  if (quiet > 3) {
-    throw new ArgError("-q or --quiet is only allowed up to 3 times.");
-  }
-
-  const [subcommand, ...subArgs] = argv.slice(i);
-  return { quiet, command: parseCommand(subcommand, subArgs, env) };
+): Command {
+  const [subcommand, ...subArgs] = argv;
+  return parseCommand(subcommand, subArgs, env);
 }
 
 function parseCommand(
