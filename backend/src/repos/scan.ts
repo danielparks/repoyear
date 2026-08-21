@@ -184,7 +184,9 @@ export async function scanRepo(gitDir: string): Promise<number[]> {
 
   for (const name of remoteNames) {
     const urlResult = await runGit(gitDir, ["remote", "get-url", name]);
-    if (!urlResult.success) continue; // FIXME? warn about unreadable remote?
+    // An unreadable URL doesn't mean this remote *is* a GitHub mirror, so
+    // skip it silently rather than treating it as one.
+    if (!urlResult.success) continue;
     const url = urlResult.stdout.trim();
     if (
       url.startsWith("git@github.com:") ||
