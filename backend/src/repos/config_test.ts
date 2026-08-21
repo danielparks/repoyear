@@ -88,7 +88,7 @@ Deno.test("tree_contains_repos_named", async () => {
   const names = results.map((r) => r.slice(0, r.indexOf(", ") + 1));
   assertEquals(
     names.sort(),
-    ["Ok(BASErepos/one,", "Ok(BASErepos/two,", "Ok(BASEthree,"].sort(),
+    ["Ok(BASE/repos/one,", "Ok(BASE/repos/two,", "Ok(BASE/three,"].sort(),
   );
 });
 
@@ -126,5 +126,5 @@ Deno.test("tree_contains_symlinked_repo_named", async () => {
     repos: [{ root: join(home.path, "base"), replaceRoot: "BASE" }],
   });
   assertEquals(results.length, 1);
-  assertEquals(results[0].startsWith("Ok(BASElink, "), true);
+  assertEquals(results[0].startsWith("Ok(BASE/link, "), true);
 });

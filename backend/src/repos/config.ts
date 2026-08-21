@@ -1,6 +1,6 @@
 // Repository configuration parsing and repo discovery.
 
-import { join, SEPARATOR } from "@std/path";
+import { join } from "@std/path";
 import { parse as parseJsonc } from "@std/jsonc";
 import { resolveGitDir } from "./scan.ts";
 
@@ -161,11 +161,7 @@ function getName(
       `${path} found under ${root}, but does not have it as a prefix`,
     );
   }
-  let suffix = path.slice(root.length);
-  if (suffix.startsWith(SEPARATOR)) {
-    suffix = suffix.slice(SEPARATOR.length);
-  }
-  return `${replaceRoot}${suffix}`;
+  return `${replaceRoot}${path.slice(root.length)}`;
 }
 
 function asError(error: unknown): Error {
