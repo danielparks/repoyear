@@ -60,14 +60,17 @@ jobs:
       - name: Compile
         working-directory: backend
         shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
         run: |
-          echo "REPOYEAR_VERSION=${{ github.ref_name }}" > build.env
+          echo "REPOYEAR_VERSION=$REF_NAME" > build.env
           ext=""
-          [[ "${{ matrix.target }}" == *windows* ]] && ext=".exe"
+          [[ "$TARGET" == *windows* ]] && ext=".exe"
           deno compile \
             --allow-read --allow-write --allow-run --allow-net --allow-env \
             --env-file=build.env \
-            --target "${{ matrix.target }}" \
+            --target "$TARGET" \
             -o "dist/repoyear${ext}" \
             src/main.ts
           rm build.env
@@ -75,12 +78,14 @@ jobs:
       - name: Package
         working-directory: backend
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          if [[ "${{ matrix.target }}" == *windows* ]] ; then
-            (cd dist && zip -9 "../repoyear-${{ matrix.target }}.zip" repoyear.exe)
+          if [[ "$TARGET" == *windows* ]] ; then
+            (cd dist && zip -9 "../repoyear-$TARGET.zip" repoyear.exe)
           else
             chmod +x dist/repoyear
-            tar -C dist -czf "repoyear-${{ matrix.target }}.tar.gz" repoyear
+            tar -C dist -czf "repoyear-$TARGET.tar.gz" repoyear
           fi
 
       - name: Upload
@@ -88,4 +93,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.ref_name }}" repoyear-"${{ matrix.target }}".*
+          REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: gh release upload "$REF_NAME" repoyear-"$TARGET".*
