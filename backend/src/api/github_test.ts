@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { exchangeOAuthToken, refreshOAuthToken } from "./github.ts";
 import { createLogger, Level } from "../logging.ts";
+import { githubResponse } from "../test/github_fixtures.ts";
 
 const credentials = {
   githubClientId: "client-id",
@@ -8,23 +9,6 @@ const credentials = {
 };
 
 const silentLogger = createLogger(Level.Silent);
-
-/**
- * A GitHub-shaped JSON response. Real responses from
- * https://github.com/login/oauth/access_token always include `scope`
- * (empty for GitHub Apps, which don't use OAuth scopes) and a `date`
- * header -- @octokit/oauth-methods reads both unconditionally, and throws
- * if they're missing.
- */
-function githubResponse(body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify({ scope: "", ...body }), {
-    status: 200,
-    headers: {
-      "content-type": "application/json",
-      "date": new Date().toUTCString(),
-    },
-  });
-}
 
 function withFetch<T>(
   handler: (

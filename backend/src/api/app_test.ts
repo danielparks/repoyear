@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import { createApp } from "./app.ts";
 import { createLogger, Level } from "../logging.ts";
 import { Home, tempDir } from "../test/fixtures.ts";
+import { githubResponse } from "../test/github_fixtures.ts";
 
 function baseState(
   scanConfig: { repos: { root: string; replaceRoot?: string }[] } | undefined =
@@ -57,23 +58,6 @@ Deno.test("GET /api/oauth/callback requires a code", async () => {
   const res = await app.request("/api/oauth/callback");
   assertEquals(res.status, 400);
 });
-
-/**
- * A GitHub-shaped JSON response. Real responses from
- * https://github.com/login/oauth/access_token always include `scope`
- * (empty for GitHub Apps) and a `date` header --
- * @octokit/oauth-methods reads both unconditionally, and throws if
- * they're missing.
- */
-function githubResponse(body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify({ scope: "", ...body }), {
-    status: 200,
-    headers: {
-      "content-type": "application/json",
-      "date": new Date().toUTCString(),
-    },
-  });
-}
 
 Deno.test("GET /api/oauth/callback surfaces GitHub errors as 400", async () => {
   const original = globalThis.fetch;
