@@ -5,7 +5,10 @@ import { parse as parseJsonc } from "@std/jsonc";
 /**
  * Get the package's own semver, from `deno.jsonc`'s `version` field.
  *
- * Used only for the generated OpenAPI spec's `info.version`.
+ * Used only for the generated OpenAPI spec's `info.version`. Resolves
+ * `deno.jsonc` relative to this source file, so it only works run from the
+ * source tree (e.g. `deno task openapi` in CI) -- a `deno compile`d binary
+ * has no `deno.jsonc` alongside it.
  */
 export async function getPackageVersion(): Promise<string> {
   const configUrl = new URL("../deno.jsonc", import.meta.url);
