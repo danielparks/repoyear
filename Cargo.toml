@@ -52,6 +52,7 @@ manual_string_new = "allow"
 map_unwrap_or = "allow"
 module_name_repetitions = "allow"
 unnecessary_debug_formatting = "allow" # display() doesn’t escape invalid chars
+unused_async_trait_impl = "allow" # harder to read
 
 # Nursery exceptions
 option_if_let_else = "allow"
