@@ -1,4 +1,3 @@
-# Mostly copied from https://github.com/taiki-e/cargo-hack/blob/main/.github/workflows/release.yml
 name: Release
 
 on:
@@ -12,15 +11,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  CARGO_INCREMENTAL: 0
-  CARGO_NET_GIT_FETCH_WITH_CLI: true
-  CARGO_NET_RETRY: 10
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-  RUSTFLAGS: -D warnings
-  RUSTUP_MAX_RETRIES: 10
-
 jobs:
   create-release:
     name: Create
@@ -29,48 +19,80 @@ jobs:
     permissions:
       contents: write # To create release
     steps:
-      - uses: danielparks/github-actions/create-release@2f6c98c73f0a8130d737500b59a0fddf749b484d # v1.1.1
+      - uses: taiki-e/checkout-action@7d1e50e93dc4fb3bba58f85018fadf77898aee8b # v1.4.2
+      - uses: taiki-e/create-gh-release-action@eba8ea96c86cca8a37f1b56e94b4d13301fba651 # v1.11.0
         with:
+          changelog: backend/CHANGELOG.md
+          title: Release $version
           token: ${{ secrets.GITHUB_TOKEN }}
-          working-directory: backend
 
   upload-assets:
     name: ${{ matrix.target }}
     if: github.repository_owner == 'danielparks'
     needs:
       - create-release
-    timeout-minutes: 60
+    timeout-minutes: 30
     permissions:
       contents: write # To update release
+    # `deno compile` can cross-compile to every supported target from a
+    # single host, unlike the old Rust build -- no need for matching
+    # macos-latest/windows-latest runners per target.
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - target: aarch64-unknown-linux-gnu
-          - target: aarch64-unknown-linux-musl
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
-          - target: x86_64-unknown-linux-gnu
-          - target: x86_64-unknown-linux-musl
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-          - target: x86_64-unknown-freebsd
-          - target: x86_64-unknown-illumos
-          - target: universal-apple-darwin
-            os: macos-latest
-          - target: powerpc64le-unknown-linux-gnu
-          - target: powerpc64le-unknown-linux-musl
-          - target: riscv64gc-unknown-linux-gnu
-          - target: riscv64gc-unknown-linux-musl
-          - target: s390x-unknown-linux-gnu
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
     steps:
-      - uses: danielparks/github-actions/create-release-artifacts@2f6c98c73f0a8130d737500b59a0fddf749b484d # v1.1.1
+      - uses: taiki-e/checkout-action@7d1e50e93dc4fb3bba58f85018fadf77898aee8b # v1.4.2
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
-          binary: repoyear-backend
-          target: ${{ matrix.target }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          working-directory: backend
+          cache: true
+
+      - name: Install dependencies
+        working-directory: backend
+        run: deno install --frozen
+
+      - name: Compile
+        working-directory: backend
+        shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          echo "REPOYEAR_VERSION=$REF_NAME" > build.env
+          ext=""
+          [[ "$TARGET" == *windows* ]] && ext=".exe"
+          deno compile \
+            --allow-read --allow-write --allow-run --allow-net --allow-env \
+            --env-file=build.env \
+            --target "$TARGET" \
+            -o "dist/repoyear${ext}" \
+            src/main.ts
+          rm build.env
+
+      - name: Package
+        working-directory: backend
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          if [[ "$TARGET" == *windows* ]] ; then
+            (cd dist && zip -9 "../repoyear-$TARGET.zip" repoyear.exe)
+          else
+            chmod +x dist/repoyear
+            tar -C dist -czf "repoyear-$TARGET.tar.gz" repoyear
+          fi
+
+      - name: Upload
+        working-directory: backend
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: gh release upload "$REF_NAME" repoyear-"$TARGET".*

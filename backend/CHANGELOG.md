@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## main branch
 
-### Security
+### Breaking changes
 
-- Upgrade h2 to fix [RUSTSEC-2026-0258](https://rustsec.org/advisories/RUSTSEC-2026-0258). It’s unclear if this crate was affected.
-- Upgrade spin to avoid yanked version.
+- Rewrote the backend in TypeScript/Deno (previously Rust). Local repo scanning
+  now shells out to `git` instead of linking `libgit2`. The API contract
+  (`openapi.json`) is unchanged.
+- Local repo configuration file now expected to be JSONC instead of TOML.

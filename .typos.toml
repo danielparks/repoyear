@@ -1,6 +1,5 @@
 [files]
 extend-exclude = [
-  "/target",
   "/src/github/gql.ts", # Generated
   "/src/github/schema.graphql" # Third-party
 ]

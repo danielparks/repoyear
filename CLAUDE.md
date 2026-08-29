@@ -8,7 +8,8 @@ repositories were contributed to.
 It has two parts:
 
 1. A React/TypeScript app in the root directory. This is run with `deno`.
-2. A Rust API server in `backend/`.
+2. A TypeScript/Deno API server in `backend/` (its own separate Deno project,
+   with its own `deno.jsonc`).
 
 ## Codebase structure
 
@@ -34,7 +35,11 @@ The app has three modes, each with its own HTML file and TypeScript entry point:
 
 ### Backend structure (`backend/`)
 
-Rust API server that handles OAuth token exchange with GitHub.
+TypeScript/Deno API server that scans local git repositories for contribution
+history not visible to GitHub, and handles OAuth token exchange with GitHub.
+Shells out to the `git` CLI rather than using a git library. Uses Hono +
+`@hono/zod-openapi` to generate `src/api/openapi.json` (root), which the
+frontend's `npm run generate:api` codegens into the typed client in `src/api/`.
 
 ### Key concepts
 
@@ -64,10 +69,10 @@ Before committing frontend changes, you will want to run something like:
 
     deno check --quiet && deno lint --fix && deno fmt
 
-Before committing frontend changes, you will want to run something like:
+Before committing backend changes (run from `backend/`, which has its own
+`deno.jsonc`), you will want to run something like:
 
-    cargo clippy --quiet --all-features --all-targets --fix --allow-dirty
-    cargo +nightly fmt
+    deno check --quiet && deno lint --fix && deno fmt
 
 ## Code comments
 

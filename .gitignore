@@ -3,9 +3,8 @@
 
 .github-token
 
-# Rust
-/target
-*.rs.bk
+# backend/ release builds (see backend/release.sh, .github/workflows/release.yaml)
+/backend/build.env
 
 # Logs
 /logs

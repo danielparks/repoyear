@@ -1,0 +1,19 @@
+{
+  "version": "0.8.1",
+  "tasks": {
+    "test": "deno test --allow-read --allow-write --allow-run --allow-net --allow-env",
+    "start": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env src/main.ts"
+  },
+  "compilerOptions": {
+    "strict": true
+  },
+  "imports": {
+    "@hono/zod-openapi": "npm:@hono/zod-openapi@^1.6.0",
+    "@octokit/oauth-methods": "npm:@octokit/oauth-methods@^6.0.4",
+    "@octokit/request-error": "npm:@octokit/request-error@^7.1.1",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
+    "@std/path": "jsr:@std/path@^1.1.6",
+    "commander": "npm:commander@^15.0.0"
+  }
+}

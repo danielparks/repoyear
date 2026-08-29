@@ -6,53 +6,43 @@
 
     export type { ApiResult, ErrorBody, ErrorResult } from './http-client.ts'
     
-/**
-* Response from `/api/contributions`.
- */
-export type ContributionsResponse =
-{
-/** Repository commit times (seconds since epoch) by repository name. */
-"repos": Record<string,(number)[]>,};
-
-/**
-* Response from `/api/health`.
- */
 export type HealthResponse =
 {
-/** Health status (always `"ok"`).
-
-This indicates that the API server is up and nothing more. */
+/** Health status (always `"ok"`). This indicates that the API server is up and nothing more. */
 "status": string,};
 
-/**
-* Response from OAuth endpoints.
-* 
-* * `/api/oauth/callback` * `/api/oauth/refresh`
- */
-export type OAuthTokenResponse =
-{
-/** The access token from GitHub. */
-"accessToken": string,
-/** Number of seconds until the access token expires. */
-"expiresIn"?: number | null,
-/** The refresh token from GitHub (if tokens are set to expire). */
-"refreshToken"?: string | null,
-/** Number of seconds until the refresh token expires. */
-"refreshTokenExpiresIn"?: number | null,};
-
-/**
-* Response from `/api/version`.
- */
 export type VersionResponse =
 {
 /** Version string from git describe. */
 "version": string,};
 
+export type ContributionsResponse =
+{
+/** Repository commit times (seconds since epoch) by repository name. */
+"repos": Record<string,(number)[]>,};
+
+export type OAuthTokenResponse =
+{
+/** The access token from GitHub. */
+"accessToken": string,
+/** The refresh token from GitHub (if tokens are set to expire). */
+"refreshToken"?: string,
+/** Number of seconds until the access token expires. */
+"expiresIn"?: number,
+/** Number of seconds until the refresh token expires. */
+"refreshTokenExpiresIn"?: number,};
+
 export interface OauthCallbackQueryParams {
+/**
+* The code from GitHub.
+ */
   code: string,
 }
 
 export interface OauthRefreshQueryParams {
+/**
+* The refresh token from GitHub.
+ */
   refreshToken: string,
 }
 
@@ -108,23 +98,34 @@ export interface ApiConfig {
        
       methods = {
 /**
-* Handle `/api/contributions`
- */
-contributions: (_: EmptyObj,
-params: FetchParams = {}) => {
-         return this.request<ContributionsResponse>({
-           path: `/api/contributions`,
-           method: "GET",
-  ...params,
-         })
-      },
-/**
 * Handle `/api/health`
  */
 healthCheck: (_: EmptyObj,
 params: FetchParams = {}) => {
          return this.request<HealthResponse>({
            path: `/api/health`,
+           method: "GET",
+  ...params,
+         })
+      },
+/**
+* Handle `/api/version`
+ */
+version: (_: EmptyObj,
+params: FetchParams = {}) => {
+         return this.request<VersionResponse>({
+           path: `/api/version`,
+           method: "GET",
+  ...params,
+         })
+      },
+/**
+* Handle `/api/contributions`
+ */
+contributions: (_: EmptyObj,
+params: FetchParams = {}) => {
+         return this.request<ContributionsResponse>({
+           path: `/api/contributions`,
            method: "GET",
   ...params,
          })
@@ -154,17 +155,6 @@ params: FetchParams = {}) => {
            path: `/api/oauth/refresh`,
            method: "GET",
   query,
-  ...params,
-         })
-      },
-/**
-* Handle `/api/version`
- */
-version: (_: EmptyObj,
-params: FetchParams = {}) => {
-         return this.request<VersionResponse>({
-           path: `/api/version`,
-           method: "GET",
   ...params,
          })
       },

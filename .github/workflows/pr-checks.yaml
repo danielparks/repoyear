@@ -33,23 +33,11 @@ jobs:
         with:
           cache: true
 
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
-        with:
-          toolchain: stable
-          components: clippy
-
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1.17.0
-        with:
-          toolchain: nightly
-          components: rustfmt
-
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-
-      - uses: taiki-e/install-action@3d7d7cd5ac7f994c1892ae0c06165095b9139094 # v2.85.1
-        with:
-          tool: cargo-msrv
-
       - run: deno install --frozen
+
+      - name: backend deno install
+        working-directory: backend
+        run: deno install --frozen
 
       - uses: crate-ci/typos@bee27e3a4fd1ea2111cf90ab89cd076c870fce14 # v1.48.0
         if: ${{ !cancelled() }}
@@ -79,35 +67,29 @@ jobs:
         if: ${{ !cancelled() }}
         run: deno run vitest:run
 
-      - uses: actions-rust-lang/rustfmt@4066006ec54a31931b9b1fddfd38f2fdf2d27143 # v1.1.2
-        if: ${{ !cancelled() }}
-
-      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
-        if: ${{ !cancelled() }}
-        with:
-          rust-version: "1.85.0"
-          manifest-path: backend/Cargo.toml
-
-      - name: cargo clippy
-        if: ${{ !cancelled() }}
-        run: cargo +stable clippy --all-features --all-targets
-
-      - name: cargo doc lints
-        if: ${{ !cancelled() }}
-        env:
-          RUSTDOCFLAGS: --document-private-items -Dwarnings
-        run: cargo +stable doc --no-deps --all-features
-
-      - name: cargo msrv
+      - name: backend deno check
         if: ${{ !cancelled() }}
         working-directory: backend
-        run: cargo msrv verify
+        run: deno check
 
-      - name: cargo build
-        id: cargo_build
+      - name: backend deno fmt
         if: ${{ !cancelled() }}
-        run: cargo +stable build --tests --all-features
+        working-directory: backend
+        run: deno fmt --check
 
-      - name: cargo test
-        if: ${{ !cancelled() && steps.cargo_build.outcome == 'success' }}
-        run: cargo +stable test --all-features
+      - name: backend deno lint
+        if: ${{ !cancelled() }}
+        working-directory: backend
+        run: deno lint
+
+      - name: backend deno test
+        if: ${{ !cancelled() }}
+        working-directory: backend
+        run: deno task test
+
+      - name: backend openapi parity
+        if: ${{ !cancelled() }}
+        working-directory: backend
+        run: |
+          deno run -A src/main.ts openapi -o /tmp/repoyear-openapi-check.json
+          diff -u ../src/api/openapi.json /tmp/repoyear-openapi-check.json

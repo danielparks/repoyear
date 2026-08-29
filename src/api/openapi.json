@@ -1,48 +1,89 @@
 {
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RepoYear API",
+    "version": "0.8.1"
+  },
   "components": {
-    "responses": {
-      "Error": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status (always `\"ok\"`). This indicates that the API server is up and nothing more."
           }
         },
-        "description": "Error"
-      }
-    },
-    "schemas": {
+        "required": [
+          "status"
+        ]
+      },
+      "VersionResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version string from git describe."
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
       "ContributionsResponse": {
-        "description": "Response from `/api/contributions`.",
+        "type": "object",
         "properties": {
           "repos": {
+            "type": "object",
             "additionalProperties": {
+              "type": "array",
               "items": {
-                "format": "int64",
                 "type": "integer"
-              },
-              "type": "array"
+              }
             },
-            "description": "Repository commit times (seconds since epoch) by repository name.",
-            "type": "object"
+            "description": "Repository commit times (seconds since epoch) by repository name."
           }
         },
         "required": [
           "repos"
-        ],
-        "type": "object"
+        ]
+      },
+      "OAuthTokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token from GitHub."
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "The refresh token from GitHub (if tokens are set to expire)."
+          },
+          "expires_in": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of seconds until the access token expires."
+          },
+          "refresh_token_expires_in": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of seconds until the refresh token expires."
+          }
+        },
+        "required": [
+          "access_token"
+        ]
       },
       "Error": {
-        "description": "Error information from a response.",
+        "type": "object",
         "properties": {
-          "error_code": {
-            "type": "string"
-          },
           "message": {
             "type": "string"
           },
           "request_id": {
+            "type": "string"
+          },
+          "error_code": {
             "type": "string"
           }
         },
@@ -50,214 +91,144 @@
           "message",
           "request_id"
         ],
-        "type": "object"
-      },
-      "HealthResponse": {
-        "description": "Response from `/api/health`.",
-        "properties": {
-          "status": {
-            "description": "Health status (always `\"ok\"`).\n\nThis indicates that the API server is up and nothing more.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "status"
-        ],
-        "type": "object"
-      },
-      "OAuthTokenResponse": {
-        "description": "Response from OAuth endpoints.\n\n* `/api/oauth/callback` * `/api/oauth/refresh`",
-        "properties": {
-          "access_token": {
-            "description": "The access token from GitHub.",
-            "type": "string"
-          },
-          "expires_in": {
-            "description": "Number of seconds until the access token expires.",
-            "format": "uint64",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          },
-          "refresh_token": {
-            "description": "The refresh token from GitHub (if tokens are set to expire).",
-            "nullable": true,
-            "type": "string"
-          },
-          "refresh_token_expires_in": {
-            "description": "Number of seconds until the refresh token expires.",
-            "format": "uint64",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          }
-        },
-        "required": [
-          "access_token"
-        ],
-        "type": "object"
-      },
-      "VersionResponse": {
-        "description": "Response from `/api/version`.",
-        "properties": {
-          "version": {
-            "description": "Version string from git describe.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "version"
-        ],
-        "type": "object"
-      }
-    }
-  },
-  "info": {
-    "title": "RepoYear API",
-    "version": "0.8.1"
-  },
-  "openapi": "3.0.3",
-  "paths": {
-    "/api/contributions": {
-      "get": {
-        "operationId": "contributions",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContributionsResponse"
-                }
-              }
-            },
-            "description": "successful operation"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        },
-        "summary": "Handle `/api/contributions`"
+        "description": "Error information from a response."
       }
     },
+    "parameters": {}
+  },
+  "paths": {
     "/api/health": {
       "get": {
         "operationId": "health_check",
+        "summary": "Handle `/api/health`",
         "responses": {
           "200": {
+            "description": "successful operation",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
                 }
               }
-            },
-            "description": "successful operation"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        },
-        "summary": "Handle `/api/health`"
-      }
-    },
-    "/api/oauth/callback": {
-      "get": {
-        "operationId": "oauth_callback",
-        "parameters": [
-          {
-            "description": "The code from GitHub.",
-            "in": "query",
-            "name": "code",
-            "required": true,
-            "schema": {
-              "type": "string"
             }
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OAuthTokenResponse"
-                }
-              }
-            },
-            "description": "successful operation"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        },
-        "summary": "Handle `/api/oauth/callback`"
-      }
-    },
-    "/api/oauth/refresh": {
-      "get": {
-        "operationId": "oauth_refresh",
-        "parameters": [
-          {
-            "description": "The refresh token from GitHub.",
-            "in": "query",
-            "name": "refresh_token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OAuthTokenResponse"
-                }
-              }
-            },
-            "description": "successful operation"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        },
-        "summary": "Handle `/api/oauth/refresh`"
+        }
       }
     },
     "/api/version": {
       "get": {
         "operationId": "version",
+        "summary": "Handle `/api/version`",
         "responses": {
           "200": {
+            "description": "successful operation",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VersionResponse"
                 }
               }
-            },
-            "description": "successful operation"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
+            }
           }
-        },
-        "summary": "Handle `/api/version`"
+        }
+      }
+    },
+    "/api/contributions": {
+      "get": {
+        "operationId": "contributions",
+        "summary": "Handle `/api/contributions`",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/oauth/callback": {
+      "get": {
+        "operationId": "oauth_callback",
+        "summary": "Handle `/api/oauth/callback`",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The code from GitHub."
+            },
+            "required": true,
+            "description": "The code from GitHub.",
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/oauth/refresh": {
+      "get": {
+        "operationId": "oauth_refresh",
+        "summary": "Handle `/api/oauth/refresh`",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The refresh token from GitHub."
+            },
+            "required": true,
+            "description": "The refresh token from GitHub.",
+            "name": "refresh_token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
