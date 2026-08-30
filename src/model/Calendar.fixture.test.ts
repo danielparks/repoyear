@@ -1,7 +1,7 @@
 /**
  * Integration tests using real GitHub API fixture data.
  */
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertGreaterOrEqual } from "@std/assert";
 import { ALL_ON } from "./Filter.ts";
 import { Calendar } from "./index.ts";
 import type { Contributions } from "../github/api.ts";
@@ -27,6 +27,26 @@ function getLastDate(contributions: Contributions[]): Date {
     contributions[0]!.calendar!.weeks.at(-1)!.contributionDays.at(-1)!.date,
   );
 }
+
+Deno.test("Calendar summary data should match specific data", () => {
+  const calendar = Calendar.fromContributions({
+    gitHub: extraWeekContributions,
+    endDate: getLastDate(extraWeekContributions),
+  });
+
+  for (const day of calendar.days) {
+    const specific = day.knownContributionCount();
+    // contributionCount may be null if there is no summary data, but in that
+    // case there should be no specific data. The assert message will show that
+    // the summary count is null in that case.
+    assertGreaterOrEqual(
+      day.contributionCount ?? 0,
+      specific,
+      `Day ${day.dateString()} has more specific contributions (${specific})` +
+        ` than summary (${day.contributionCount})`,
+    );
+  }
+});
 
 // ----------------------------------------------------------------------------
 // Extra-week handling
