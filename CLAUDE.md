@@ -69,6 +69,12 @@ Before committing frontend changes, you will want to run something like:
     cargo clippy --quiet --all-features --all-targets --fix --allow-dirty
     cargo +nightly fmt
 
+## Changelog
+
+`CHANGELOG.md` security entries cover only issues affecting the deployed app,
+the backend, or the release process. Do not list advisories that are limited to
+development-only dependencies (build, test, and code generation tools).
+
 ## Code comments
 
 Inline comments should only be used when the code isn't clear, the reason for

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+Security fixes are listed here when they affect the deployed app, the backend,
+or the release process. Advisories in development-only dependencies (build,
+test, and code generation tools) are not.
+
 ## main branch
 
 - No longer blurs days with contributions from unknown sources after data is
@@ -14,6 +18,7 @@ All notable changes to this project will be documented in this file.
   from GitHub before any data has arrived.
 - No longer loses cached data when the GitHub token refreshes.
 - Extend calendar map to the edges of the screen in narrow windows or on mobile.
+- Updated frontend dependencies, including React 19.3, Vite 8.3, and Vitest 5.
 
 ### Security fixes
 
