@@ -56,3 +56,4 @@ unused_async_trait_impl = "allow" # harder to read
 
 # Nursery exceptions
 option_if_let_else = "allow"
+empty_enums = "allow" # Requires MSRV of 1.100 for ! type
